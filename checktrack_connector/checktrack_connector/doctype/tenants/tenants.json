@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "creation": "2025-03-19 10:58:11.487705",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tenant_id",
+  "prefix",
+  "company_name",
+  "phone",
+  "timezone",
+  "date_format",
+  "no_of_employee",
+  "features",
+  "work_location"
+ ],
+ "fields": [
+  {
+   "fieldname": "prefix",
+   "fieldtype": "Data",
+   "label": "Prefix",
+   "reqd": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Phone",
+   "in_list_view": 1,
+   "label": "Phone"
+  },
+  {
+   "default": "Asia/Kolkata",
+   "fieldname": "timezone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Timezone"
+  },
+  {
+   "fieldname": "features",
+   "fieldtype": "Table",
+   "label": "Features",
+   "options": "Features"
+  },
+  {
+   "fieldname": "tenant_id",
+   "fieldtype": "Data",
+   "label": "Tenant Id",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company name"
+  },
+  {
+   "default": "dd/MM/yyyy",
+   "fieldname": "date_format",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Date Format"
+  },
+  {
+   "fieldname": "no_of_employee",
+   "fieldtype": "Data",
+   "label": "No of employees"
+  },
+  {
+   "fieldname": "work_location",
+   "fieldtype": "Table",
+   "label": "Work location",
+   "options": "WorkLocation"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-03-25 10:38:27.357528",
+ "modified_by": "Administrator",
+ "module": "checktrack_connector",
+ "name": "Tenants",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
