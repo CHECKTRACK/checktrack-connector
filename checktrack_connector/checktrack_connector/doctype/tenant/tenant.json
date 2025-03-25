@@ -2,6 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
+ "autoname": "field:tenant_id",
  "creation": "2025-03-19 10:58:11.487705",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -27,14 +28,16 @@
    "fieldname": "phone",
    "fieldtype": "Phone",
    "in_list_view": 1,
-   "label": "Phone"
+   "label": "Phone",
+   "reqd": 1
   },
   {
    "default": "Asia/Kolkata",
    "fieldname": "timezone",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Timezone"
+   "label": "Timezone",
+   "reqd": 1
   },
   {
    "fieldname": "features",
@@ -53,19 +56,22 @@
    "fieldname": "company_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Company name"
+   "label": "Company name",
+   "reqd": 1
   },
   {
    "default": "dd/MM/yyyy",
    "fieldname": "date_format",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Date Format"
+   "label": "Date Format",
+   "reqd": 1
   },
   {
    "fieldname": "no_of_employee",
    "fieldtype": "Data",
-   "label": "No of employees"
+   "label": "No of employees",
+   "reqd": 1
   },
   {
    "fieldname": "work_location",
@@ -76,10 +82,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-25 10:38:27.357528",
+ "modified": "2025-03-25 11:28:50.124962",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "Tenants",
+ "name": "Tenant",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -97,5 +104,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "company_name"
 }
