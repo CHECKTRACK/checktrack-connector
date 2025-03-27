@@ -6,7 +6,7 @@ def validate_cors():
     
     # Allow all origins
     frappe.local.response["headers"].update({
-        "Access-Control-Allow-Origin": "*",   # Allow all origins
+        "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Requested-With, Accept",
         "Access-Control-Allow-Credentials": "true",
@@ -17,7 +17,7 @@ def handle_preflight():
     """Handle preflight requests for CORS with all origins allowed."""
     if frappe.request.method == "OPTIONS":
         frappe.local.response["headers"].update({
-            "Access-Control-Allow-Origin": "*",   # Allow all origins
+            "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
             "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Requested-With, Accept",
             "Access-Control-Allow-Credentials": "true",
