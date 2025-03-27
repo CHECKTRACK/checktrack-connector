@@ -1,135 +1,135 @@
 {
-  "actions": [],
-  "allow_rename": 1,
-  "autoname": "field:teammember_id",
-  "creation": "2025-03-25 14:54:33.593806",
-  "doctype": "DocType",
-  "engine": "InnoDB",
-  "field_order": [
-    "add_team_member_section",
-    "first_name",
-    "last_name",
-    "phone",
-    "address",
-    "timezone",
-    "employment_type",
-    "start_date",
-    "job_title",
-    "report_to",
-    "termination_date",
-    "tenant",
-    "work_email",
-    "teammember_id",
-    "status"
-  ],
-  "fields": [
-    {
-      "fieldname": "add_team_member_section",
-      "fieldtype": "Section Break",
-      "label": "Add team member"
-    },
-    {
-      "fieldname": "first_name",
-      "fieldtype": "Data",
-      "label": "First Name"
-    },
-    {
-      "fieldname": "last_name",
-      "fieldtype": "Data",
-      "label": "Last Name"
-    },
-    {
-      "fieldname": "phone",
-      "fieldtype": "Phone",
-      "label": "Phone"
-    },
-    {
-      "fieldname": "address",
-      "fieldtype": "Table",
-      "label": "Address Details",
-      "options": "WorkLocation"
-    },
-    {
-      "fieldname": "timezone",
-      "fieldtype": "Data",
-      "label": "Timezone"
-    },
-    {
-      "fieldname": "employment_type",
-      "fieldtype": "Data",
-      "label": "Employment Type"
-    },
-    {
-      "fieldname": "start_date",
-      "fieldtype": "Date",
-      "label": "Date of Joining"
-    },
-    {
-      "fieldname": "job_title",
-      "fieldtype": "Data",
-      "label": "Job Title"
-    },
-    {
-      "fieldname": "report_to",
-      "fieldtype": "Link",
-      "label": "Report to",
-      "options": "Team Member"
-    },
-    {
-      "fieldname": "termination_date",
-      "fieldtype": "Date",
-      "label": "Termination Date"
-    },
-    {
-      "fieldname": "tenant",
-      "fieldtype": "Link",
-      "label": "Tenant",
-      "options": "Tenant"
-    },
-    {
-      "fieldname": "work_email",
-      "fieldtype": "Data",
-      "label": "Work Email",
-      "unique": 1
-    },
-    {
-      "fieldname": "teammember_id",
-      "fieldtype": "Data",
-      "label": "Team Member Id",
-      "not_nullable": 1,
-      "unique": 1
-    },
-    {
-      "fieldname": "status",
-      "fieldtype": "Data",
-      "label": "Status"
-    }
-  ],
-  "index_web_pages_for_search": 1,
-  "links": [],
-  "modified": "2025-03-25 17:19:07.631808",
-  "modified_by": "Administrator",
-  "module": "checktrack_connector",
-  "name": "Team Member",
-  "naming_rule": "By fieldname",
-  "owner": "Administrator",
-  "permissions": [
-    {
-      "create": 1,
-      "delete": 1,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "System Manager",
-      "share": 1,
-      "write": 1
-    }
-  ],
-  "show_title_field_in_link": 1,
-  "sort_field": "creation",
-  "sort_order": "DESC",
-  "states": [],
-  "title_field": "work_email"
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:teammember_id",
+ "creation": "2025-03-25 14:54:33.593806",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "add_team_member_section",
+  "first_name",
+  "last_name",
+  "phone",
+  "address",
+  "timezone",
+  "employment_type",
+  "start_date",
+  "job_title",
+  "report_to",
+  "termination_date",
+  "tenant",
+  "work_email",
+  "teammember_id",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "add_team_member_section",
+   "fieldtype": "Section Break",
+   "label": "Add team member"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Table",
+   "label": "Address Details",
+   "options": "WorkLocation"
+  },
+  {
+   "fieldname": "timezone",
+   "fieldtype": "Data",
+   "label": "Timezone"
+  },
+  {
+   "fieldname": "employment_type",
+   "fieldtype": "Data",
+   "label": "Employment Type"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Date of Joining"
+  },
+  {
+   "fieldname": "job_title",
+   "fieldtype": "Data",
+   "label": "Job Title"
+  },
+  {
+   "fieldname": "report_to",
+   "fieldtype": "Data",
+   "label": "Report to",
+   "options": "Team Member"
+  },
+  {
+   "fieldname": "termination_date",
+   "fieldtype": "Date",
+   "label": "Termination Date"
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Data",
+   "label": "Tenant",
+   "options": "Tenant"
+  },
+  {
+   "fieldname": "work_email",
+   "fieldtype": "Data",
+   "label": "Work Email",
+   "unique": 1
+  },
+  {
+   "fieldname": "teammember_id",
+   "fieldtype": "Data",
+   "label": "Team Member Id",
+   "not_nullable": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "Status"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-03-27 11:35:51.777171",
+ "modified_by": "Administrator",
+ "module": "checktrack_connector",
+ "name": "Team Member",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "work_email"
 }
