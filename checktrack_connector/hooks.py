@@ -172,6 +172,29 @@ app_license = "mit"
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "checktrack_connector.event.get_events"
 # }
+
+override_whitelisted_methods = {
+    "frappe.www.login": "checktrack_connector.api.sso_login"
+}
+
+doc_events = {
+    "*": {
+        "before_request": "checktrack_connector.middleware.validate_jwt_token"
+    }
+}
+
+doc_events = {
+    "*": {
+        "on_request": "checktrack_connector.utils.validate_cors",
+    }
+}
+
+override_whitelisted_methods = {
+    "frappe.utils.handle_preflight": "checktrack_connector.utils.handle_preflight",
+}
+
+after_request = ["checktrack_connector.utils.add_cors_headers"]
+
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

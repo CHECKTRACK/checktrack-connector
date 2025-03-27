@@ -95,3 +95,19 @@ jobs:
           bench --site test_site run-tests --app checktrack_connector
         env:
           TYPE: server
+
+  deploy:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Frappe Cloud (Dev)
+        run: |
+          curl -X POST "https://api.frappe.cloud/v1/sites/YOUR_DEV_SITE/deploy" \
+          -H "Authorization: token ${{ secrets.FRAPPE_CLOUD_API_KEY }}:${{ secrets.FRAPPE_CLOUD_API_SECRET }}" \
+          -H "Content-Type: application/json" \
+          -d '{"branch": "master"}'
+        env:
+          CI: 'Yes'
