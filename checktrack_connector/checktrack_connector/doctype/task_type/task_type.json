@@ -1,40 +1,33 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-03-20 14:48:20.791950",
+ "creation": "2025-03-27 09:28:20.804028",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "task_name",
-  "description",
-  "due_date"
+  "task_type_name",
+  "link_doctype"
  ],
  "fields": [
   {
-   "fieldname": "task_name",
+   "fieldname": "task_type_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Task name",
-   "reqd": 1
+   "label": "Task type name"
   },
   {
-   "fieldname": "description",
-   "fieldtype": "Small Text",
-   "label": "Description"
-  },
-  {
-   "fieldname": "due_date",
-   "fieldtype": "Date",
-   "label": "Due date"
+   "fieldname": "link_doctype",
+   "fieldtype": "Table MultiSelect",
+   "label": "Link Doctype",
+   "options": "Linked DocType"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-26 15:26:00.552847",
+ "modified": "2025-03-27 11:26:36.197487",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "Task",
+ "name": "Task Type",
  "owner": "Administrator",
  "permissions": [
   {
@@ -45,7 +38,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "CT HR",
+   "role": "System Manager",
    "share": 1,
    "write": 1
   }
