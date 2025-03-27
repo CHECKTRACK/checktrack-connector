@@ -24,7 +24,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-27 11:26:36.197487",
+ "modified": "2025-03-27 12:17:58.131327",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task Type",
@@ -44,7 +44,9 @@
   }
  ],
  "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "task_type_name"
 }
