@@ -6,8 +6,10 @@
  "engine": "InnoDB",
  "field_order": [
   "task_name",
+  "due_date",
   "description",
-  "due_date"
+  "task_type",
+  "assign_to"
  ],
  "fields": [
   {
@@ -26,12 +28,23 @@
    "fieldname": "due_date",
    "fieldtype": "Date",
    "label": "Due date"
+  },
+  {
+   "fieldname": "assign_to",
+   "fieldtype": "Table MultiSelect",
+   "label": "Assign to",
+   "options": "Task Assign To"
+  },
+  {
+   "fieldname": "task_type",
+   "fieldtype": "Link",
+   "label": "Task Type",
+   "options": "AMC"
   }
  ],
- "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-26 15:26:00.552847",
+ "modified": "2025-03-27 11:49:40.706476",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
@@ -50,8 +63,8 @@
    "write": 1
   }
  ],
- "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "task_name"
 }
