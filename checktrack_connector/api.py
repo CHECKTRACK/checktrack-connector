@@ -1,5 +1,8 @@
 import frappe
 import jwt
+import requests
+import urllib.parse
+import json
 from frappe.auth import LoginManager
 from frappe import _
 
@@ -46,6 +49,412 @@ def sso_login(token):
     except Exception as e:
         frappe.log_error(str(e), "SSO Login Error")
         frappe.throw(str(e))
+
+# Get API URLs from hooks with better error handling
+try:
+    USER_API_URL = frappe.get_hooks().get("user_api_url")
+    DATA_API_URL = frappe.get_hooks().get("data_api_url")
+    
+    if isinstance(USER_API_URL, list) and USER_API_URL:
+        USER_API_URL = USER_API_URL[0]
+    if isinstance(DATA_API_URL, list) and DATA_API_URL:
+        DATA_API_URL = DATA_API_URL[0]
+
+except Exception as e:
+    frappe.log_error(f"Error getting API URLs from hooks: {str(e)}", "API Configuration Error")
+
+@frappe.whitelist(allow_guest=True)
+def on_board_tenant_authentication(email, password):
+        
+    # Authenticate and get access token
+    auth_url = f"{USER_API_URL}/login"
+    auth_payload = {"email": email.strip().lower(), "password": password}
+    HEADERS = {"Content-Type": "application/json"}
+
+    try:
+        auth_response = requests.post(auth_url, headers=HEADERS, json=auth_payload)
+
+        # if auth_response.status_code != 200:
+        #     frappe.throw("Invalid email or password.")
+
+        auth_data = auth_response.json()
+        frappe.log_error(message=f"Auth response keys: {list(auth_data.keys())}", title="Auth Debug")
+        
+        access_token = auth_data.get("accessToken")
+        tenant_id = auth_data.get("user", {}).get("works", [{}])[0].get("tenant", {}).get("_id", {}).get("$oid")
+
+        if not access_token:
+            frappe.throw("Failed to get access token.")
+        if not tenant_id:
+            frappe.throw("Failed to get tenant id.")
+
+    except Exception as e:
+        frappe.throw(f"{str(e)}")
+
+    try:
+        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
+        tenant_headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        tenant_response = requests.get(tenant_url, headers=tenant_headers)
+        tenant_data = tenant_response.json()
+
+    except Exception as e:
+        frappe.throw(f"{str(e)}")
+
+    try:
+        mapped_data = map_tenant_data(tenant_data)
+
+        # Save tenant data in Frappe
+        tenant_id = mapped_data.get("data", {}).get("tenant_id")
+        tenant_prefix = mapped_data.get("data", {}).get("prefix")
+
+        if not tenant_id:
+            frappe.throw("Tenant ID missing from mapped data.")
+        if not frappe.db.exists("DocType", "Tenant"):
+            frappe.throw("Tenant DocType not found. Please make sure it exists.")
+
+        tenant_result = {}
+
+        new_tenant = frappe.get_doc({
+                "doctype": "Tenant",
+                **mapped_data["data"]
+            })
+        new_tenant.insert(ignore_permissions=True)
+        tenant_result = {"status": "created", "tenant_id": tenant_id, "message": "Tenant created successfully"}
+                
+        team_members_result = fetch_and_create_team_members(tenant_id, tenant_prefix, access_token)
+        
+        if team_members_result.get("status") == "error" or team_members_result.get("rollback_status") == True:
+            try:
+                if frappe.db.exists("Tenant", tenant_id):
+                    tenant_doc = frappe.get_doc("Tenant", tenant_id)
+                    tenant_doc.delete(ignore_permissions=True)
+                    frappe.db.commit()
+                    tenant_result = {"status": "error", "tenant_id": tenant_id, "message": "Tenant removed due to team member creation failure"}
+                    
+                    frappe.throw(_("Something went wrong"), indicator="red")
+                    return {
+                        "tenant": tenant_result,
+                        "team_members": team_members_result,
+                        "is_fully_onboarded": False
+                    }
+            except Exception as e:
+                frappe.throw(_("Something went wrong"), indicator="red")
+        
+        if team_members_result.get("status") == "success":
+            new_members = team_members_result.get("new_members", len(team_members_result.get("team_members", [])))
+            tenant_action = "updated" if tenant_result.get("status") == "updated" else "created"
+            message = _(f"Successfully {tenant_action} tenant with {new_members} team members")
+            frappe.msgprint(message, indicator="green")
+            
+        is_fully_onboarded = team_members_result.get("status") == "success"
+        
+        return {
+            "tenant": tenant_result,
+            "team_members": team_members_result,
+            "is_fully_onboarded": is_fully_onboarded
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error processing tenant data: {str(e)}")
+
+@frappe.whitelist()
+def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token):
+    try:
+        fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)            
+        team_members_data = fetch_result.get("data")
+        
+        if not team_members_data:
+            return {
+                "status": "warning",
+                "message": "No team members found for this tenant"
+            }
+            
+        create_result = create_all_team_members(team_members_data)
+            
+        return create_result 
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "rollback_status": False,
+            "message": "Something went wrong"
+        }
+
+@frappe.whitelist()
+def get_all_team_members(tenant_id, tenant_prefix, access_token):
+    try:
+        limit = 1000
+        filter_query = {"tenant._id": {"$oid": tenant_id}}
+        url = f"{DATA_API_URL}/{tenant_prefix}_team_members?filter={urllib.parse.quote(json.dumps(filter_query))}&pagesize={limit}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "No-Auth-Challenge": "true",
+            "Content-Type": "application/json"
+        }
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            team_members_data = response.json()
+            if isinstance(team_members_data, list):
+                return {
+                    "status": "success",
+                    "message": f"Successfully fetched {len(team_members_data)} team members",
+                    "data": team_members_data
+                }
+            else:
+                return {
+                    "status": "error",
+                    "rollback_status": True,
+                    "message": "Something went wrong"
+                }
+        else:
+            return {
+                "status": "error",
+                "rollback_status": True,
+                "message": "Something went wrong"
+            }
+            
+    except Exception as e:
+        return {
+            "status": "error",
+            "rollback_status": True,
+            "message": "Something went wrong!!"
+        }
+
+@frappe.whitelist()
+def create_all_team_members(team_members_data):
+    if not isinstance(team_members_data, list):
+        team_members_data = frappe.parse_json(team_members_data)
+        
+    successfully_processed_ids = []
+    already_existing_ids = []
+    total_members = len(team_members_data)
+    processing_count = 0
+    should_rollback = False
+    rollback_reason = ""
+    rollback_results = []
+    
+    try:
+        for member_data in team_members_data:
+            try:
+                processing_count += 1
+                # Removing the progress popup message
+                # frappe.publish_progress(
+                #     percent=int((processing_count / total_members) * 100),
+                #     title=f"Processing team members ({processing_count}/{total_members})"
+                # )
+                
+                if "_id" in member_data and not "teammember_id" in member_data:
+                    member_data = map_team_member_data(member_data)
+                
+                result = create_team_member(member_data)
+                
+                if result.get("already_exists"):
+                    already_existing_ids.append(result["data"]["name"])
+                else:
+                    successfully_processed_ids.append(result["data"]["name"])
+                
+            except Exception as e:
+                error_msg = str(e)
+                teammember_id = member_data.get('teammember_id', 'unknown')
+                should_rollback = True
+                rollback_reason = f"Error processing team member: {teammember_id} - {error_msg}"
+                break
+        
+        # Check if we need to rollback (only if we have new members and an error occurred)
+        if should_rollback and successfully_processed_ids:
+            rollback_results = rollback_team_members(successfully_processed_ids)
+            frappe.msgprint(_("Something went wrong"), indicator="red")
+            
+            return {
+                "status": "error",
+                "rollback_status": True,
+                "message": rollback_reason,
+                "rollback_results": rollback_results,
+                "processed_before_error": len(successfully_processed_ids),
+            }
+        
+        return {
+            "status": "success",
+            "rollback_status": False,
+            "message": f"Successfully created {len(successfully_processed_ids)} team members, {len(already_existing_ids)} already existed",
+            "team_members": successfully_processed_ids + already_existing_ids,
+            "new_members": len(successfully_processed_ids),
+        }
+        
+    except Exception as e:
+        rollback_reason = f"Unexpected error in create_all_team_members: {str(e)}"
+        frappe.msgprint(_("Something went wrong"), indicator="red")
+        
+        # Always rollback if there are any successfully processed members
+        if successfully_processed_ids:
+            rollback_results = rollback_team_members(successfully_processed_ids)
+        
+        return {
+            "status": "error",
+            "rollback_status": True,
+            "message": rollback_reason,
+            "rollback_results": rollback_results,
+            "processed_before_error": len(successfully_processed_ids),
+        }
+    finally:
+        if should_rollback and successfully_processed_ids and not rollback_results:
+            rollback_results = rollback_team_members(successfully_processed_ids)
+
+@frappe.whitelist()
+def create_team_member(data):
+    try:
+        if not isinstance(data, dict):
+            data = frappe.parse_json(data)
+        
+        teammember_id = data.get('teammember_id')
+        if not teammember_id:
+            frappe.throw("Team Member ID is required")
+
+        if not frappe.db.exists("DocType", "Team Member"):
+            frappe.throw("Team Member DocType not found. Please make sure it exists.")
+        
+        new_member = frappe.get_doc({
+            "doctype": "Team Member",
+            **data
+        })
+        new_member.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        return {
+            "data": {
+                "name": new_member.name,
+                "teammember_id": teammember_id
+            }
+        }
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.throw(f"Something went wrong!")
+
+def rollback_team_members(processed_ids):
+    rollback_results = []
+    for member_id in processed_ids:
+        try:
+            if frappe.db.exists("Team Member", member_id):
+                doc = frappe.get_doc("Team Member", member_id)
+                doc.delete(ignore_permissions=True)
+                frappe.db.commit()
+                rollback_results.append({
+                    "id": member_id,
+                    "status": "success",
+                    "rollback_status": True,
+                    "message": f"Rollback successful: Deleted Team Member ID {member_id}"
+                })
+            else:
+                rollback_results.append({
+                    "id": member_id,
+                    "status": "warning",
+                    "rollback_status": True,
+                    "message": f"Team Member ID {member_id} not found for rollback"
+                })
+        except Exception as e:
+            rollback_results.append({
+                "id": member_id,
+                "status": "error",
+                "rollback_status": True,
+                "message": f"Rollback error for Team Member ID {member_id}: {str(e)}"
+            })
+    
+    return rollback_results
+
+def map_tenant_data(input_data):
+    
+    if isinstance(input_data, list) and input_data:
+        input_data = input_data[0]
+    
+    tenant_id = input_data.get('_id', {}).get('$oid') if isinstance(input_data.get('_id'), dict) else str(input_data.get('_id'))
+    
+    phone_data = input_data.get('phone', {})
+    dial_code = phone_data.get('dialCode', '')
+    phone_number = phone_data.get('phoneNumber', '')
+    if phone_number and dial_code and phone_number.startswith(dial_code):
+        phone_number = phone_number[len(dial_code):]
+    formatted_phone = f"{dial_code}-{phone_number}" if dial_code and phone_number else phone_number
+    
+    return {
+        "data": {
+            "tenant_id": tenant_id,
+            "prefix": input_data.get('prefix', ''),
+            "phone": formatted_phone,
+            "timezone": input_data.get('timezone', ''),
+            "features": [{"features": feature} for feature in input_data.get('featuresList', [])],
+            "company_name": input_data.get('name', ''),
+            "date_format": input_data.get('dateFormat', ''),
+            "no_of_employee": str(input_data.get('noOfEmployee', 0)),
+            "work_location": [
+                {
+                    "address": location.get('address', ''),
+                    "country": location.get('country', ''),
+                    "state": location.get('state', ''),
+                    "city": location.get('city', ''),
+                    "pincode": str(location.get('pincode', ''))
+                } 
+                for location in input_data.get('workLocation', [])
+            ]
+        }
+    }
+
+def map_team_member_data(input_data):
+    
+    phone_data = input_data.get('phone', {})
+    dial_code = phone_data.get('dialCode', '')
+    phone_number = phone_data.get('phoneNumber', '')
+    if phone_number and dial_code and phone_number.startswith(dial_code):
+        phone_number = phone_number[len(dial_code):]
+    formatted_phone = f"{dial_code}-{phone_number}" if dial_code and phone_number else phone_number
+    
+    start_date = ""
+    if input_data.get('startDate', {}).get('$date'):
+        try:
+            from datetime import datetime
+            timestamp = input_data['startDate']['$date']
+            if isinstance(timestamp, int):
+                start_date = datetime.fromtimestamp(timestamp/1000 if timestamp > 9999999999 else timestamp).isoformat()
+        except Exception as e:
+            frappe.log_error(f"Error formatting start date: {str(e)}", "Date Conversion Error")
+    
+    termination_date = None
+    if input_data.get('terminationDate', {}).get('$date'):
+        try:
+            from datetime import datetime
+            timestamp = input_data['terminationDate']['$date']
+            if isinstance(timestamp, int):
+                termination_date = datetime.fromtimestamp(timestamp/1000 if timestamp > 9999999999 else timestamp).isoformat()
+        except Exception as e:
+            frappe.log_error(f"Error formatting termination date: {str(e)}", "Date Conversion Error")
+
+    return {
+        'teammember_id': input_data.get('_id', {}).get('$oid') if isinstance(input_data.get('_id'), dict) else str(input_data.get('_id', '')),
+        'tenant': input_data.get('tenant', {}).get('_id', {}).get('$oid') if isinstance(input_data.get('tenant', {}).get('_id'), dict) else str(input_data.get('tenant', {}).get('_id', '')),
+        'first_name': input_data.get('firstName', ''),
+        'last_name': input_data.get('lastName', ''),
+        'work_email': input_data.get('workEmail', ''),
+        'phone': formatted_phone,
+        'employment_type': input_data.get('employmentType', ''),
+        'job_title': input_data.get('jobTitle', ''),
+        'start_date': start_date,
+        'status': input_data.get('status', ''),
+        'timezone': input_data.get('timezone', ''),
+        'report_to': input_data.get('reportsTo', {}).get('_id', {}).get('$oid') if isinstance(input_data.get('reportsTo', {}).get('_id'), dict) else str(input_data.get('reportsTo', {}).get('_id', '')),
+        'address': [
+            {
+                'address': input_data.get('addressDetails', {}).get('address', ''),
+                'country': input_data.get('addressDetails', {}).get('country', ''),
+                'state': input_data.get('addressDetails', {}).get('state', ''),
+                'city': input_data.get('addressDetails', {}).get('city', ''),
+                'pincode': str(input_data.get('addressDetails', {}).get('pincode', '')),
+            }
+        ],
+        'termination_date': termination_date,
+    }
 
 # SECRET_KEY = "e6H9QQMGBx33KaOd"
 
@@ -115,3 +524,54 @@ def sso_login(token):
 #     })
 #     user.insert(ignore_permissions=True)
 #     return {"message": "User synced successfully"}
+
+@frappe.whitelist(allow_guest=True)
+def check_tenant_exists(email, password):
+    """
+    Check if a tenant already exists for the given credentials.
+    This function authenticates with the credentials but does not create any records.
+    Returns: True if tenant exists and is fully onboarded, False otherwise
+    """
+    # Authenticate and get access token
+    auth_url = f"{USER_API_URL}/login"
+    auth_payload = {"email": email.strip().lower(), "password": password}
+    HEADERS = {"Content-Type": "application/json"}
+
+    try:
+        auth_response = requests.post(auth_url, headers=HEADERS, json=auth_payload)
+
+        if auth_response.status_code != 200:
+            return {"exists": False, "message": "Authentication failed. Invalid email or password."}
+
+        auth_data = auth_response.json()
+        
+        access_token = auth_data.get("accessToken")
+        tenant_id = auth_data.get("user", {}).get("works", [{}])[0].get("tenant", {}).get("_id", {}).get("$oid")
+
+        if not access_token or not tenant_id:
+            return {"exists": False, "message": "Failed to get tenant information."}
+
+        # Check if tenant exists in Frappe
+        if frappe.db.exists("Tenant", tenant_id):
+            team_members_count = frappe.db.count("Team Member", {"tenant": tenant_id})
+            
+            if team_members_count > 0:
+                return {
+                    "exists": True, 
+                    "tenant_id": tenant_id,
+                    "team_members_count": team_members_count,
+                    "message": f"Tenant exists with {team_members_count} team members"
+                }
+            else:
+                return {
+                    "exists": False,
+                    "tenant_id": tenant_id,
+                    "team_members_count": 0,
+                    "message": "Tenant exists but has no team members"
+                }
+        else:
+            return {"exists": False, "message": "Tenant does not exist in the system"}
+
+    except Exception as e:
+        frappe.log_error(message=f"Error checking tenant exists: {str(e)}", title="Tenant Check Error")
+        return {"exists": False, "message": f"Error: {str(e)}"}
