@@ -1,11 +1,11 @@
 // Copyright (c) 2025, satat tech llp and contributors
 // For license information, please see license.txt
 
-frappe.ui.form.on('On Board Tenant Authentication', {
+frappe.ui.form.on('Onboard Tenant Authentication', {
     refresh: function (frm) {
         if (!frm.is_new()) {
             
-            frm.remove_custom_button('On Board Tenant');
+            frm.remove_custom_button('Onboard Tenant');
             
             check_tenant_exists(frm, function(exists) {
                 if (exists) {
@@ -27,7 +27,7 @@ frappe.ui.form.on('On Board Tenant Authentication', {
                         frm.set_df_property(field.df.fieldname, 'hidden', false);
                     });
                     frm.dashboard.clear_headline();
-                    frm.add_custom_button(__('On Board Tenant'), function () {
+                    frm.add_custom_button(__('Onboard Tenant'), function () {
                         
                         if (!frm.doc.email || !frm.doc.password) {
                             frappe.msgprint(__('Please fill in all required fields before onboarding.'), __('Validation Error'));

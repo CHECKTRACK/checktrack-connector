@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class OnBoardTenantAuthentication(Document):
+class OnboardTenantAuthentication(Document):
 	pass

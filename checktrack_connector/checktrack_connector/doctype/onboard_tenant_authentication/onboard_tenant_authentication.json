@@ -26,7 +26,7 @@
  "modified": "2025-03-31 14:15:51.619835",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "On Board Tenant Authentication",
+ "name": "Onboard Tenant Authentication",
  "owner": "Administrator",
  "permissions": [
   {
