@@ -12,21 +12,21 @@
   {
    "fieldname": "email",
    "fieldtype": "Data",
-   "label": "Email"
+   "label": "CeckTrack Email"
   },
   {
    "fieldname": "password",
-   "fieldtype": "Data",
-   "label": "Password"
+   "fieldtype": "Password",
+   "label": "CheckTrack Password"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-31 14:15:51.619835",
+ "modified": "2025-04-03 13:41:12.723261",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "Onboard Tenant Authentication",
+ "name": "CheckTrack Integration",
  "owner": "Administrator",
  "permissions": [
   {

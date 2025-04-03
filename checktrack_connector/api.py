@@ -64,7 +64,7 @@ except Exception as e:
     frappe.log_error(f"Error getting API URLs from hooks: {str(e)}", "API Configuration Error")
 
 @frappe.whitelist(allow_guest=True)
-def on_board_tenant_authentication(email, password):
+def checktrack_integration(email, password):
         
     # Authenticate and get access token
     auth_url = f"{USER_API_URL}/login"
@@ -74,8 +74,8 @@ def on_board_tenant_authentication(email, password):
     try:
         auth_response = requests.post(auth_url, headers=HEADERS, json=auth_payload)
 
-        # if auth_response.status_code != 200:
-        #     frappe.throw("Invalid email or password.")
+        if auth_response.status_code != 200:
+            frappe.throw("CheckTrack intergation failed. Invalid email or password.")
 
         auth_data = auth_response.json()
         frappe.log_error(message=f"Auth response keys: {list(auth_data.keys())}", title="Auth Debug")
@@ -83,13 +83,9 @@ def on_board_tenant_authentication(email, password):
         access_token = auth_data.get("accessToken")
         tenant_id = auth_data.get("user", {}).get("works", [{}])[0].get("tenant", {}).get("_id", {}).get("$oid")
 
-        if not access_token:
-            frappe.throw("Failed to get access token.")
-        if not tenant_id:
-            frappe.throw("Failed to get tenant id.")
-
     except Exception as e:
-        frappe.throw(f"{str(e)}")
+        frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
+        return {"exists": False, "message": f"Error: {str(e)}"}
 
     try:
         tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
@@ -101,7 +97,8 @@ def on_board_tenant_authentication(email, password):
         tenant_data = tenant_response.json()
 
     except Exception as e:
-        frappe.throw(f"{str(e)}")
+        frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
+        return {"exists": False, "message": f"Error: {str(e)}"}
 
     try:
         mapped_data = map_tenant_data(tenant_data)
@@ -109,11 +106,6 @@ def on_board_tenant_authentication(email, password):
         # Save tenant data in Frappe
         tenant_id = mapped_data.get("data", {}).get("tenant_id")
         tenant_prefix = mapped_data.get("data", {}).get("prefix")
-
-        if not tenant_id:
-            frappe.throw("Tenant ID missing from mapped data.")
-        if not frappe.db.exists("DocType", "Tenant"):
-            frappe.throw("Tenant DocType not found. Please make sure it exists.")
 
         tenant_result = {}
 
@@ -134,14 +126,14 @@ def on_board_tenant_authentication(email, password):
                     frappe.db.commit()
                     tenant_result = {"status": "error", "tenant_id": tenant_id, "message": "Tenant removed due to team member creation failure"}
                     
-                    frappe.throw(_("Something went wrong"), indicator="red")
+                    frappe.throw(_("Something went wrong!"), indicator="red")
                     return {
                         "tenant": tenant_result,
                         "team_members": team_members_result,
-                        "is_fully_onboarded": False
+                        "is_fully_integration": False
                     }
             except Exception as e:
-                frappe.throw(_("Something went wrong"), indicator="red")
+                frappe.throw(_("Something went wrong!"), indicator="red")
         
         if team_members_result.get("status") == "success":
             new_members = team_members_result.get("new_members", len(team_members_result.get("team_members", [])))
@@ -149,16 +141,17 @@ def on_board_tenant_authentication(email, password):
             message = _(f"Successfully {tenant_action} tenant with {new_members} team members")
             frappe.msgprint(message, indicator="green")
             
-        is_fully_onboarded = team_members_result.get("status") == "success"
+        is_fully_integration = team_members_result.get("status") == "success"
         
         return {
             "tenant": tenant_result,
             "team_members": team_members_result,
-            "is_fully_onboarded": is_fully_onboarded
+            "is_fully_integration": is_fully_integration
         }
         
     except Exception as e:
-        frappe.log_error(f"Error processing tenant data: {str(e)}")
+        frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
+        return {"exists": False, "message": f"Error: {str(e)}"}
 
 @frappe.whitelist()
 def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token):
@@ -180,7 +173,7 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token):
         return {
             "status": "error",
             "rollback_status": False,
-            "message": "Something went wrong"
+            "message": "Something went wrong!"
         }
 
 @frappe.whitelist()
@@ -208,20 +201,20 @@ def get_all_team_members(tenant_id, tenant_prefix, access_token):
                 return {
                     "status": "error",
                     "rollback_status": True,
-                    "message": "Something went wrong"
+                    "message": "Something went wrong!"
                 }
         else:
             return {
                 "status": "error",
                 "rollback_status": True,
-                "message": "Something went wrong"
+                "message": "Something went wrong!"
             }
             
     except Exception as e:
         return {
             "status": "error",
             "rollback_status": True,
-            "message": "Something went wrong!!"
+            "message": "Something went wrong!"
         }
 
 @frappe.whitelist()
@@ -264,10 +257,9 @@ def create_all_team_members(team_members_data):
                 rollback_reason = f"Error processing team member: {teammember_id} - {error_msg}"
                 break
         
-        # Check if we need to rollback (only if we have new members and an error occurred)
         if should_rollback and successfully_processed_ids:
             rollback_results = rollback_team_members(successfully_processed_ids)
-            frappe.msgprint(_("Something went wrong"), indicator="red")
+            frappe.msgprint(_("Something went wrong!"), indicator="red")
             
             return {
                 "status": "error",
@@ -287,7 +279,7 @@ def create_all_team_members(team_members_data):
         
     except Exception as e:
         rollback_reason = f"Unexpected error in create_all_team_members: {str(e)}"
-        frappe.msgprint(_("Something went wrong"), indicator="red")
+        frappe.msgprint(_("Something went wrong!"), indicator="red")
         
         # Always rollback if there are any successfully processed members
         if successfully_processed_ids:
@@ -311,11 +303,6 @@ def create_team_member(data):
             data = frappe.parse_json(data)
         
         teammember_id = data.get('teammember_id')
-        if not teammember_id:
-            frappe.throw("Team Member ID is required")
-
-        if not frappe.db.exists("DocType", "Team Member"):
-            frappe.throw("Team Member DocType not found. Please make sure it exists.")
         
         new_member = frappe.get_doc({
             "doctype": "Team Member",
@@ -530,7 +517,7 @@ def check_tenant_exists(email, password):
     """
     Check if a tenant already exists for the given credentials.
     This function authenticates with the credentials but does not create any records.
-    Returns: True if tenant exists and is fully onboarded, False otherwise
+    Returns: True if tenant exists and is fully intgration, False otherwise
     """
     # Authenticate and get access token
     auth_url = f"{USER_API_URL}/login"
@@ -541,7 +528,7 @@ def check_tenant_exists(email, password):
         auth_response = requests.post(auth_url, headers=HEADERS, json=auth_payload)
 
         if auth_response.status_code != 200:
-            return {"exists": False, "message": "Authentication failed. Invalid email or password."}
+            return {"exists": False, "message": "CheckTrack intergation failed. Invalid email or password."}
 
         auth_data = auth_response.json()
         

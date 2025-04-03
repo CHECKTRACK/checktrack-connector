@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestOnboardTenantAuthentication(FrappeTestCase):
+class TestCheckTrackIntegration(FrappeTestCase):
 	pass

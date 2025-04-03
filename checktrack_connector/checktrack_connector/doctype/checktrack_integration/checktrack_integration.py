@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class OnboardTenantAuthentication(Document):
+class CheckTrackIntegration(Document):
 	pass
