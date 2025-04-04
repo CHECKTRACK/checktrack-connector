@@ -5,6 +5,7 @@ import urllib.parse
 import json
 from frappe.auth import LoginManager
 from frappe import _
+from frappe.utils.password import get_decrypted_password
 
 @frappe.whitelist(allow_guest=True)
 def sso_login(token):
@@ -135,11 +136,11 @@ def checktrack_integration(email, password):
             except Exception as e:
                 frappe.throw(_("Something went wrong!"), indicator="red")
         
-        if team_members_result.get("status") == "success":
-            new_members = team_members_result.get("new_members", len(team_members_result.get("team_members", [])))
-            tenant_action = "updated" if tenant_result.get("status") == "updated" else "created"
-            message = _(f"Successfully {tenant_action} tenant with {new_members} team members")
-            frappe.msgprint(message, indicator="green")
+        # if team_members_result.get("status") == "success":
+        #     new_members = team_members_result.get("new_members", len(team_members_result.get("team_members", [])))
+        #     tenant_action = "updated" if tenant_result.get("status") == "updated" else "created"
+        #     message = _(f"Successfully {tenant_action} tenant with {new_members} team members")
+        #     frappe.msgprint(message, indicator="green")
             
         is_fully_integration = team_members_result.get("status") == "success"
         
@@ -562,3 +563,12 @@ def check_tenant_exists(email, password):
     except Exception as e:
         frappe.log_error(message=f"Error checking tenant exists: {str(e)}", title="Tenant Check Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
+
+@frappe.whitelist(allow_guest=True)
+def get_decrypted_password_for_doc(docname):
+    try:
+        password = get_decrypted_password("CheckTrack Integration", docname, "password")
+        return password
+    except Exception as e:
+        frappe.log_error(f"Error decrypting password for {docname}: {str(e)}", "CheckTrack Error")
+        return {"error": "Could not decrypt password"}

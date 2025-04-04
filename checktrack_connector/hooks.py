@@ -199,6 +199,10 @@ override_whitelisted_methods = {
 
 after_request = ["checktrack_connector.utils.add_cors_headers"]
 
+doctype_js = {
+    "CheckTrack Integration": "checktrack_connector/doctype/checktrack_integration/checktrack_integration.js"
+}
+
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
