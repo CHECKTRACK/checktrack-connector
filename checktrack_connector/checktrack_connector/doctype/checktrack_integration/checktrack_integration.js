@@ -45,23 +45,23 @@ frappe.ui.form.on('CheckTrack Integration', {
                             frappe.msgprint(__('Please fill in all required fields before CheckTrack intergration.'), __('Validation Error'));
                             return;
                         }
-                        frm.fields.forEach(field => {
-                            frm.set_df_property(field.df.fieldname, 'read_only', true);
-                        });
+                        // frm.fields.forEach(field => {
+                        //     frm.set_df_property(field.df.fieldname, 'read_only', true);
+                        // });
                         
-                        // let $btn = $('.btn-primary:contains("Connect")');
-                        // let original_text = $btn.text();
-                        // $btn.prop('disabled', true);
-                        // $btn.html(`<i class="fa fa-spinner fa-spin"></i> ${__("Connecting...")}`);
+                        let $btn = $('.btn-primary:contains("Connect")');
+                        let original_text = $btn.text();
+                        $btn.prop('disabled', true);
+                        $btn.html(`<i class="fa fa-spinner fa-spin"></i> ${__("Connecting...")}`);
                         
                         
                         const enable_form = function() {
-                            // $btn.prop('disabled', false);
-                            // $btn.html(original_text);
+                            $btn.prop('disabled', false);
+                            $btn.html(original_text);
                             frm.enable_save();
-                            frm.fields.forEach(field => {
-                                frm.set_df_property(field.df.fieldname, 'read_only', false);
-                            });
+                            // frm.fields.forEach(field => {
+                            //     frm.set_df_property(field.df.fieldname, 'read_only', false);
+                            // });
                         };
                         
                         new Promise((resolve, reject) => {
