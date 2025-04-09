@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-04-09 09:48:40.438031",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer_name",
+  "customer_email",
+  "instrument",
+  "model",
+  "serial_no",
+  "calibration_std_used",
+  "parameters",
+  "criteria",
+  "result",
+  "date_of_calibration",
+  "due_date_of_calibration"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
+  },
+  {
+   "fieldname": "instrument",
+   "fieldtype": "Data",
+   "label": "Instrument"
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Data",
+   "label": "Serial No"
+  },
+  {
+   "fieldname": "calibration_std_used",
+   "fieldtype": "Small Text",
+   "label": "Calibration Std Used "
+  },
+  {
+   "fieldname": "parameters",
+   "fieldtype": "Table",
+   "label": "Parameters",
+   "options": "Calibration Parameter"
+  },
+  {
+   "default": "The percentage of Variation must be <= +/- 5% of the Full-scale range.",
+   "fieldname": "criteria",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Criteria",
+   "read_only": 1
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Result "
+  },
+  {
+   "fieldname": "date_of_calibration",
+   "fieldtype": "Date",
+   "label": "Date of Calibration"
+  },
+  {
+   "fieldname": "due_date_of_calibration",
+   "fieldtype": "Date",
+   "label": "Due Date of Calibration"
+  },
+  {
+   "fieldname": "customer_email",
+   "fieldtype": "Data",
+   "label": "Customer Email"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-04-09 11:58:29.335425",
+ "modified_by": "Administrator",
+ "module": "checktrack_connector",
+ "name": "Calibration Report",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
