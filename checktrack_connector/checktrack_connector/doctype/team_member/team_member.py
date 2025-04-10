@@ -6,4 +6,7 @@ from frappe.model.document import Document
 
 
 class TeamMember(Document):
-	pass
+    def validate(self):
+        first_name = self.first_name or ''
+        last_name = self.last_name or ''
+        self.full_name = f"{first_name} {last_name}".strip()
