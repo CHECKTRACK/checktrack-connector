@@ -5,6 +5,10 @@ app_description = "This app will be medium of communication between checktrack a
 app_email = "mihir.patel@team.satat.tech"
 app_license = "mit"
 
+# Define API URLs as hooks
+user_api_url = "https://app.checktrack.dev/api/user-api"
+data_api_url = "https://app.checktrack.dev/api/data-api"
+
 # Apps
 # ------------------
 
