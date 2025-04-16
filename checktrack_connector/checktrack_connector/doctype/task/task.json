@@ -10,7 +10,9 @@
   "description",
   "due_date",
   "assign_to",
-  "projectid"
+  "project_id",
+  "task_type",
+  "task_type_id"
  ],
  "fields": [
   {
@@ -20,13 +22,6 @@
    "label": "Name",
    "reqd": 1,
    "unique": 1
-  },
-  {
-   "default": "abc123",
-   "fieldname": "projectid",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "ProjectId"
   },
   {
    "fieldname": "description",
@@ -43,11 +38,31 @@
    "fieldname": "due_date",
    "fieldtype": "Date",
    "label": "Due date"
+  },
+  {
+   "fieldname": "task_type",
+   "fieldtype": "Select",
+   "label": "Task Type",
+   "options": "Preventive Maintenance\nBreakdown Maintenance\nCalibration"
+  },
+  {
+   "fieldname": "task_type_id",
+   "fieldtype": "Dynamic Link",
+   "hidden": 1,
+   "label": "Task Type Id",
+   "options": "task_type"
+  },
+  {
+   "default": "67e66908d8315d3bde0f750f",
+   "fieldname": "project_id",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Project Id"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-09 16:23:06.728701",
+ "modified": "2025-04-15 15:41:49.640644",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",

@@ -3,6 +3,7 @@ import jwt
 import requests
 import urllib.parse
 import json
+from frappe.model.meta import get_meta
 from frappe.auth import LoginManager
 from frappe import _
 from frappe.utils.password import get_decrypted_password
@@ -572,3 +573,162 @@ def get_decrypted_password_for_doc(docname):
     except Exception as e:
         frappe.log_error(f"Error decrypting password for {docname}: {str(e)}", "CheckTrack Error")
         return {"error": "Could not decrypt password"}
+
+@frappe.whitelist(allow_guest=True)
+def get_doc_data_list(doctype, filters=None):
+    filters = json.loads(filters) if filters else {}
+    docs = frappe.get_all(doctype, filters=filters, fields=["*"])
+
+    def expand_links(doc_dict, doctype_name):
+        """Recursively expands all Link fields in a document"""
+        meta = frappe.get_meta(doctype_name)
+        for field in meta.fields:
+            value = doc_dict.get(field.fieldname)
+            
+            # Expand regular Link fields
+            if field.fieldtype == "Link" and value:
+                try:
+                    linked_doc = frappe.get_doc(field.options, value)
+                    doc_dict[field.fieldname] = linked_doc.as_dict()
+                except:
+                    pass
+
+            # Expand Dynamic Link fields
+            elif field.fieldtype == "Dynamic Link" and value:
+                dynamic_doctype = doc_dict.get(field.options)
+                if dynamic_doctype:
+                    try:
+                        linked_doc = frappe.get_doc(dynamic_doctype, value)
+                        doc_dict[field.fieldname] = expand_links(linked_doc.as_dict(), dynamic_doctype)
+                    except:
+                        pass
+
+            # Expand Table / Table MultiSelect fields
+            elif field.fieldtype in ["Table", "Table MultiSelect"] and isinstance(value, list):
+                child_doctype = field.options
+                try:
+                    child_docs = frappe.get_all(child_doctype, filters={
+                        "parent": doc_dict.get("name"),
+                        "parenttype": doctype_name,
+                        "parentfield": field.fieldname
+                    }, fields=["*"])
+                    # Recursively expand link fields inside child table
+                    expanded_children = []
+                    for child_doc in child_docs:
+                        child_doc_expanded = expand_links(child_doc, child_doctype)
+                        expanded_children.append(child_doc_expanded)
+                    doc_dict[field.fieldname] = expanded_children
+                except:
+                    pass
+        return doc_dict
+
+    result = []
+    for doc in docs:
+        full_doc = frappe.get_doc(doctype, doc.name).as_dict()
+        result.append(expand_links(full_doc, doctype))
+
+    return {"data": result}
+
+@frappe.whitelist()
+def get_expanded_doc(doctype, name):
+    doc = frappe.get_doc(doctype, name).as_dict()
+    meta = get_meta(doctype)
+
+    def expand_field(field, value):
+        # LINK
+        if field.fieldtype == "Link" and value:
+            return value
+        
+        # DYNAMIC LINK
+        if field.fieldtype == "Dynamic Link" and value:
+            doctype_field = field.options
+            link_doctype = doc.get(doctype_field)
+            if link_doctype and value:
+                try:
+                    return frappe.get_doc(link_doctype, value).as_dict()
+                except:
+                    return value
+
+        # TABLE / TABLE MULTISELECT
+        if field.fieldtype in ("Table", "Table MultiSelect") and isinstance(value, list):
+            child_table = []
+            for row in value:
+                row_meta = get_meta(field.options)
+                expanded_row = row.copy()
+                for child_field in row_meta.fields:
+                    val = row.get(child_field.fieldname)
+                    if child_field.fieldtype in ("Link", "Dynamic Link"):
+                        expanded_row[child_field.fieldname] = expand_field(child_field, val)
+                child_table.append(expanded_row)
+            return child_table
+
+        return value
+
+    expanded_doc = {}
+    for field in meta.fields:
+        val = doc.get(field.fieldname)
+        expanded_doc[field.fieldname] = expand_field(field, val)
+
+    return {"data": expanded_doc}
+
+@frappe.whitelist(allow_guest=True)
+def get_specific_doc_data(doctype, name=None, filters=None):
+    # If 'name' is provided, fetch the specific document, otherwise fetch all with filters
+    if name:
+        # Fetch the specific document based on the 'name'
+        try:
+            doc = frappe.get_doc(doctype, name)
+            full_doc = doc.as_dict()
+            expanded_doc = expand_links(full_doc, doctype)
+            return {"data": expanded_doc}
+        except Exception as e:
+            frappe.log_error(f"Error fetching specific document: {str(e)}")
+            return {"message": f"Error fetching specific document: {str(e)}"}
+    else:
+        # If 'name' is not provided, proceed with the filters and get all documents
+        filters = json.loads(filters) if filters else {}
+        docs = frappe.get_all(doctype, filters=filters, fields=["*"])
+
+        result = []
+        for doc in docs:
+            full_doc = frappe.get_doc(doctype, doc.name).as_dict()
+            result.append(expand_links(full_doc, doctype))
+
+        return {"data": result}
+
+def expand_links(doc_dict, doctype_name):
+    """Recursively expands all Link fields in a document"""
+    meta = frappe.get_meta(doctype_name)
+    for field in meta.fields:
+        value = doc_dict.get(field.fieldname)
+
+        # Expand regular Link fields
+        if field.fieldtype == "Link" and value:
+            try:
+                linked_doc = frappe.get_doc(field.options, value)
+                doc_dict[field.fieldname] = linked_doc.as_dict()
+            except:
+                pass
+
+        # Expand Dynamic Link fields
+        elif field.fieldtype == "Dynamic Link" and value:
+            dynamic_doctype = doc_dict.get(field.options)
+            if dynamic_doctype:
+                try:
+                    linked_doc = frappe.get_doc(dynamic_doctype, value)
+                    doc_dict[field.fieldname] = expand_links(linked_doc.as_dict(), dynamic_doctype)
+                except:
+                    pass
+
+        # Expand Table / Table MultiSelect fields
+        elif field.fieldtype in ["Table", "Table MultiSelect"] and isinstance(value, list):
+            child_doctype = field.options
+            try:
+                expanded_children = []
+                for row in value:
+                    expanded_row = expand_links(row, child_doctype)
+                    expanded_children.append(expanded_row)
+                doc_dict[field.fieldname] = expanded_children
+            except:
+                pass
+    return doc_dict
