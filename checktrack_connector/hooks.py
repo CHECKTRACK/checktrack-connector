@@ -178,7 +178,8 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # }
 
 override_whitelisted_methods = {
-    "frappe.www.login": "checktrack_connector.api.sso_login"
+    "frappe.www.login": "checktrack_connector.api.sso_login",
+    "checktrack_connector.api.auth.login_with_checktrack_jwt": "checktrack_connector.api.login_with_checktrack_jwt"
 }
 
 doc_events = {

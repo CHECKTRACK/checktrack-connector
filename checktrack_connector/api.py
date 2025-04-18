@@ -6,6 +6,7 @@ import json
 from frappe.auth import LoginManager
 from frappe import _
 from frappe.utils.password import get_decrypted_password
+from checktrack_connector.onboard_api import automated_import_users  
 
 @frappe.whitelist(allow_guest=True)
 def sso_login(token):
@@ -157,7 +158,7 @@ def checktrack_integration(email, password):
 @frappe.whitelist()
 def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token):
     try:
-        fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)            
+        fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)
         team_members_data = fetch_result.get("data")
         
         if not team_members_data:
@@ -165,16 +166,38 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token):
                 "status": "warning",
                 "message": "No team members found for this tenant"
             }
-            
+
         create_result = create_all_team_members(team_members_data)
-            
-        return create_result 
-        
+
+        if create_result.get("status") != "success":
+            return create_result
+
+        # ✅ Call automated_import_users with tenant_id
+# Import correctly
+
+        user_import_result = automated_import_users(tenant_id=tenant_id)
+        if user_import_result.get("status") == "success":
+            update_mongodb_tenant_flag(tenant_id,access_token)
+            return create_result
+
+        if user_import_result.get("status") != "success":
+            rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
+            frappe.msgprint(_("User import failed. Rolling back created team members."), indicator="red")
+
+            return {
+                "status": "error",
+                "rollback_status": True,
+                "message": "User import failed after team member creation",
+                "import_error": user_import_result
+            }
+
+        return create_result
+
     except Exception as e:
         return {
             "status": "error",
-            "rollback_status": False,
-            "message": "Something went wrong!"
+            "rollback_status": True,
+            "message": f"Exception: {str(e)}"
         }
 
 @frappe.whitelist()
@@ -276,6 +299,7 @@ def create_all_team_members(team_members_data):
             "message": f"Successfully created {len(successfully_processed_ids)} team members, {len(already_existing_ids)} already existed",
             "team_members": successfully_processed_ids + already_existing_ids,
             "new_members": len(successfully_processed_ids),
+            "new_member_ids": successfully_processed_ids  # Add this line
         }
         
     except Exception as e:
@@ -572,3 +596,103 @@ def get_decrypted_password_for_doc(docname):
     except Exception as e:
         frappe.log_error(f"Error decrypting password for {docname}: {str(e)}", "CheckTrack Error")
         return {"error": "Could not decrypt password"}
+
+def update_mongodb_tenant_flag(tenant_id, access_token):
+    try:
+        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "isFrappeIntegrated": True
+        }
+
+        response = requests.patch(tenant_url, headers=headers, json=payload)
+
+        if response.status_code in [200, 204]:
+            frappe.logger().info(f"CheckTrack: Tenant {tenant_id} updated with isFrappeIntegrated = true")
+        else:
+            frappe.logger().warn(f"CheckTrack: Failed to update tenant {tenant_id}. Status: {response.status_code}, Response: {response.text}")
+
+    except Exception as e:
+        frappe.log_error(str(e), "CheckTrack Tenant Update Error")
+
+
+@frappe.whitelist(allow_guest=True)
+def login_with_checktrack_jwt(token: str):
+    try:
+        secret_key = "e6H9QQMGBx33KaOd"  # Use your secret
+        decoded = jwt.decode(token, secret_key, algorithms=["HS256"], audience="app.checktrack.dev")
+
+        email = decoded.get("email")
+        if not email:
+            frappe.throw(_("Invalid JWT token"))
+
+        if not frappe.db.exists("User", email):
+            frappe.throw(_("User {0} not found").format(email))
+
+        # Authenticate user
+        login_manager = LoginManager()
+        login_manager.user = email
+        login_manager.post_login()
+
+        frappe.response.update({
+            "sid": frappe.session.sid,
+            "message": "Login successful",
+            "redirect_to": f"http://checktrack.test:8000?sid={frappe.session.sid}"
+        })
+
+    except jwt.ExpiredSignatureError:
+        frappe.throw(_("JWT token has expired"))
+    except Exception as e:
+        frappe.log_error(str(e), "SSO Login Error")
+        frappe.throw(str(e))
+
+
+
+@frappe.whitelist(allow_guest=True)
+def get_frappe_sid_if_integrated(access_token: str, tenant_id: str):
+    try:
+        # 1. Get tenant info from CheckTrack via DATA_API
+        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.get(tenant_url, headers=headers)
+        if response.status_code != 200:
+            frappe.throw(_("Failed to fetch tenant information from CheckTrack."))
+
+        tenant_data = response.json()
+
+        if not tenant_data.get("isFrappeIntegrated"):
+            frappe.throw(_("Tenant is not yet integrated with Frappe."))
+
+        # 2. Get first team member’s email (or handle this logic based on your needs)
+        team_member = frappe.get_all(
+            "Team Member",
+            filters={"tenant": tenant_id},
+            fields=["work_email"],
+            limit=1
+        )
+
+        if not team_member:
+            frappe.throw(_("No associated team members found in Frappe."))
+
+        user_email = team_member[0].get("work_email")
+
+        if not frappe.db.exists("User", user_email):
+            frappe.throw(_("Frappe user not found for {0}").format(user_email))
+
+        # 3. Log in as this user and return SID
+        login_manager = LoginManager()
+        login_manager.user = user_email
+        login_manager.post_login()
+
+        return frappe.session.sid  # Return string as required for Flutter
+
+    except Exception as e:
+        frappe.log_error(str(e), "get_frappe_sid_if_integrated Error")
+        frappe.throw(str(e))

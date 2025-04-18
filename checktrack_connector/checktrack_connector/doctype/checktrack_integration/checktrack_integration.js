@@ -114,7 +114,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                             
                             if (response.message) {
                                 if (response.message.is_fully_integration) {
-                                    frappe.msgprint(__('Cecktrack successfully integration.'));
+                                    frappe.msgprint(__('Checktrack successfully integration.'));
                                     frm.reload_doc();
                                 }
                             } else {
