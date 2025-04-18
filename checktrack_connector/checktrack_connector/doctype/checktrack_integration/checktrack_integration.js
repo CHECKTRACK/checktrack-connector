@@ -18,6 +18,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                     frm.dashboard.set_headline(
                         `<div class="alert alert-success" style="margin-bottom: 0px;">
                             <strong>${__("Connected to Checktrack")}</strong>
+                            <strong>${__("Company name")}</strong>
                         </div>`
                     );
                     frm.set_indicator(__('Connected to Frappe'), 'green');
@@ -114,7 +115,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                             
                             if (response.message) {
                                 if (response.message.is_fully_integration) {
-                                    frappe.msgprint(__('Cecktrack successfully integration.'));
+                                    frappe.msgprint(__('Chacktrack successfully integration.'));
                                     frm.reload_doc();
                                 }
                             } else {

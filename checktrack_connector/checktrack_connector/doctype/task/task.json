@@ -43,7 +43,8 @@
    "fieldname": "task_type",
    "fieldtype": "Select",
    "label": "Task Type",
-   "options": "Preventive Maintenance\nBreakdown Maintenance\nCalibration"
+   "options": "\nPreventive Maintenance\nBreakdown Maintenance\nCalibration",
+   "show_fields": 1
   },
   {
    "fieldname": "task_type_id",
@@ -53,7 +54,6 @@
    "options": "task_type"
   },
   {
-   "default": "67e66908d8315d3bde0f750f",
    "fieldname": "project_id",
    "fieldtype": "Data",
    "hidden": 1,
@@ -62,7 +62,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-15 15:41:49.640644",
+ "modified": "2025-04-18 13:14:47.567339",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
