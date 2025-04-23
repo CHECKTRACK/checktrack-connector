@@ -72,6 +72,50 @@ def automated_import_users(tenant_id=None):
         status_info = get_import_status(import_doc.name)
 
         if status_info.get("status") == "Success":
+
+            new_user_emails = [tm["work_email"] for tm in team_members]
+            created_permission_ids = []
+            failed_permissions = []
+
+            for email in new_user_emails:
+                if frappe.db.exists("User", email):
+                    try:
+                        if not frappe.db.exists("User Permission", {
+                            "user": email,
+                            "allow": "Tenant",
+                            "for_value": tenant_id
+                        }):
+                            doc = frappe.get_doc({
+                                "doctype": "User Permission",
+                                "user": email,
+                                "allow": "Tenant",
+                                "for_value": tenant_id,
+                                "apply_to_all_doctypes": 1
+                })
+                            doc.insert(ignore_permissions=True)
+                            created_permission_ids.append(doc.name)
+                    except Exception:
+                        frappe.log_error(frappe.get_traceback(), f"User Permission Error for {email}")
+                        failed_permissions.append(email)
+                        break
+
+
+            if failed_permissions:
+                for perm_id in created_permission_ids:
+                    try:
+                        frappe.delete_doc("User Permission", perm_id, ignore_permissions=True)
+                    except Exception as del_err:
+                        frappe.log_error(frappe.get_traceback(), f"Rollback failed for User Permission: {perm_id}")
+    
+                frappe.db.commit()
+                return {
+                    "status": "error",
+                    "message": "User permission creation failed. Rolled back all permissions.",
+                    "failed_user_permissions": failed_permissions
+                }
+            
+            frappe.db.commit()
+
             return {
                 "status": "success",
                 "message": f"Imported data into User from file {file_doc.file_url}"
