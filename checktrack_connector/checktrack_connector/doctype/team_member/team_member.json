@@ -11,6 +11,7 @@
   "last_name",
   "phone",
   "address",
+  "tasks",
   "timezone",
   "employment_type",
   "start_date",
@@ -103,11 +104,17 @@
    "fieldname": "status",
    "fieldtype": "Data",
    "label": "Status"
+  },
+  {
+   "fieldname": "tasks",
+   "fieldtype": "Table",
+   "label": "tasks",
+   "options": "Team Member Task Details"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-27 11:35:51.777171",
+ "modified": "2025-04-23 11:41:58.559817",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Team Member",
@@ -127,6 +134,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",

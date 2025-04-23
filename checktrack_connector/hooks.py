@@ -180,13 +180,25 @@ override_whitelisted_methods = {
 doc_events = {
     "*": {
         "before_request": "checktrack_connector.middleware.validate_jwt_token"
-    }
+    },
 }
 
 doc_events = {
     "*": {
         "on_request": "checktrack_connector.utils.validate_cors",
-    }
+    },
+    "Maintenance Schedule": {
+        "on_submit": [
+           "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.add_amc_expiry_date_in_device",
+           "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.create_schedule_logs",
+        ]
+    },
+    "Maintenance Visit":{
+        "on_submit": [
+            "checktrack_connector.checktrack_connector.doctype.maintenance_visit.maintenance_visit.update_schedule_log_on_visit",
+            "checktrack_connector.checktrack_connector.doctype.maintenance_visit.maintenance_visit.update_teammember_tasks_on_visit",
+        ]
+	},
 }
 
 override_whitelisted_methods = {
