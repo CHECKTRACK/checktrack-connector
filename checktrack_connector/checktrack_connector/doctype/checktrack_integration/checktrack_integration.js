@@ -18,14 +18,13 @@ frappe.ui.form.on('CheckTrack Integration', {
                     frm.dashboard.set_headline(
                         `<div class="alert alert-success" style="margin-bottom: 0px;">
                             <strong>${__("Connected to Checktrack")}</strong>
-                            <strong>${__("Company name")}</strong>
                         </div>`
                     );
                     frm.set_indicator(__('Connected to Frappe'), 'green');
                     frm.remove_custom_button('Connect');
                     
                 } else {
-                    let d_password;
+                    let d_password = "";
                     frm.fields.forEach(field => {
                         frm.set_df_property(field.df.fieldname, 'hidden', false);
                     });
@@ -37,7 +36,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                         },
                         callback: function(r) {
                             d_password = r.message;
-                            console.log("Decrypted password: ", d_password);
+                            // console.log("Decrypted password: ", d_password);
                         },
                     });    
                     frm.add_custom_button(__('Connect'), function () {
@@ -82,7 +81,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                                     method: 'checktrack_connector.api.check_tenant_exists',
                                     args: {
                                         email: frm.doc.email,
-                                        password: d_password
+                                        password: d_password || ""
                                     },
                                     callback: function(response) {
                                         resolve(response.message && response.message.exists);
@@ -96,19 +95,36 @@ frappe.ui.form.on('CheckTrack Integration', {
                         .then((exists) => {
                             return new Promise((resolve, reject) => {
                                 frappe.call({
-                                    method: 'checktrack_connector.api.checktrack_integration',
-                                    args: {
-                                        email: frm.doc.email,
-                                        password: d_password
-                                    },
-                                    callback: function(response) {
-                                        resolve(response);
+                                    method: 'checktrack_connector.api.get_decrypted_password_for_doc',
+                                    args: { docname: frm.doc.name },
+                                    callback: function(r) {
+                                        const d_password = r.message;
+                                        // console.log("password: ", d_password);
+                            
+                                        if (!d_password) {
+                                            reject(new Error("Decrypted password not found"));
+                                            return;
+                                        }
+                            
+                                        frappe.call({
+                                            method: 'checktrack_connector.api.checktrack_integration',
+                                            args: {
+                                                email: frm.doc.email,
+                                                password: d_password
+                                            },
+                                            callback: function(response) {
+                                                resolve(response);
+                                            },
+                                            error: function(err) {
+                                                reject(err);
+                                            }
+                                        });
                                     },
                                     error: function(err) {
                                         reject(err);
                                     }
                                 });
-                            });
+                            });                            
                         })
                         .then((response) => {
                             enable_form();
@@ -161,13 +177,13 @@ function check_tenant_exists(frm, callback) {
         },
         callback: function(r) {
             let d_password = r.message;
-            console.log("Decrypted password: ", d_password);
+            // console.log("Decrypted password: ", d_password);
 
             frappe.call({
                 method: 'checktrack_connector.api.check_tenant_exists',
                 args: {
                     email: frm.doc.email,
-                    password: d_password
+                    password: d_password || ""
                 },
                 callback: function (response) {
                     var exists = response.message && response.message.exists;

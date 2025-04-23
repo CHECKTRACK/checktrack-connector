@@ -66,7 +66,7 @@ except Exception as e:
     frappe.log_error(f"Error getting API URLs from hooks: {str(e)}", "API Configuration Error")
 
 @frappe.whitelist(allow_guest=True)
-def checktrack_integration(email, password):
+def checktrack_integration(email, password=""):
         
     # Authenticate and get access token
     auth_url = f"{USER_API_URL}/login"
@@ -515,12 +515,14 @@ def map_team_member_data(input_data):
 #     return {"message": "User synced successfully"}
 
 @frappe.whitelist(allow_guest=True)
-def check_tenant_exists(email, password):
+def check_tenant_exists(email, password=""):
     """
     Check if a tenant already exists for the given credentials.
     This function authenticates with the credentials but does not create any records.
     Returns: True if tenant exists and is fully intgration, False otherwise
     """
+    if not email or not password:
+        return {"exists": False}
     # Authenticate and get access token
     auth_url = f"{USER_API_URL}/login"
     auth_payload = {"email": email.strip().lower(), "password": password}
@@ -568,11 +570,27 @@ def check_tenant_exists(email, password):
 @frappe.whitelist(allow_guest=True)
 def get_decrypted_password_for_doc(docname):
     try:
+        # Get raw password field value first
+        raw_password = frappe.db.get_value("CheckTrack Integration", docname, "password")
+        
+        # If password field is null or empty string, return None silently
+        if not raw_password:
+            # No error, just return None or empty string
+            return None
+        
+        # Otherwise decrypt password
         password = get_decrypted_password("CheckTrack Integration", docname, "password")
+        
+        # If decrypted password is empty, also return None silently
+        if not password:
+            return None
+        
         return password
     except Exception as e:
         frappe.log_error(f"Error decrypting password for {docname}: {str(e)}", "CheckTrack Error")
-        return {"error": "Could not decrypt password"}
+        # Return error dict only on real exceptions
+        return {"error": "Could not decrypt password due to an internal error."}
+
 
 @frappe.whitelist(allow_guest=True)
 def get_doc_data_list(doctype, filters=None):
