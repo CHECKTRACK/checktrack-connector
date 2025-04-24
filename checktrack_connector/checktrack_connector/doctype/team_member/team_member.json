@@ -9,6 +9,7 @@
   "add_team_member_section",
   "first_name",
   "last_name",
+  "full_name",
   "phone",
   "address",
   "timezone",
@@ -96,18 +97,22 @@
    "fieldname": "teammember_id",
    "fieldtype": "Data",
    "label": "Team Member Id",
-   "not_nullable": 1,
    "unique": 1
   },
   {
    "fieldname": "status",
    "fieldtype": "Data",
    "label": "Status"
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-27 11:35:51.777171",
+ "modified": "2025-04-09 14:56:34.057333",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Team Member",
@@ -131,5 +136,5 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
- "title_field": "work_email"
+ "title_field": "full_name"
 }

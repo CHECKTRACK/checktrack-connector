@@ -5,6 +5,10 @@ app_description = "This app will be medium of communication between checktrack a
 app_email = "mihir.patel@team.satat.tech"
 app_license = "mit"
 
+# Define API URLs as hooks
+user_api_url = "https://app.checktrack.dev/api/user-api"
+data_api_url = "https://app.checktrack.dev/api/data-api"
+
 # Apps
 # ------------------
 
@@ -174,7 +178,8 @@ app_license = "mit"
 # }
 
 override_whitelisted_methods = {
-    "frappe.www.login": "checktrack_connector.api.sso_login"
+    "frappe.www.login": "checktrack_connector.api.sso_login",
+    "checktrack_connector.api.auth.login_with_checktrack_jwt": "checktrack_connector.api.login_with_checktrack_jwt"
 }
 
 doc_events = {
