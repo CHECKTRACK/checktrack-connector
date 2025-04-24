@@ -83,7 +83,7 @@
   },
   {
    "fieldname": "tenant",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Tenant",
    "options": "Tenant"
   },
@@ -112,7 +112,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-09 14:56:34.057333",
+ "modified": "2025-04-24 12:06:08.850423",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Team Member",
@@ -132,6 +132,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
