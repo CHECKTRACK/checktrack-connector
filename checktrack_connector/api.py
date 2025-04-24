@@ -640,7 +640,7 @@ def login_with_checktrack_jwt(token: str):
         frappe.response.update({
             "sid": frappe.session.sid,
             "message": "Login successful",
-            "redirect_to": f"http://checktrack.test:8000?sid={frappe.session.sid}"
+            "redirect_to": f"https://checktrack-dev.frappe.cloud/app?sid={frappe.session.sid}"
         })
 
     except jwt.ExpiredSignatureError:
