@@ -7,10 +7,10 @@ frappe.ui.form.on('CheckTrack Integration', {
             frm.page.btn_primary.hide();
         }
         if (!frm.is_new()) {
-            
+
             check_tenant_exists(frm, function(exists) {
                 if (exists) {
-                    
+
                     frm.fields.forEach(field => {
                         frm.set_df_property(field.df.fieldname, 'hidden', true);
                     });
@@ -22,7 +22,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                     );
                     frm.set_indicator(__('Connected to Frappe'), 'green');
                     frm.remove_custom_button('Connect');
-                    
+
                 } else {
                     let d_password = "";
                     frm.fields.forEach(field => {
@@ -38,9 +38,9 @@ frappe.ui.form.on('CheckTrack Integration', {
                             d_password = r.message;
                             // console.log("Decrypted password: ", d_password);
                         },
-                    });    
+                    });
                     frm.add_custom_button(__('Connect'), function () {
-                        
+
                         if (!frm.doc.email || !frm.doc.password) {
                             frappe.msgprint(__('Please fill in all required fields before CheckTrack intergration.'), __('Validation Error'));
                             return;
@@ -48,13 +48,13 @@ frappe.ui.form.on('CheckTrack Integration', {
                         // frm.fields.forEach(field => {
                         //     frm.set_df_property(field.df.fieldname, 'read_only', true);
                         // });
-                        
+
                         let $btn = $('.btn-primary:contains("Connect")');
                         let original_text = $btn.text();
                         $btn.prop('disabled', true);
                         $btn.html(`<i class="fa fa-spinner fa-spin"></i> ${__("Connecting...")}`);
-                        
-                        
+
+
                         const enable_form = function() {
                             $btn.prop('disabled', false);
                             $btn.html(original_text);
@@ -63,7 +63,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                             //     frm.set_df_property(field.df.fieldname, 'read_only', false);
                             // });
                         };
-                        
+
                         new Promise((resolve, reject) => {
                             if (frm.is_dirty()) {
                                 frm.save()
@@ -100,12 +100,12 @@ frappe.ui.form.on('CheckTrack Integration', {
                                     callback: function(r) {
                                         const d_password = r.message;
                                         // console.log("password: ", d_password);
-                            
+
                                         if (!d_password) {
                                             reject(new Error("Decrypted password not found"));
                                             return;
                                         }
-                            
+
                                         frappe.call({
                                             method: 'checktrack_connector.api.checktrack_integration',
                                             args: {
@@ -124,11 +124,11 @@ frappe.ui.form.on('CheckTrack Integration', {
                                         reject(err);
                                     }
                                 });
-                            });                            
+                            });
                         })
                         .then((response) => {
                             enable_form();
-                            
+
                             if (response.message) {
                                 if (response.message.is_fully_integration) {
                                     frappe.msgprint(__('Chacktrack successfully integration.'));
@@ -143,22 +143,22 @@ frappe.ui.form.on('CheckTrack Integration', {
                             enable_form();
                             frappe.msgprint(__('Connection failed: ') + (error.message || ''));
                         });
-                        
+
                     }).addClass('btn-primary');
                 }
             });
         }
     },
-    
+
     email: function(frm) {
         if (frm.doc.email && frm.doc.password) {
             frm.trigger('refresh');
         }
     },
-    
+
     password: function(frm) {
         frm.raw_password = frm.fields_dict.password.input.value;
-        
+
         if (frm.doc.email && frm.doc.password) {
             frm.trigger('refresh');
         }

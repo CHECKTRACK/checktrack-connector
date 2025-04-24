@@ -7,6 +7,7 @@ from frappe.model.meta import get_meta
 from frappe.auth import LoginManager
 from frappe import _
 from frappe.utils.password import get_decrypted_password
+from checktrack_connector.onboard_api import automated_import_users
 
 @frappe.whitelist(allow_guest=True)
 def sso_login(token):
@@ -19,7 +20,7 @@ def sso_login(token):
         # Decode JWT token
         secret_key = "e6H9QQMGBx33KaOd"
         decoded = jwt.decode(token, secret_key, algorithms=["HS256"], audience="app.checktrack.dev")
-            
+
         # Extract user information
         email = decoded.get("email")
 
@@ -39,7 +40,7 @@ def sso_login(token):
         login_manager.user = user.name
         login_manager.post_login()
 
-        frappe.response.update({        
+        frappe.response.update({
             "sid": frappe.session.sid,
             # "csrf-token": frappe.local.session.data
         })
@@ -56,7 +57,7 @@ def sso_login(token):
 try:
     USER_API_URL = frappe.get_hooks().get("user_api_url")
     DATA_API_URL = frappe.get_hooks().get("data_api_url")
-    
+
     if isinstance(USER_API_URL, list) and USER_API_URL:
         USER_API_URL = USER_API_URL[0]
     if isinstance(DATA_API_URL, list) and DATA_API_URL:
@@ -67,7 +68,7 @@ except Exception as e:
 
 @frappe.whitelist(allow_guest=True)
 def checktrack_integration(email, password=""):
-        
+
     # Authenticate and get access token
     auth_url = f"{USER_API_URL}/login"
     auth_payload = {"email": email.strip().lower(), "password": password}
@@ -81,7 +82,7 @@ def checktrack_integration(email, password=""):
 
         auth_data = auth_response.json()
         frappe.log_error(message=f"Auth response keys: {list(auth_data.keys())}", title="Auth Debug")
-        
+
         access_token = auth_data.get("accessToken")
         tenant_id = auth_data.get("user", {}).get("works", [{}])[0].get("tenant", {}).get("_id", {}).get("$oid")
 
@@ -117,9 +118,9 @@ def checktrack_integration(email, password=""):
             })
         new_tenant.insert(ignore_permissions=True)
         tenant_result = {"status": "created", "tenant_id": tenant_id, "message": "Tenant created successfully"}
-                
+
         team_members_result = fetch_and_create_team_members(tenant_id, tenant_prefix, access_token)
-        
+
         if team_members_result.get("status") == "error" or team_members_result.get("rollback_status") == True:
             try:
                 if frappe.db.exists("Tenant", tenant_id):
@@ -127,7 +128,7 @@ def checktrack_integration(email, password=""):
                     tenant_doc.delete(ignore_permissions=True)
                     frappe.db.commit()
                     tenant_result = {"status": "error", "tenant_id": tenant_id, "message": "Tenant removed due to team member creation failure"}
-                    
+
                     frappe.throw(_("Something went wrong!"), indicator="red")
                     return {
                         "tenant": tenant_result,
@@ -136,21 +137,21 @@ def checktrack_integration(email, password=""):
                     }
             except Exception as e:
                 frappe.throw(_("Something went wrong!"), indicator="red")
-        
+
         # if team_members_result.get("status") == "success":
         #     new_members = team_members_result.get("new_members", len(team_members_result.get("team_members", [])))
         #     tenant_action = "updated" if tenant_result.get("status") == "updated" else "created"
         #     message = _(f"Successfully {tenant_action} tenant with {new_members} team members")
         #     frappe.msgprint(message, indicator="green")
-            
+
         is_fully_integration = team_members_result.get("status") == "success"
-        
+
         return {
             "tenant": tenant_result,
             "team_members": team_members_result,
             "is_fully_integration": is_fully_integration
         }
-        
+
     except Exception as e:
         frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
@@ -158,24 +159,46 @@ def checktrack_integration(email, password=""):
 @frappe.whitelist()
 def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token):
     try:
-        fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)            
+        fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)
         team_members_data = fetch_result.get("data")
-        
+
         if not team_members_data:
             return {
                 "status": "warning",
                 "message": "No team members found for this tenant"
             }
-            
+
         create_result = create_all_team_members(team_members_data)
-            
-        return create_result 
-        
+
+        if create_result.get("status") != "success":
+            return create_result
+
+        # ✅ Call automated_import_users with tenant_id
+# Import correctly
+
+        user_import_result = automated_import_users(tenant_id=tenant_id)
+        if user_import_result.get("status") == "success":
+            update_mongodb_tenant_flag(tenant_id,access_token)
+            return create_result
+
+        if user_import_result.get("status") != "success":
+            rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
+            frappe.msgprint(_("User import failed. Rolling back created team members."), indicator="red")
+
+            return {
+                "status": "error",
+                "rollback_status": True,
+                "message": "User import failed after team member creation",
+                "import_error": user_import_result
+            }
+
+        return create_result
+
     except Exception as e:
         return {
             "status": "error",
-            "rollback_status": False,
-            "message": "Something went wrong!"
+            "rollback_status": True,
+            "message": f"Exception: {str(e)}"
         }
 
 @frappe.whitelist()
@@ -211,7 +234,7 @@ def get_all_team_members(tenant_id, tenant_prefix, access_token):
                 "rollback_status": True,
                 "message": "Something went wrong!"
             }
-            
+
     except Exception as e:
         return {
             "status": "error",
@@ -223,7 +246,7 @@ def get_all_team_members(tenant_id, tenant_prefix, access_token):
 def create_all_team_members(team_members_data):
     if not isinstance(team_members_data, list):
         team_members_data = frappe.parse_json(team_members_data)
-        
+
     successfully_processed_ids = []
     already_existing_ids = []
     total_members = len(team_members_data)
@@ -231,7 +254,7 @@ def create_all_team_members(team_members_data):
     should_rollback = False
     rollback_reason = ""
     rollback_results = []
-    
+
     try:
         for member_data in team_members_data:
             try:
@@ -241,28 +264,28 @@ def create_all_team_members(team_members_data):
                 #     percent=int((processing_count / total_members) * 100),
                 #     title=f"Processing team members ({processing_count}/{total_members})"
                 # )
-                
+
                 if "_id" in member_data and not "teammember_id" in member_data:
                     member_data = map_team_member_data(member_data)
-                
+
                 result = create_team_member(member_data)
-                
+
                 if result.get("already_exists"):
                     already_existing_ids.append(result["data"]["name"])
                 else:
                     successfully_processed_ids.append(result["data"]["name"])
-                
+
             except Exception as e:
                 error_msg = str(e)
                 teammember_id = member_data.get('teammember_id', 'unknown')
                 should_rollback = True
                 rollback_reason = f"Error processing team member: {teammember_id} - {error_msg}"
                 break
-        
+
         if should_rollback and successfully_processed_ids:
             rollback_results = rollback_team_members(successfully_processed_ids)
             frappe.msgprint(_("Something went wrong!"), indicator="red")
-            
+
             return {
                 "status": "error",
                 "rollback_status": True,
@@ -270,23 +293,24 @@ def create_all_team_members(team_members_data):
                 "rollback_results": rollback_results,
                 "processed_before_error": len(successfully_processed_ids),
             }
-        
+
         return {
             "status": "success",
             "rollback_status": False,
             "message": f"Successfully created {len(successfully_processed_ids)} team members, {len(already_existing_ids)} already existed",
             "team_members": successfully_processed_ids + already_existing_ids,
             "new_members": len(successfully_processed_ids),
+            "new_member_ids": successfully_processed_ids  # Add this line
         }
-        
+
     except Exception as e:
         rollback_reason = f"Unexpected error in create_all_team_members: {str(e)}"
         frappe.msgprint(_("Something went wrong!"), indicator="red")
-        
+
         # Always rollback if there are any successfully processed members
         if successfully_processed_ids:
             rollback_results = rollback_team_members(successfully_processed_ids)
-        
+
         return {
             "status": "error",
             "rollback_status": True,
@@ -303,16 +327,16 @@ def create_team_member(data):
     try:
         if not isinstance(data, dict):
             data = frappe.parse_json(data)
-        
+
         teammember_id = data.get('teammember_id')
-        
+
         new_member = frappe.get_doc({
             "doctype": "Team Member",
             **data
         })
         new_member.insert(ignore_permissions=True)
         frappe.db.commit()
-        
+
         return {
             "data": {
                 "name": new_member.name,
@@ -351,23 +375,23 @@ def rollback_team_members(processed_ids):
                 "rollback_status": True,
                 "message": f"Rollback error for Team Member ID {member_id}: {str(e)}"
             })
-    
+
     return rollback_results
 
 def map_tenant_data(input_data):
-    
+
     if isinstance(input_data, list) and input_data:
         input_data = input_data[0]
-    
+
     tenant_id = input_data.get('_id', {}).get('$oid') if isinstance(input_data.get('_id'), dict) else str(input_data.get('_id'))
-    
+
     phone_data = input_data.get('phone', {})
     dial_code = phone_data.get('dialCode', '')
     phone_number = phone_data.get('phoneNumber', '')
     if phone_number and dial_code and phone_number.startswith(dial_code):
         phone_number = phone_number[len(dial_code):]
     formatted_phone = f"{dial_code}-{phone_number}" if dial_code and phone_number else phone_number
-    
+
     return {
         "data": {
             "tenant_id": tenant_id,
@@ -385,21 +409,21 @@ def map_tenant_data(input_data):
                     "state": location.get('state', ''),
                     "city": location.get('city', ''),
                     "pincode": str(location.get('pincode', ''))
-                } 
+                }
                 for location in input_data.get('workLocation', [])
             ]
         }
     }
 
 def map_team_member_data(input_data):
-    
+
     phone_data = input_data.get('phone', {})
     dial_code = phone_data.get('dialCode', '')
     phone_number = phone_data.get('phoneNumber', '')
     if phone_number and dial_code and phone_number.startswith(dial_code):
         phone_number = phone_number[len(dial_code):]
     formatted_phone = f"{dial_code}-{phone_number}" if dial_code and phone_number else phone_number
-    
+
     start_date = ""
     if input_data.get('startDate', {}).get('$date'):
         try:
@@ -409,7 +433,7 @@ def map_team_member_data(input_data):
                 start_date = datetime.fromtimestamp(timestamp/1000 if timestamp > 9999999999 else timestamp).isoformat()
         except Exception as e:
             frappe.log_error(f"Error formatting start date: {str(e)}", "Date Conversion Error")
-    
+
     termination_date = None
     if input_data.get('terminationDate', {}).get('$date'):
         try:
@@ -458,21 +482,21 @@ def map_team_member_data(input_data):
 #         print("Authorization header :", auth_header)
 #         if not auth_header:
 #             frappe.throw(_("Authorization header is missing"))
-        
+
 #         # Expecting the header to have the format: Bearer <token>
 #         if not auth_header.startswith("Bearer "):
 #             frappe.throw(_("Invalid Authorization header format"))
-        
+
 #         token = auth_header.split(" ")[1]  # Extract the token part
-        
+
 #         # Decode and verify the JWT token
 #         print("Token :", token)
 #         decoded_token = jwt.decode(token, SECRET_KEY, algorithms=["HS256"], audience="app.checktrack.dev")
 #         email = decoded_token.get("email")
-        
+
 #         if not email:
 #             frappe.throw(_("Invalid token: email is missing"))
-        
+
 #         # Check if the user exists in ERPNext
 
 #         user = frappe.get_doc("User", email)
@@ -488,7 +512,7 @@ def map_team_member_data(input_data):
 
 #         # Return success response
 #         return {"message": "Login successful", "user": user.name}
-    
+
 #     except jwt.ExpiredSignatureError:
 #         frappe.throw(_("Token has expired"))
 #     except jwt.InvalidTokenError:
@@ -535,7 +559,7 @@ def check_tenant_exists(email, password=""):
             return {"exists": False, "message": "CheckTrack intergation failed. Invalid email or password."}
 
         auth_data = auth_response.json()
-        
+
         access_token = auth_data.get("accessToken")
         tenant_id = auth_data.get("user", {}).get("works", [{}])[0].get("tenant", {}).get("_id", {}).get("$oid")
 
@@ -545,10 +569,10 @@ def check_tenant_exists(email, password=""):
         # Check if tenant exists in Frappe
         if frappe.db.exists("Tenant", tenant_id):
             team_members_count = frappe.db.count("Team Member", {"tenant": tenant_id})
-            
+
             if team_members_count > 0:
                 return {
-                    "exists": True, 
+                    "exists": True,
                     "tenant_id": tenant_id,
                     "team_members_count": team_members_count,
                     "message": f"Tenant exists with {team_members_count} team members"
@@ -572,19 +596,19 @@ def get_decrypted_password_for_doc(docname):
     try:
         # Get raw password field value first
         raw_password = frappe.db.get_value("CheckTrack Integration", docname, "password")
-        
+
         # If password field is null or empty string, return None silently
         if not raw_password:
             # No error, just return None or empty string
             return None
-        
+
         # Otherwise decrypt password
         password = get_decrypted_password("CheckTrack Integration", docname, "password")
-        
+
         # If decrypted password is empty, also return None silently
         if not password:
             return None
-        
+
         return password
     except Exception as e:
         frappe.log_error(f"Error decrypting password for {docname}: {str(e)}", "CheckTrack Error")
@@ -602,7 +626,7 @@ def get_doc_data_list(doctype, filters=None):
         meta = frappe.get_meta(doctype_name)
         for field in meta.fields:
             value = doc_dict.get(field.fieldname)
-            
+
             # Expand regular Link fields
             if field.fieldtype == "Link" and value:
                 try:
@@ -656,7 +680,7 @@ def get_expanded_doc(doctype, name):
         # LINK
         if field.fieldtype == "Link" and value:
             return value
-        
+
         # DYNAMIC LINK
         if field.fieldtype == "Dynamic Link" and value:
             doctype_field = field.options
@@ -750,3 +774,103 @@ def expand_links(doc_dict, doctype_name):
             except:
                 pass
     return doc_dict
+
+def update_mongodb_tenant_flag(tenant_id, access_token):
+    try:
+        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "isFrappeIntegrated": True
+        }
+
+        response = requests.patch(tenant_url, headers=headers, json=payload)
+
+        if response.status_code in [200, 204]:
+            frappe.logger().info(f"CheckTrack: Tenant {tenant_id} updated with isFrappeIntegrated = true")
+        else:
+            frappe.logger().warn(f"CheckTrack: Failed to update tenant {tenant_id}. Status: {response.status_code}, Response: {response.text}")
+
+    except Exception as e:
+        frappe.log_error(str(e), "CheckTrack Tenant Update Error")
+
+
+@frappe.whitelist(allow_guest=True)
+def login_with_checktrack_jwt(token: str):
+    try:
+        secret_key = "e6H9QQMGBx33KaOd"  # Use your secret
+        decoded = jwt.decode(token, secret_key, algorithms=["HS256"], audience="app.checktrack.dev")
+
+        email = decoded.get("email")
+        if not email:
+            frappe.throw(_("Invalid JWT token"))
+
+        if not frappe.db.exists("User", email):
+            frappe.throw(_("User {0} not found").format(email))
+
+        # Authenticate user
+        login_manager = LoginManager()
+        login_manager.user = email
+        login_manager.post_login()
+
+        frappe.response.update({
+            "sid": frappe.session.sid,
+            "message": "Login successful",
+            "redirect_to": f"https://checktrack-dev.frappe.cloud/app?sid={frappe.session.sid}"
+        })
+
+    except jwt.ExpiredSignatureError:
+        frappe.throw(_("JWT token has expired"))
+    except Exception as e:
+        frappe.log_error(str(e), "SSO Login Error")
+        frappe.throw(str(e))
+
+
+
+@frappe.whitelist(allow_guest=True)
+def get_frappe_sid_if_integrated(access_token: str, tenant_id: str):
+    try:
+        # 1. Get tenant info from CheckTrack via DATA_API
+        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.get(tenant_url, headers=headers)
+        if response.status_code != 200:
+            frappe.throw(_("Failed to fetch tenant information from CheckTrack."))
+
+        tenant_data = response.json()
+
+        if not tenant_data.get("isFrappeIntegrated"):
+            frappe.throw(_("Tenant is not yet integrated with Frappe."))
+
+        # 2. Get first team member’s email (or handle this logic based on your needs)
+        team_member = frappe.get_all(
+            "Team Member",
+            filters={"tenant": tenant_id},
+            fields=["work_email"],
+            limit=1
+        )
+
+        if not team_member:
+            frappe.throw(_("No associated team members found in Frappe."))
+
+        user_email = team_member[0].get("work_email")
+
+        if not frappe.db.exists("User", user_email):
+            frappe.throw(_("Frappe user not found for {0}").format(user_email))
+
+        # 3. Log in as this user and return SID
+        login_manager = LoginManager()
+        login_manager.user = user_email
+        login_manager.post_login()
+
+        return frappe.session.sid  # Return string as required for Flutter
+
+    except Exception as e:
+        frappe.log_error(str(e), "get_frappe_sid_if_integrated Error")
+        frappe.throw(str(e))
