@@ -44,7 +44,8 @@
    "fieldname": "task_type",
    "fieldtype": "Select",
    "label": "Task Type",
-   "options": "\nPreventive Maintenance"
+   "options": "Preventive Maintenance\nBreakdown Maintenance",
+   "show_fields": 1
   },
   {
    "fieldname": "task_type_id",
@@ -62,13 +63,14 @@
   {
    "fieldname": "tenant",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Tenant",
    "options": "Tenant"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-24 12:05:52.462607",
+ "modified": "2025-04-25 13:35:57.973377",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
