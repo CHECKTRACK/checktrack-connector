@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:company_name",
+ "autoname": "field:tenant_id",
  "creation": "2022-01-25 10:29:55.938239",
  "description": "Legal Entity / Subsidiary with a separate Chart of Accounts belonging to the Organization.",
  "doctype": "DocType",
@@ -149,7 +149,6 @@
    "label": "Abbr",
    "oldfieldname": "abbr",
    "oldfieldtype": "Data",
-   "reqd": 1,
    "set_only_once": 1
   },
   {
@@ -157,16 +156,14 @@
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
    "label": "Default Currency",
-   "options": "Currency",
-   "reqd": 1
+   "options": "Currency"
   },
   {
    "fieldname": "country",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Country",
-   "options": "Country",
-   "reqd": 1
+   "options": "Country"
   },
   {
    "bold": 1,
@@ -221,7 +218,9 @@
   {
    "fieldname": "tenant_id",
    "fieldtype": "Data",
-   "label": "Tenant Id"
+   "label": "Tenant Id",
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "prefix",
@@ -896,7 +895,7 @@
  "image_field": "company_logo",
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-25 17:53:43.836459",
+ "modified": "2025-04-28 11:58:49.299712",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Company",
@@ -963,5 +962,6 @@
  "sort_field": "creation",
  "sort_order": "ASC",
  "states": [],
+ "title_field": "company_name",
  "track_changes": 1
 }

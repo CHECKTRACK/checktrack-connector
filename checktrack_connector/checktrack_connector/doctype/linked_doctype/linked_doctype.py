@@ -12,7 +12,7 @@ def get_filtered_doctypes():
     """Fetch DocTypes only from the CheckTrack Frappe app"""
     doctypes = frappe.get_all(
         "DocType",
-        filters={"module": "Checktrack Frappe"},
+        filters={"module": "checktrack_connector"},
         fields=["name"]
     )
     return doctypes

@@ -21,8 +21,8 @@
   {
    "fieldname": "prefix",
    "fieldtype": "Data",
-   "label": "Prefix",
-   "reqd": 1
+   "hidden": 1,
+   "label": "Prefix"
   },
   {
    "fieldname": "phone",
@@ -35,13 +35,14 @@
    "default": "Asia/Kolkata",
    "fieldname": "timezone",
    "fieldtype": "Data",
+   "hidden": 1,
    "in_list_view": 1,
-   "label": "Timezone",
-   "reqd": 1
+   "label": "Timezone"
   },
   {
    "fieldname": "features",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Features",
    "options": "Features"
   },
@@ -63,26 +64,27 @@
    "default": "dd/MM/yyyy",
    "fieldname": "date_format",
    "fieldtype": "Data",
+   "hidden": 1,
    "in_list_view": 1,
-   "label": "Date Format",
-   "reqd": 1
+   "label": "Date Format"
   },
   {
    "fieldname": "no_of_employee",
    "fieldtype": "Data",
-   "label": "No of employees",
-   "reqd": 1
+   "hidden": 1,
+   "label": "No of employees"
   },
   {
    "fieldname": "work_location",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Work location",
    "options": "WorkLocation"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-27 11:36:41.156409",
+ "modified": "2025-04-24 13:28:54.903737",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Tenant",
@@ -102,6 +104,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
