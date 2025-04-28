@@ -8,28 +8,18 @@
  "field_order": [
   "customer_details",
   "naming_series",
-  "customer",
-  "column_break0",
-  "status",
   "transaction_date",
+  "status",
+  "customer",
+  "customer_name",
+  "customer_email_id",
   "items_section",
   "items",
   "schedule",
   "generate_schedule",
   "schedules",
-  "contact_info",
-  "customer_name",
-  "contact_person",
-  "contact_mobile",
-  "contact_email",
-  "contact_display",
-  "column_break_17",
-  "customer_address",
-  "address_display",
-  "territory",
-  "customer_group",
-  "company",
-  "amended_from"
+  "amended_from",
+  "company"
  ],
  "fields": [
   {
@@ -41,6 +31,7 @@
   {
    "fieldname": "naming_series",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Series",
    "no_copy": 1,
    "options": "MAT-MSH-.YYYY.-",
@@ -49,25 +40,10 @@
    "set_only_once": 1
   },
   {
-   "fieldname": "customer",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Customer",
-   "oldfieldname": "customer",
-   "oldfieldtype": "Link",
-   "options": "Customer",
-   "print_hide": 1,
-   "search_index": 1
-  },
-  {
-   "fieldname": "column_break0",
-   "fieldtype": "Column Break",
-   "oldfieldtype": "Column Break"
-  },
-  {
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
@@ -80,6 +56,7 @@
   {
    "fieldname": "transaction_date",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Transaction Date",
    "oldfieldname": "transaction_date",
    "oldfieldtype": "Date",
@@ -122,95 +99,9 @@
    "options": "Maintenance Schedule Detail"
   },
   {
-   "fieldname": "contact_info",
-   "fieldtype": "Section Break",
-   "label": "Contact Info"
-  },
-  {
-   "bold": 1,
-   "depends_on": "customer",
-   "fieldname": "customer_name",
-   "fieldtype": "Data",
-   "in_global_search": 1,
-   "in_list_view": 1,
-   "label": "Customer Name",
-   "oldfieldname": "customer_name",
-   "oldfieldtype": "Data",
-   "read_only": 1
-  },
-  {
-   "depends_on": "customer",
-   "fieldname": "contact_person",
-   "fieldtype": "Link",
-   "label": "Contact Person",
-   "options": "Contact",
-   "print_hide": 1
-  },
-  {
-   "depends_on": "customer",
-   "fieldname": "contact_mobile",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Mobile No",
-   "options": "Phone",
-   "read_only": 1
-  },
-  {
-   "depends_on": "customer",
-   "fieldname": "contact_email",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Contact Email",
-   "options": "Email",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "contact_display",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "in_global_search": 1,
-   "label": "Contact",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_17",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "customer",
-   "fieldname": "customer_address",
-   "fieldtype": "Link",
-   "label": "Customer Address",
-   "options": "Address",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "address_display",
-   "fieldtype": "Text Editor",
-   "hidden": 1,
-   "label": "Address",
-   "read_only": 1
-  },
-  {
-   "depends_on": "customer",
-   "fieldname": "territory",
-   "fieldtype": "Link",
-   "label": "Territory",
-   "oldfieldname": "territory",
-   "oldfieldtype": "Link",
-   "options": "Territory"
-  },
-  {
-   "depends_on": "customer",
-   "fieldname": "customer_group",
-   "fieldtype": "Link",
-   "label": "Customer Group",
-   "options": "Customer Group"
-  },
-  {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Company",
    "oldfieldname": "company",
    "oldfieldtype": "Link",
@@ -226,6 +117,24 @@
    "options": "Maintenance Schedule",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
+  },
+  {
+   "fetch_from": "customer.email_id",
+   "fieldname": "customer_email_id",
+   "fieldtype": "Data",
+   "label": "Customer Email_ID"
   }
  ],
  "icon": "fa fa-calendar",
@@ -238,7 +147,7 @@
    "link_fieldname": "maintenance_schedule"
   }
  ],
- "modified": "2025-04-22 16:17:12.217971",
+ "modified": "2025-04-25 15:23:04.393021",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule",
@@ -261,9 +170,8 @@
   }
  ],
  "row_format": "Dynamic",
- "search_fields": "status,customer,customer_name",
+ "search_fields": "status",
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": [],
- "timeline_field": "customer"
+ "states": []
 }

@@ -189,7 +189,6 @@ doc_events = {
     },
     "Maintenance Schedule": {
         "on_submit": [
-           "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.add_amc_expiry_date_in_device",
            "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.create_schedule_logs",
         ]
     },

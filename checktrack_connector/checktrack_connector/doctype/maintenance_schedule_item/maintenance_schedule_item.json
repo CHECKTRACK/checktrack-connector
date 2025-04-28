@@ -7,7 +7,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "device",
+  "serial_no",
   "item_code",
   "item_name",
   "description",
@@ -17,34 +17,29 @@
   "periodicity",
   "schedule_details",
   "no_of_visits",
+  "customer",
   "customer_name",
   "customer_email_id",
   "column_break_10",
   "sales_person",
   "teammember_id",
-  "teammember_name",
-  "reference",
-  "serial_no",
-  "sales_order",
-  "column_break_ugqr",
-  "serial_and_batch_bundle"
+  "teammember_name"
  ],
  "fields": [
   {
    "columns": 2,
-   "fetch_from": "device.item",
+   "fetch_from": "serial_no.item_code",
    "fieldname": "item_code",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Item Code",
    "oldfieldname": "item_code",
    "oldfieldtype": "Link",
-   "reqd": 1,
-   "search_index": 1
+   "reqd": 1
   },
   {
    "columns": 1,
-   "fetch_from": "device.item_name",
+   "fetch_from": "serial_no.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_global_search": 1,
@@ -127,61 +122,11 @@
    "options": "Sales Person"
   },
   {
-   "fieldname": "reference",
-   "fieldtype": "Section Break",
-   "label": "Reference"
-  },
-  {
-   "fieldname": "sales_order",
-   "fieldtype": "Link",
-   "label": "Sales Order",
-   "no_copy": 1,
-   "oldfieldname": "prevdoc_docname",
-   "oldfieldtype": "Data",
-   "options": "Sales Order",
-   "print_hide": 1,
-   "print_width": "150px",
-   "read_only": 1,
-   "search_index": 1,
-   "width": "150px"
-  },
-  {
-   "fieldname": "column_break_ugqr",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "serial_and_batch_bundle",
-   "fieldtype": "Link",
-   "label": "Serial and Batch Bundle",
-   "no_copy": 1,
-   "options": "Serial and Batch Bundle",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "device",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Device",
-   "options": "Device"
-  },
-  {
-   "bold": 1,
-   "fieldname": "customer_name",
-   "fieldtype": "Link",
-   "in_global_search": 1,
-   "label": "Customer Name",
-   "options": "Customer"
-  },
-  {
    "fetch_from": "customer_name.email_id",
    "fieldname": "customer_email_id",
    "fieldtype": "Data",
-   "label": "Customer Email Id"
-  },
-  {
-   "fieldname": "serial_no",
-   "fieldtype": "Small Text",
-   "label": "Serial No"
+   "label": "Customer Email ID",
+   "read_only": 1
   },
   {
    "fieldname": "teammember_id",
@@ -194,12 +139,38 @@
    "fieldname": "teammember_name",
    "fieldtype": "Data",
    "label": "Team Member Name"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Serial No",
+   "no_copy": 1,
+   "options": "Device",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Customer",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-23 17:14:28.945537",
+ "modified": "2025-04-28 10:59:57.233173",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule Item",

@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class MaintenanceVisitPurpose(Document):
+class CustomerItems(Document):
 	pass

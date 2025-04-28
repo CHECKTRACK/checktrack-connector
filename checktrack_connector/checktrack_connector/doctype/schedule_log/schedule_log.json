@@ -7,7 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "tasks_no",
-  "device",
+  "serial_no",
   "item_code",
   "item_name",
   "scheduled_date",
@@ -16,6 +16,7 @@
   "assign_to",
   "completion_status",
   "maintenance_schedule",
+  "customer",
   "customer_name",
   "customer_email_id"
  ],
@@ -24,11 +25,6 @@
    "fieldname": "tasks_no",
    "fieldtype": "Data",
    "label": "Tasks No"
-  },
-  {
-   "fieldname": "device",
-   "fieldtype": "Data",
-   "label": "Device"
   },
   {
    "fieldname": "item_code",
@@ -68,8 +64,9 @@
   },
   {
    "fieldname": "maintenance_schedule",
-   "fieldtype": "Data",
-   "label": "Maintenance Schedule"
+   "fieldtype": "Link",
+   "label": "Maintenance Schedule",
+   "options": "Maintenance Schedule"
   },
   {
    "fieldname": "customer_name",
@@ -80,12 +77,22 @@
    "fieldname": "customer_email_id",
    "fieldtype": "Data",
    "label": "Customer Email Id"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Data",
+   "label": "Serial No"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "label": "Customer"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-23 11:18:16.914070",
+ "modified": "2025-04-28 10:07:32.182496",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Schedule Log",
