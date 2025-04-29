@@ -6,7 +6,7 @@
  "autoname": "field:teammember_id",
  "creation": "2022-02-21 11:54:09.632218",
  "doctype": "DocType",
- "document_type": "checktrack_connector",
+ "document_type": "Setup",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
@@ -282,7 +282,7 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
-   "options": "Company",
+   "options": "CT Company",
    "print_hide": 1,
    "remember_last_selected_value": 1,
    "reqd": 1
@@ -880,7 +880,7 @@
  "image_field": "image",
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-28 17:00:20.473839",
+ "modified": "2025-04-29 16:43:14.818803",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Employee",
