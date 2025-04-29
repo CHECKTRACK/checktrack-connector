@@ -129,7 +129,7 @@ def checktrack_integration(email, password=""):
                     frappe.db.commit()
                     company_result = {"status": "error", "tenant_id": tenant_id, "message": "Company removed due to employee creation failure"}
 
-                    frappe.throw(_("Something went wrong!!!"), indicator="red")
+                    frappe.throw(_("Something went wrong!"), indicator="red")
                     return {
                         "tenant": company_result,
                         "team_members": team_members_result,
