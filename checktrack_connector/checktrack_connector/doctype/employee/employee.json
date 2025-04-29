@@ -6,7 +6,7 @@
  "autoname": "field:teammember_id",
  "creation": "2022-02-21 11:54:09.632218",
  "doctype": "DocType",
- "document_type": "Setup",
+ "document_type": "checktrack_connector",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [

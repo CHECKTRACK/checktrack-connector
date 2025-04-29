@@ -33,7 +33,7 @@
    "fieldname": "assign_to",
    "fieldtype": "Table MultiSelect",
    "label": "Assign to",
-   "options": "Team Member Link"
+   "options": "Linked Employee"
   },
   {
    "fieldname": "due_date",
@@ -65,13 +65,13 @@
    "fieldtype": "Link",
    "hidden": 1,
    "label": "Tenant",
-   "options": "Tenant"
+   "options": "Company"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-25 13:35:57.973377",
- "modified_by": "Administrator",
+ "modified": "2025-04-29 16:16:30.324404",
+ "modified_by": "aakash.5656@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",
  "naming_rule": "Random",

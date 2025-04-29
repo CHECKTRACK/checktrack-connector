@@ -6,7 +6,7 @@
  "creation": "2022-01-25 10:29:55.938239",
  "description": "Legal Entity / Subsidiary with a separate Chart of Accounts belonging to the Organization.",
  "doctype": "DocType",
- "document_type": "Setup",
+ "document_type": "checktrack_connector",
  "engine": "InnoDB",
  "field_order": [
   "details",
