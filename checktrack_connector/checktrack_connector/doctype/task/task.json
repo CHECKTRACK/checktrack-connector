@@ -44,6 +44,7 @@
    "fieldname": "task_type",
    "fieldtype": "Select",
    "label": "Task Type",
+   "options": "\nCalibration Status",
    "show_fields": 1
   },
   {
@@ -61,7 +62,7 @@
   },
   {
    "fieldname": "tenant",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "hidden": 1,
    "label": "Company",
    "options": "CT Company"
@@ -69,7 +70,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-29 16:43:18.435559",
+ "modified": "2025-04-29 17:22:11.866639",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
