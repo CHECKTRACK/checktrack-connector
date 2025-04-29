@@ -33,7 +33,7 @@
    "fieldname": "assign_to",
    "fieldtype": "Table MultiSelect",
    "label": "Assign to",
-   "options": "Team Member Link"
+   "options": "Linked Employee"
   },
   {
    "fieldname": "due_date",
@@ -70,7 +70,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-25 13:35:57.973377",
+ "modified": "2025-04-29 10:57:48.853899",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
