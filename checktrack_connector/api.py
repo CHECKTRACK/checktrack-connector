@@ -136,7 +136,7 @@ def checktrack_integration(email, password=""):
                         "is_fully_integration": False
                     }
             except Exception as e:
-                frappe.throw(_("Something went wrong!!"), indicator="red")
+                frappe.throw(_("Something went wrong!"), indicator="red")
 
         is_fully_integration = team_members_result.get("status") == "success"
 
