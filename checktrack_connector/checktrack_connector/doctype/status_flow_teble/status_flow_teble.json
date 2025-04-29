@@ -11,7 +11,7 @@
   "visible_fields",
   "required_fields",
   "read_only_fields",
-  "change_status"
+  "status_change_to"
  ],
  "fields": [
   {
@@ -45,16 +45,16 @@
    "label": "Read Only Fields"
   },
   {
-   "fieldname": "change_status",
+   "fieldname": "status_change_to",
    "fieldtype": "Data",
-   "label": "Change Status"
+   "label": "Status Change To"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-29 14:15:01.792772",
+ "modified": "2025-04-29 14:24:40.738380",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Status Flow Teble",
