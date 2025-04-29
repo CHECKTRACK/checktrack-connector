@@ -6,7 +6,7 @@
  "creation": "2022-01-25 10:29:55.938239",
  "description": "Legal Entity / Subsidiary with a separate Chart of Accounts belonging to the Organization.",
  "doctype": "DocType",
- "document_type": "checktrack_connector",
+ "document_type": "Setup",
  "engine": "InnoDB",
  "field_order": [
   "details",
@@ -898,7 +898,7 @@
  "modified": "2025-04-29 14:49:14.404968",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "Company",
+ "name": "CT Company",
  "naming_rule": "By fieldname",
  "nsm_parent_field": "parent_company",
  "owner": "Administrator",

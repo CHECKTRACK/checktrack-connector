@@ -44,7 +44,6 @@
    "fieldname": "task_type",
    "fieldtype": "Select",
    "label": "Task Type",
-   "options": "Preventive Maintenance\nBreakdown Maintenance",
    "show_fields": 1
   },
   {
@@ -65,13 +64,13 @@
    "fieldtype": "Link",
    "hidden": 1,
    "label": "Company",
-   "options": "Company"
+   "options": "CT Company"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-29 16:20:09.503872",
- "modified_by": "aakash.5656@yopmail.com",
+ "modified": "2025-04-29 16:43:18.435559",
+ "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
  "naming_rule": "Random",

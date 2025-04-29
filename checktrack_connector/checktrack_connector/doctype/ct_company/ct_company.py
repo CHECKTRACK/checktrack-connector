@@ -5,5 +5,5 @@
 from frappe.utils.nestedset import NestedSet
 
 
-class Company(NestedSet):
+class CTCompany(NestedSet):
 	pass
