@@ -64,13 +64,13 @@
    "fieldname": "tenant",
    "fieldtype": "Link",
    "hidden": 1,
-   "label": "Tenant",
+   "label": "Company",
    "options": "Company"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-29 16:16:30.324404",
+ "modified": "2025-04-29 16:20:09.503872",
  "modified_by": "aakash.5656@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",
