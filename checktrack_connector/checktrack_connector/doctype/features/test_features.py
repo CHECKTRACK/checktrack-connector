@@ -12,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestTeamMember(UnitTestCase):
+class UnitTestFeatures(UnitTestCase):
 	"""
-	Unit tests for TeamMember.
+	Unit tests for Features.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestTeamMember(IntegrationTestCase):
+class IntegrationTestFeatures(IntegrationTestCase):
 	"""
-	Integration tests for TeamMember.
+	Integration tests for Features.
 	Use this class for testing interactions between multiple components.
 	"""
 

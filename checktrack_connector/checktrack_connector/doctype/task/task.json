@@ -10,7 +10,10 @@
   "description",
   "due_date",
   "assign_to",
-  "projectid"
+  "project_id",
+  "task_type",
+  "task_type_id",
+  "tenant"
  ],
  "fields": [
   {
@@ -20,13 +23,6 @@
    "label": "Name",
    "reqd": 1,
    "unique": 1
-  },
-  {
-   "default": "abc123",
-   "fieldname": "projectid",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "ProjectId"
   },
   {
    "fieldname": "description",
@@ -43,11 +39,38 @@
    "fieldname": "due_date",
    "fieldtype": "Date",
    "label": "Due date"
+  },
+  {
+   "fieldname": "task_type",
+   "fieldtype": "Select",
+   "label": "Task Type",
+   "options": "Preventive Maintenance\nBreakdown Maintenance",
+   "show_fields": 1
+  },
+  {
+   "fieldname": "task_type_id",
+   "fieldtype": "Dynamic Link",
+   "hidden": 1,
+   "label": "Task Type Id",
+   "options": "task_type"
+  },
+  {
+   "fieldname": "project_id",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Project Id"
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Tenant",
+   "options": "Tenant"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-09 16:23:06.728701",
+ "modified": "2025-04-25 13:35:57.973377",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
@@ -67,6 +90,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
