@@ -12,7 +12,7 @@ def automated_import_users(tenant_id=None):
             return {"status": "error", "message": "tenant_id is required"}
 
         # Step 1: Fetch team members based on tenant_id
-        team_members = frappe.get_all("Team Member", filters={"tenant": tenant_id}, fields=["work_email", "first_name", "last_name"])
+        team_members = frappe.get_all("Employee", filters={"company": tenant_id}, fields=["work_email", "first_name", "last_name"])
 
         if not team_members:
             return {"status": "error", "message": "No team members found for the provided tenant_id"}
@@ -82,13 +82,13 @@ def automated_import_users(tenant_id=None):
                     try:
                         if not frappe.db.exists("User Permission", {
                             "user": email,
-                            "allow": "Tenant",
+                            "allow": "Company",
                             "for_value": tenant_id
                         }):
                             doc = frappe.get_doc({
                                 "doctype": "User Permission",
                                 "user": email,
-                                "allow": "Tenant",
+                                "allow": "Company",
                                 "for_value": tenant_id,
                                 "apply_to_all_doctypes": 1
                 })

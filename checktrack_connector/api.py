@@ -123,8 +123,8 @@ def checktrack_integration(email, password=""):
 
         if team_members_result.get("status") == "error" or team_members_result.get("rollback_status") == True:
             try:
-                if frappe.db.exists("Company", tenant_id):
-                    company_doc = frappe.get_doc("Company", tenant_id)
+                if frappe.db.exists("Company", company_name):
+                    company_doc = frappe.get_doc("Company", company_name)
                     company_doc.delete(ignore_permissions=True)
                     frappe.db.commit()
                     company_result = {"status": "error", "tenant_id": tenant_id, "message": "Company removed due to employee creation failure"}
@@ -136,7 +136,7 @@ def checktrack_integration(email, password=""):
                         "is_fully_integration": False
                     }
             except Exception as e:
-                frappe.throw(_("Something went wrong!"), indicator="red")
+                frappe.throw(_("Something went wrong!!"), indicator="red")
 
         is_fully_integration = team_members_result.get("status") == "success"
 
@@ -169,21 +169,21 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
         if create_result.get("status") != "success":
             return create_result
 
-        # user_import_result = automated_import_users(tenant_id=tenant_id)
-        # if user_import_result.get("status") == "success":
-        #     update_mongodb_tenant_flag(tenant_id,access_token)
-        #     return create_result
+        user_import_result = automated_import_users(tenant_id=company_name)
+        if user_import_result.get("status") == "success":
+            update_mongodb_tenant_flag(tenant_id,access_token)
+            return create_result
 
-        # if user_import_result.get("status") != "success":
-        #     rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
-        #     frappe.msgprint(_("User import failed. Rolling back created team members."), indicator="red")
+        if user_import_result.get("status") != "success":
+            rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
+            frappe.msgprint(_("User import failed. Rolling back created team members."), indicator="red")
 
-        #     return {
-        #         "status": "error",
-        #         "rollback_status": True,
-        #         "message": "User import failed after team member creation",
-        #         "import_error": user_import_result
-        #     }
+            return {
+                "status": "error",
+                "rollback_status": True,
+                "message": "User import failed after team member creation",
+                "import_error": user_import_result
+            }
 
         return create_result
 
