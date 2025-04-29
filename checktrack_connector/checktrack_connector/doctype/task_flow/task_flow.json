@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:task_type",
+ "creation": "2025-04-29 09:54:40.843315",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "task_type",
+  "status_flow"
+ ],
+ "fields": [
+  {
+   "fieldname": "task_type",
+   "fieldtype": "Link",
+   "label": "Task Type",
+   "options": "DocType",
+   "unique": 1
+  },
+  {
+   "fieldname": "status_flow",
+   "fieldtype": "Table",
+   "label": "Status Flow",
+   "options": "Status Flow Teble"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-04-29 10:36:42.053060",
+ "modified_by": "Administrator",
+ "module": "checktrack_connector",
+ "name": "Task Flow",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
