@@ -185,13 +185,18 @@ override_whitelisted_methods = {
 doc_events = {
     "*": {
         "before_request": "checktrack_connector.middleware.validate_jwt_token"
-    }
+    },
 }
 
 doc_events = {
     "*": {
         "on_request": "checktrack_connector.utils.validate_cors",
-    }
+    },
+    "Maintenance Schedule": {
+        "on_submit": [
+           "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.create_schedule_logs",
+        ]
+    },
 }
 
 override_whitelisted_methods = {
