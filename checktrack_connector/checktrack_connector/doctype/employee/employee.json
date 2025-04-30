@@ -2,7 +2,6 @@
  "actions": [],
  "allow_events_in_timeline": 1,
  "allow_import": 1,
- "allow_rename": 1,
  "autoname": "field:teammember_id",
  "creation": "2022-02-21 11:54:09.632218",
  "doctype": "DocType",
