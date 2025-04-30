@@ -27,22 +27,3 @@ class Customer(Document):
 				frappe.logger().info(f"Device created for Serial No: {item.serial_no}, Customer: {self.name}")
 			else:
 				frappe.logger().info(f"Device already exists for Serial No: {item.serial_no}, skipping creation.")
-
-	def clear_expired_amc():
-		# Fetch all Customer records where AMC Expiry Date <= today and AMC is not empty
-		customers = frappe.get_all(
-			"Customer",
-			filters={
-				"amc_expiry_date": ("<=", nowdate()),
-				"amc": ("!=", "")  # Skip already cleared AMC fields
-			},
-			fields=["name"]
-		)
-
-		# Clear the AMC field for expired records
-		for customer in customers:
-			doc = frappe.get_doc("Customer", customer.name)
-			doc.amc = None  # or doc.set("amc", "")
-			doc.save(ignore_permissions=True)
-
-		frappe.db.commit()	

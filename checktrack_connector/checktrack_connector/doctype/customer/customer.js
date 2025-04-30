@@ -11,15 +11,5 @@ frappe.ui.form.on('Customer', {
             };
         };
     },
-    validate: function(frm) {
-        const today = frappe.datetime.get_today();
-        if (frm.doc.customer_items) {
-            frm.doc.customer_items.forEach(function(item) {
-                if (item.amc_expiry_date && today > item.amc_expiry_date) {
-                    item.amc = null;
-                    frappe.msgprint(`AMC expired for Serial No: ${item.serial_no}. Clearing AMC.`);
-                }
-            });
-        }
-    }
+
 });

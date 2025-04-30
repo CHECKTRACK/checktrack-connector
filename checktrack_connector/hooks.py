@@ -147,30 +147,23 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # Scheduled Tasks
 # ---------------
 
-scheduler_events = {
-	# "all": [
-	# 	"checktrack_connector.tasks.all"
-	# ],
-	"daily": [
-        "checktrack_connector.checktrack_connector.doctype.customer.customer.clear_expired_amc",
-        "checktrack_connector.checktrack_connector.doctype.device.device.clear_expired_amc_in_devices"
-    ],
-    "cron": {
-        "0 0 * * *": [
-            "checktrack_connector.checktrack_connector.doctype.customer.customer.clear_expired_amc",
-            "checktrack_connector.checktrack_connector.doctype.device.device.clear_expired_amc_in_devices"
-        ]
-    }
-	# "hourly": [
-	# 	"checktrack_connector.tasks.hourly"
-	# ],
-	# "weekly": [
-	# 	"checktrack_connector.tasks.weekly"
-	# ],
-	# "monthly": [
-	# 	"checktrack_connector.tasks.monthly"
-	# ],
-}
+# scheduler_events = {
+# 	"all": [
+# 		"checktrack_connector.tasks.all"
+# 	],
+# 	"daily": [
+# 		"checktrack_connector.tasks.daily"
+# 	],
+# 	"hourly": [
+# 		"checktrack_connector.tasks.hourly"
+# 	],
+# 	"weekly": [
+# 		"checktrack_connector.tasks.weekly"
+# 	],
+# 	"monthly": [
+# 		"checktrack_connector.tasks.monthly"
+# 	],
+# }
 
 # Testing
 # -------
@@ -204,12 +197,6 @@ doc_events = {
            "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.create_schedule_logs",
         ]
     },
-    "Maintenance Visit":{
-        "on_submit": [
-            "checktrack_connector.checktrack_connector.doctype.maintenance_visit.maintenance_visit.update_schedule_log_on_visit",
-            "checktrack_connector.checktrack_connector.doctype.maintenance_visit.maintenance_visit.update_teammember_tasks_on_visit",
-        ]
-	},
 }
 
 override_whitelisted_methods = {
