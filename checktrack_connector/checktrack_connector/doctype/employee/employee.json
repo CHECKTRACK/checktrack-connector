@@ -36,6 +36,8 @@
   "termination_date",
   "work_email",
   "teammember_id",
+  "section_break_bnjo",
+  "tasks",
   "erpnext_user",
   "user_id",
   "create_user",
@@ -282,7 +284,7 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
-   "options": "CT Company",
+   "options": "Company",
    "print_hide": 1,
    "remember_last_selected_value": 1,
    "reqd": 1
@@ -873,6 +875,16 @@
    "label": "Team Member Id",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "section_break_bnjo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "tasks",
+   "fieldtype": "Table",
+   "label": "tasks",
+   "options": "Employee Task Details"
   }
  ],
  "icon": "fa fa-user",
@@ -880,7 +892,7 @@
  "image_field": "image",
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-29 16:43:14.818803",
+ "modified": "2025-04-30 14:49:36.438404",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Employee",
