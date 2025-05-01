@@ -1,7 +1,6 @@
 {
  "actions": [],
  "allow_import": 1,
- "autoname": "field:task_name",
  "creation": "2013-01-29 19:25:50",
  "doctype": "DocType",
  "document_type": "Setup",
@@ -324,6 +323,7 @@
    "fetch_from": "project.company",
    "fieldname": "company",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Company",
    "options": "Company",
    "remember_last_selected_value": 1
@@ -360,6 +360,7 @@
    "fieldname": "task_name",
    "fieldtype": "Data",
    "label": "Name",
+   "reqd": 1,
    "unique": 1
   },
   {
@@ -379,11 +380,10 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-04-30 16:12:21.595128",
+ "modified": "2025-05-01 16:41:09.406055",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
- "naming_rule": "By fieldname",
  "nsm_parent_field": "parent_task",
  "owner": "Administrator",
  "permissions": [
