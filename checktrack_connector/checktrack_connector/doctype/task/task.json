@@ -328,12 +328,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "total_billing_amount",
-   "fieldtype": "Currency",
-   "label": "Total Billable Amount (via Timesheet)",
-   "read_only": 1
-  },
-  {
    "collapsible": 1,
    "fieldname": "sb_more_info",
    "fieldtype": "Section Break",
@@ -400,6 +394,12 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Template Task"
+  },
+  {
+   "fieldname": "total_billing_amount",
+   "fieldtype": "Currency",
+   "label": "Total Billable Amount (via Timesheet)",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-check",
@@ -407,7 +407,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-06 14:19:21.826935",
+ "modified": "2025-05-06 16:55:53.072850",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
