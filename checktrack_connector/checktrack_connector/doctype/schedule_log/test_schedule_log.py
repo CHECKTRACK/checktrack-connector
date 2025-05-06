@@ -12,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestTaskType(UnitTestCase):
+class UnitTestScheduleLog(UnitTestCase):
 	"""
-	Unit tests for TaskType.
+	Unit tests for ScheduleLog.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestTaskType(IntegrationTestCase):
+class IntegrationTestScheduleLog(IntegrationTestCase):
 	"""
-	Integration tests for TaskType.
+	Integration tests for ScheduleLog.
 	Use this class for testing interactions between multiple components.
 	"""
 

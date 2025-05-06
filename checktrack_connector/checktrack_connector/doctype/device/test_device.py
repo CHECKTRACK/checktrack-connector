@@ -12,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestTask(UnitTestCase):
+class UnitTestDevice(UnitTestCase):
 	"""
-	Unit tests for Task.
+	Unit tests for Device.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestTask(IntegrationTestCase):
+class IntegrationTestDevice(IntegrationTestCase):
 	"""
-	Integration tests for Task.
+	Integration tests for Device.
 	Use this class for testing interactions between multiple components.
 	"""
 

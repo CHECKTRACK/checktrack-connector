@@ -1,8 +1,8 @@
 // Copyright (c) 2025, satat tech llp and contributors
 // For license information, please see license.txt
 
-// frappe.ui.form.on("Team Member Link", {
-// 	refresh(frm) {
-
-// 	},
-// });
+//frappe.ui.form.on('Device', {
+//    refresh(frm) {
+//
+//    // 	},
+//});

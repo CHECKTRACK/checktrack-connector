@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class PreventiveMaintenance(Document):
+class ScheduleLog(Document):
 	pass
