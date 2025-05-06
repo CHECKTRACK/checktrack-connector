@@ -23,6 +23,7 @@
   "parent_task",
   "completed_on",
   "completed_by",
+  "mongo_task_id",
   "sb_timeline",
   "exp_start_date",
   "expected_time",
@@ -110,7 +111,7 @@
   {
    "bold": 1,
    "fieldname": "status",
-   "fieldtype": "Select",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
@@ -121,7 +122,7 @@
   },
   {
    "fieldname": "priority",
-   "fieldtype": "Select",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Priority",
@@ -323,7 +324,6 @@
    "fetch_from": "project.company",
    "fieldname": "company",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "Company",
    "options": "Company",
    "remember_last_selected_value": 1
@@ -359,9 +359,7 @@
   {
    "fieldname": "task_name",
    "fieldtype": "Data",
-   "label": "Name",
-   "reqd": 1,
-   "unique": 1
+   "label": "Name"
   },
   {
    "fieldname": "due_date",
@@ -373,6 +371,11 @@
    "fieldtype": "Table MultiSelect",
    "label": "Assign to",
    "options": "Task Assign To"
+  },
+  {
+   "fieldname": "mongo_task_id",
+   "fieldtype": "Data",
+   "label": "Mongo_task_id"
   }
  ],
  "icon": "fa fa-check",
@@ -380,8 +383,8 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-01 16:41:09.406055",
- "modified_by": "Administrator",
+ "modified": "2025-05-05 18:41:45.425018",
+ "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",
  "nsm_parent_field": "parent_task",

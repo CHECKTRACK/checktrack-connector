@@ -136,13 +136,12 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Task": {
+        "after_insert": "checktrack_connector.sync.sync_task_to_mongo",
+        "on_update": "checktrack_connector.sync.update_task_in_mongo"
+    }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -182,17 +181,17 @@ override_whitelisted_methods = {
     "checktrack_connector.api.auth.login_with_checktrack_jwt": "checktrack_connector.api.login_with_checktrack_jwt"
 }
 
-doc_events = {
-    "*": {
-        "before_request": "checktrack_connector.middleware.validate_jwt_token"
-    }
-}
+# doc_events = {
+#     "*": {
+#         "before_request": "checktrack_connector.middleware.validate_jwt_token"
+#     }
+# }
 
-doc_events = {
-    "*": {
-        "on_request": "checktrack_connector.utils.validate_cors",
-    }
-}
+# doc_events = {
+#     "*": {
+#         "on_request": "checktrack_connector.utils.validate_cors",
+#     }
+# }
 
 override_whitelisted_methods = {
     "frappe.utils.handle_preflight": "checktrack_connector.utils.handle_preflight",
