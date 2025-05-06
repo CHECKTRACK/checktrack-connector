@@ -26,7 +26,8 @@ frappe.ui.form.on("Maintenance Schedule", {
             var child = locals[cdt][cdn];
             return {
                 filters: {
-                    'customer': frm.doc.customer
+                    'customer': frm.doc.customer,
+                    'amc': ''
                 }
             };
         };

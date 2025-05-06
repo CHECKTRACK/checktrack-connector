@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-05 17:48:56.972956",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "default_task_flow"
+ ],
+ "fields": [
+  {
+   "fieldname": "default_task_flow",
+   "fieldtype": "Data",
+   "label": "Default Task Flow"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_task_type": 1,
+ "links": [],
+ "modified": "2025-05-05 17:49:19.550274",
+ "modified_by": "Administrator",
+ "module": "checktrack_connector",
+ "name": "CT Default Task Flow",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
