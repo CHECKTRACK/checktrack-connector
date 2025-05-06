@@ -2,7 +2,7 @@ app_name = "checktrack_connector"
 app_title = "checktrack_connector"
 app_publisher = "satat tech llp"
 app_description = "This app will be medium of communication between checktrack app and frappe app while they both will be isolated from each other."
-app_email = "mihir.patel@team.satat.tech"
+app_email = "app_support@satat.tech"
 app_license = "mit"
 
 # Define API URLs as hooks
