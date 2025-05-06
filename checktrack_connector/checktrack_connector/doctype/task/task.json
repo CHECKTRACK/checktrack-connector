@@ -324,6 +324,7 @@
    "fetch_from": "project.company",
    "fieldname": "company",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Company",
    "options": "Company",
    "remember_last_selected_value": 1
@@ -375,6 +376,7 @@
   {
    "fieldname": "mongo_task_id",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Mongo_task_id"
   }
  ],
@@ -383,8 +385,8 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-05 18:41:45.425018",
- "modified_by": "da.1@yopmail.com",
+ "modified": "2025-05-06 15:57:56.587048",
+ "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
  "nsm_parent_field": "parent_task",
