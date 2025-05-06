@@ -12,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestStatusFlowTeble(UnitTestCase):
+class UnitTestDemoPMReport(UnitTestCase):
 	"""
-	Unit tests for StatusFlowTeble.
+	Unit tests for DemoPMReport.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestStatusFlowTeble(IntegrationTestCase):
+class IntegrationTestDemoPMReport(IntegrationTestCase):
 	"""
-	Integration tests for StatusFlowTeble.
+	Integration tests for DemoPMReport.
 	Use this class for testing interactions between multiple components.
 	"""
 

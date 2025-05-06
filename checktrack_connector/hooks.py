@@ -185,6 +185,9 @@ override_whitelisted_methods = {
 doc_events = {
     "*": {
         "before_request": "checktrack_connector.middleware.validate_jwt_token"
+    },
+     "Demo PM Task": {
+        "on_save": "checktrack_connector.doctype.demo_pm_task.demo_pm_task.on_update",
     }
 }
 

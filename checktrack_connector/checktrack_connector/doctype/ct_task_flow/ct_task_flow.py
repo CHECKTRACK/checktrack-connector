@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class StatusFlowTeble(Document):
+class CTTaskFlow(Document):
 	pass

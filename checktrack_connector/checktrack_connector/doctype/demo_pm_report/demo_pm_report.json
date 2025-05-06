@@ -1,29 +1,25 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:task_type_doctype",
- "creation": "2025-03-27 09:28:20.804028",
+ "creation": "2025-05-06 14:14:58.281539",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "task_type_doctype"
+  "pm_report_name"
  ],
  "fields": [
   {
-   "fieldname": "task_type_doctype",
-   "fieldtype": "Link",
-   "label": "Task Type Doctype",
-   "options": "DocType",
-   "unique": 1
+   "fieldname": "pm_report_name",
+   "fieldtype": "Data",
+   "label": "PM Report Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-30 16:18:35.346101",
+ "modified": "2025-05-06 14:16:53.841730",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "Task Type",
- "naming_rule": "By fieldname",
+ "name": "Demo PM Report",
  "owner": "Administrator",
  "permissions": [
   {
@@ -39,9 +35,7 @@
    "write": 1
   }
  ],
- "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": [],
- "title_field": "task_type_doctype"
+ "states": []
 }
