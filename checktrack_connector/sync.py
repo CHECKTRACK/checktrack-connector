@@ -6,6 +6,12 @@ def get_last_value(url):
     parts = url.rstrip('/').split('/')
     return parts[-1]
 
+def sync_or_update_task_in_mongo(doc, method):
+    if doc.mongo_task_id:
+        update_task_in_mongo(doc, method)
+    else:
+        sync_task_to_mongo(doc, method)
+
 def get_app_admin_bearer_auth():
 
     try:
@@ -33,7 +39,7 @@ def get_app_admin_bearer_auth():
 
     except Exception:
         frappe.log_error(frappe.get_traceback(), "get_app_admin_bearer_auth failed")
-        frappe.throw("Failed to generate admin token.")
+        frappe.throw("Failed to generate admin token.") 
 
 def sync_task_to_mongo(doc, method):
 

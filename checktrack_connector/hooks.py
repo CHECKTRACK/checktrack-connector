@@ -138,8 +138,7 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 
 doc_events = {
 	"Task": {
-        "after_insert": "checktrack_connector.sync.sync_task_to_mongo",
-        "on_update": "checktrack_connector.sync.update_task_in_mongo"
+       "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo"
     }
 }
 
