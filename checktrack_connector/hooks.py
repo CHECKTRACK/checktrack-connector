@@ -136,13 +136,6 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
 
 # Scheduled Tasks
 # ---------------
@@ -188,10 +181,10 @@ doc_events = {
     },
      "Demo PM Task": {
         "on_save": "checktrack_connector.doctype.demo_pm_task.demo_pm_task.on_update",
-    }
-}
-
-doc_events = {
+    },
+    "Task": {
+       "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo"
+    },
     "*": {
         "on_request": "checktrack_connector.utils.validate_cors",
     },
