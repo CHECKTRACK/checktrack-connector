@@ -35,6 +35,8 @@
   "termination_date",
   "work_email",
   "teammember_id",
+  "section_break_bnjo",
+  "tasks",
   "erpnext_user",
   "user_id",
   "create_user",
@@ -872,6 +874,16 @@
    "label": "Team Member Id",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "section_break_bnjo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "tasks",
+   "fieldtype": "Table",
+   "label": "tasks",
+   "options": "Employee Task Details"
   }
  ],
  "icon": "fa fa-user",
@@ -879,8 +891,8 @@
  "image_field": "image",
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-30 11:47:56.250477",
- "modified_by": "ayush.patel@team.satat.tech",
+ "modified": "2025-04-30 14:49:36.438404",
+ "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Employee",
  "naming_rule": "By fieldname",

@@ -2,7 +2,7 @@ app_name = "checktrack_connector"
 app_title = "checktrack_connector"
 app_publisher = "satat tech llp"
 app_description = "This app will be medium of communication between checktrack app and frappe app while they both will be isolated from each other."
-app_email = "mihir.patel@team.satat.tech"
+app_email = "app_support@satat.tech"
 app_license = "mit"
 
 # Define API URLs as hooks
@@ -180,17 +180,25 @@ override_whitelisted_methods = {
     "checktrack_connector.api.auth.login_with_checktrack_jwt": "checktrack_connector.api.login_with_checktrack_jwt"
 }
 
-# doc_events = {
-#     "*": {
-#         "before_request": "checktrack_connector.middleware.validate_jwt_token"
-#     }
-# }
+doc_events = {
+    "*": {
+        "before_request": "checktrack_connector.middleware.validate_jwt_token"
+    },
+     "Demo PM Task": {
+        "on_save": "checktrack_connector.doctype.demo_pm_task.demo_pm_task.on_update",
+    }
+}
 
-# doc_events = {
-#     "*": {
-#         "on_request": "checktrack_connector.utils.validate_cors",
-#     }
-# }
+doc_events = {
+    "*": {
+        "on_request": "checktrack_connector.utils.validate_cors",
+    },
+    "Maintenance Schedule": {
+        "on_submit": [
+           "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.create_schedule_logs",
+        ]
+    },
+}
 
 override_whitelisted_methods = {
     "frappe.utils.handle_preflight": "checktrack_connector.utils.handle_preflight",

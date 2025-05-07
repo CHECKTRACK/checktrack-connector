@@ -914,3 +914,33 @@ def get_frappe_sid_if_integrated(access_token: str, tenant_id: str):
     except Exception as e:
         frappe.log_error(str(e), "get_frappe_sid_if_integrated Error")
         frappe.throw(str(e))
+
+
+def update_related_tasks(doc, method):
+    """
+    This function is triggered when a Demo PM Task document is updated.
+    It looks up all Task documents that reference this Demo PM Task (via the dynamic Link field) 
+    and updates their status to match the updated document.
+    """
+    # Check if the status field has changed. Optionally, you can compare with the previous value.
+    # For example, if you want to restrict updates only when status truly changes,
+    # you can use doc.get_doc_before_save() if available.
+
+    # Fetch all Task documents where:
+    # - the 'type' field equals the name of the Task_Type_Doc (e.g., "Demo PM Task")
+    # - the 'task_type_doc' field equals the name of this document (doc.name)
+    tasks = frappe.get_all("Task",
+        filters={
+            "type": doc.doctype,
+            "task_type_doc": doc.name
+        },
+        fields=["name"]
+    )
+
+    # Iterate through each task and update its status field
+    for task in tasks:
+        frappe.db.set_value("Task", task.name, "status", doc.status)
+        # Alternatively, if you want the document to be reloaded and triggers to fire, use:
+        task_doc = frappe.get_doc("Task", task.name)
+        task_doc.status = doc.status
+        task_doc.save()

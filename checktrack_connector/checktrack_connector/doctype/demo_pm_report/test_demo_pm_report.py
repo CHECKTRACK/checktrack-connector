@@ -1,3 +1,7 @@
+# Copyright (c) 2025, satat tech llp and Contributors
+# See license.txt
+
+# import frappe
 from frappe.tests import IntegrationTestCase, UnitTestCase
 
 
@@ -8,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestTask(UnitTestCase):
+class UnitTestDemoPMReport(UnitTestCase):
 	"""
-	Unit tests for Task.
+	Unit tests for DemoPMReport.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestTask(IntegrationTestCase):
+class IntegrationTestDemoPMReport(IntegrationTestCase):
 	"""
-	Integration tests for Task.
+	Integration tests for DemoPMReport.
 	Use this class for testing interactions between multiple components.
 	"""
 

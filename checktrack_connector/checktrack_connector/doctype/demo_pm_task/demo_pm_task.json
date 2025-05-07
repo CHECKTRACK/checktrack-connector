@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-04-29 09:15:04.799019",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_hhk8",
+  "amended_from",
+  "status",
+  "customer",
+  "product",
+  "calibration_certificate",
+  "pm_report",
+  "reason",
+  "completion_date",
+  "cancellation_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_hhk8",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Demo PM Task",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Status"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "product",
+   "fieldtype": "Link",
+   "label": "Product",
+   "options": "Product"
+  },
+  {
+   "fieldname": "calibration_certificate",
+   "fieldtype": "Link",
+   "label": "Calibration Certificate",
+   "options": "Calibration Report"
+  },
+  {
+   "fieldname": "pm_report",
+   "fieldtype": "Link",
+   "label": "PM Report",
+   "options": "Demo PM Report"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason"
+  },
+  {
+   "fieldname": "completion_date",
+   "fieldtype": "Date",
+   "label": "Completion Date"
+  },
+  {
+   "fieldname": "cancellation_reason",
+   "fieldtype": "Data",
+   "label": "Cancellation_reason"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "is_task_type": 1,
+ "links": [],
+ "modified": "2025-05-06 14:17:01.911654",
+ "modified_by": "Administrator",
+ "module": "checktrack_connector",
+ "name": "Demo PM Task",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
