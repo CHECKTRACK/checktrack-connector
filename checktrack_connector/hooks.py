@@ -185,6 +185,9 @@ doc_events = {
     "Task": {
        "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo"
     },
+    "Project": {
+       "on_update": "checktrack_connector.sync.sync_or_update_project_in_mongo"
+    },
     "*": {
         "on_request": "checktrack_connector.utils.validate_cors",
     },
