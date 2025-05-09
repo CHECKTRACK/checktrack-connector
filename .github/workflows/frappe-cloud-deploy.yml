@@ -17,7 +17,12 @@ jobs:
         run: |
           # Source the init.sh script to load the environment variables
           source ./dev/init.sh
-          
+
+      - name: Print Debug Info (for debugging only)
+        run: |
+          echo "API Key: $FC_API_KEY"
+          echo "API Secret: $FC_API_SECRET"
+
       - name: Trigger Deploy on Frappe Cloud
         run: |
           curl -X POST https://frappecloud.com/api/website/deploy \
