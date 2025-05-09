@@ -1,0 +1,32 @@
+name: Deploy to Frappe Cloud
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up environment variables
+        run: |
+          # Source the init.sh script to load the environment variables
+          source ./dev/init.sh
+          
+      - name: Trigger Deploy on Frappe Cloud
+        run: |
+          curl -X POST https://frappecloud.com/api/website/deploy \
+            -H "Authorization: token $FC_API_KEY:$FC_API_SECRET" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "site": "$FC_SITE",
+              "apps": [{
+                "name": "$FC_APP",
+                "branch": "$FC_BRANCH"
+              }]
+            }'
