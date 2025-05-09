@@ -25,11 +25,13 @@ jobs:
 
       - name: Trigger Deploy on Frappe Cloud
         run: |
-          curl -X POST https://api.frappe.cloud/v1/sites/checktrack-dev.frappe.cloud/deploy \
-            -H "Authorization: token 572fdcb2fa4c94771d77c03653e6d96cde2363496a30b753549cb13b:dc157af64cfad8f427416159b1e9811e7774f9f0577240868763ef61" \
+          curl -X POST https://frappecloud.com/api/website/deploy \
+            -H "Authorization: token 849789aeb2dc0d7ce6982fea0cc0c3225aa6b7f0c4335b37d03b754f:dd72f7fee2f8703684ad76de66ed5f39ad321adfb59874022f8580d2" \
             -H "Content-Type: application/json" \
             -d '{
+              "site": "checktrack-dev.frappe.cloud",
+              "apps": [{
+                "name": "checktrack_connector",
                 "branch": "master"
+              }]
             }'
-        env:
-          CI: 'Yes'
