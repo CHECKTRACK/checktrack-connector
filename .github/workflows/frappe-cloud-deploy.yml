@@ -29,9 +29,9 @@ jobs:
             -H "Authorization: token 572fdcb2fa4c94771d77c03653e6d96cde2363496a30b753549cb13b:dc157af64cfad8f427416159b1e9811e7774f9f0577240868763ef61" \
             -H "Content-Type: application/json" \
             -d '{
-              "site": "$FC_SITE",
+              "site": "checktrack-dev.frappe.cloud",
               "apps": [{
-                "name": "$FC_APP",
-                "branch": "$FC_BRANCH"
+                "name": "checktrack_connector",
+                "branch": "master"
               }]
             }'
