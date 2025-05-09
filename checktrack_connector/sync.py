@@ -76,7 +76,20 @@ def sync_task_to_mongo(doc, method):
         }
     }
     if doc.project:
-        payload["project"] = doc.project
+        try:
+            project_doc = frappe.get_doc("Project", doc.project)
+            
+            payload["project"] = {
+                "_id": {
+                    "$oid": project_doc.mongo_project_id
+                },
+                "_ref": f"{company_doc.prefix}_projects",
+                "_title": project_doc.project_name
+            }
+        except frappe.DoesNotExistError:
+            frappe.log_error(f"Project '{doc.project}' not found", "Sync Task Error")
+        except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"Failed to sync project '{doc.project}'")
 
     if doc.status:
         payload["status"] = doc.status
@@ -136,7 +149,20 @@ def update_task_in_mongo(doc, method):
         }
     }
     if doc.project:
-        payload["project"] = doc.project
+        try:
+            project_doc = frappe.get_doc("Project", doc.project)
+            
+            payload["project"] = {
+                "_id": {
+                    "$oid": project_doc.mongo_project_id
+                },
+                "_ref": f"{company_doc.prefix}_projects",
+                "_title": project_doc.project_name
+            }
+        except frappe.DoesNotExistError:
+            frappe.log_error(f"Project '{doc.project}' not found", "Sync Task Error")
+        except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"Failed to sync project '{doc.project}'")
 
     if doc.status:
         payload["status"] = doc.status
