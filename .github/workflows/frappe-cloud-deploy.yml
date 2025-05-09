@@ -16,7 +16,7 @@ jobs:
       - name: Set up environment variables
         run: |
           # Source the init.sh script to load the environment variables
-          source ./dev/init.sh
+          source ./../../dev/init.sh
 
       - name: Print Debug Info (for debugging only)
         run: |
