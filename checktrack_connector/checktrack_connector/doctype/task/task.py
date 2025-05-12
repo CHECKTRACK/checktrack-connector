@@ -24,3 +24,21 @@ class Task(NestedSet):
 					title="Task Sync Error",
 					message=f"Failed to update {self.type} {self.task_type_doc} from Task {self.name}: {frappe.get_traceback()}"
 				)
+
+def get_permission_query_conditions(user):
+	if user == "Administrator":
+		return ""
+
+	# Match Employee by work_email
+	employee = frappe.db.get_value("Employee", {"work_email": user}, "name")
+	if employee:
+		return f"`tabTask`.`assign_to` = '{employee}'"
+	else:
+		return "1=0"  # Deny access if no employee found
+
+def has_permission(doc, user):
+	if user == "Administrator":
+		return True
+
+	employee = frappe.db.get_value("Employee", {"work_email": user}, "name")
+	return doc.assign_to == employee
