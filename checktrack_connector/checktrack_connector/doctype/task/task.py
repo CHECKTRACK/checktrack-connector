@@ -24,3 +24,47 @@ class Task(NestedSet):
 					title="Task Sync Error",
 					message=f"Failed to update {self.type} {self.task_type_doc} from Task {self.name}: {frappe.get_traceback()}"
 				)
+def get_permission_query_conditions(user):
+	if not user:
+		user = frappe.session.user
+
+	if user == "Administrator" or has_unrestricted_role(user):
+		return ""
+
+	user_email = frappe.db.get_value("User", user, "email")
+
+	return """exists (
+		select 1 from `tabWatchers Table` watcher
+		where watcher.parent = `tabTask`.name
+		and watcher.employee_email = '{user_email}'
+	)""".format(user_email=user_email)
+
+def has_permission(doc, user=None, permission_type=None):
+	if not user:
+		user = frappe.session.user
+
+	if user == "Administrator":
+		return True
+
+		# Get email of the logged-in user
+	user_email = frappe.db.get_value("User", user, "email")
+
+	watchers = doc.get("watchers", [])
+	for watcher in watchers:
+		if watcher.employee_email == user_email:
+			return True
+
+	return False
+
+def has_unrestricted_role(user):
+    """Check if the user has any role that grants unrestricted access to all tasks"""
+
+    unrestricted_roles = ["System Manager", "CT HR" ,"Projects User"]
+
+    user_roles = frappe.get_roles(user)
+
+    for role in unrestricted_roles:
+        if role in user_roles:
+            return True
+
+    return False
