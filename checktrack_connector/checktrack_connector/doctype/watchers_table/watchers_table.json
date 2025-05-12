@@ -21,6 +21,7 @@
    "fetch_from": "employee.work_email",
    "fieldname": "employee_email",
    "fieldtype": "Data",
+   "hidden": 1,
    "in_list_view": 1,
    "label": "Employee Email"
   }
@@ -29,8 +30,8 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-12 10:20:41.430415",
- "modified_by": "Administrator",
+ "modified": "2025-05-12 12:29:24.377304",
+ "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Watchers Table",
  "owner": "Administrator",

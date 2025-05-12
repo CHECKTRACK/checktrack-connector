@@ -43,7 +43,7 @@ def has_permission(doc, user=None, permission_type=None):
 	if not user:
 		user = frappe.session.user
 
-	if user == "Administrator":
+	if user == "Administrator" or has_unrestricted_role(user):
 		return True
 
 		# Get email of the logged-in user
@@ -59,7 +59,7 @@ def has_permission(doc, user=None, permission_type=None):
 def has_unrestricted_role(user):
     """Check if the user has any role that grants unrestricted access to all tasks"""
 
-    unrestricted_roles = ["System Manager", "CT HR" ,"Projects User"]
+    unrestricted_roles = ["System Manager","Projects User"]
 
     user_roles = frappe.get_roles(user)
 

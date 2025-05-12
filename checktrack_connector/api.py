@@ -672,7 +672,41 @@ def get_decrypted_password_for_doc(docname):
 @frappe.whitelist(allow_guest=True)
 def get_doc_data_list(doctype, filters=None):
     filters = json.loads(filters) if filters else {}
-    docs = frappe.get_all(doctype, filters=filters, fields=["*"])
+
+    filters_dict = {}
+    employee_id = None
+
+    # Convert filters list to dict while checking for special employee_id filter
+    new_filters = []
+    for condition in filters:
+        if isinstance(condition, list) and len(condition) == 3:
+            key, op, value = condition
+            if key == "employee_id":
+                employee_id = value
+            else:
+                new_filters.append(condition)
+
+    for condition in new_filters:
+        if len(condition) == 3:
+            field, op, value = condition
+            if op == "=":
+                filters_dict[field] = value
+            else:
+                filters_dict[field] = [op, value]
+
+    # If filtering Task by employee watcher
+    if doctype == "Task" and employee_id:
+        task_names = frappe.get_all(
+            "Watchers Table",  # Make sure this is the correct child table name
+            filters={"employee": employee_id},
+            fields=["parent"]
+        )
+        task_ids = [t["parent"] for t in task_names]
+        if not task_ids:
+            return {"data": []}
+        filters_dict["name"] = ["in", task_ids]
+
+    docs = frappe.get_all(doctype, filters=filters_dict, fields=["*"])
 
     def expand_links(doc_dict, doctype_name):
         meta = frappe.get_meta(doctype_name)

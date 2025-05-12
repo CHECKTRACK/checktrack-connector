@@ -391,25 +391,13 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-12 10:53:42.648828",
+ "modified": "2025-05-12 12:13:54.251398",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",
  "nsm_parent_field": "parent_task",
  "owner": "Administrator",
  "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  },
   {
    "create": 1,
    "delete": 1,
