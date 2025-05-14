@@ -381,7 +381,7 @@
   },
   {
    "fieldname": "watchers",
-   "fieldtype": "Table",
+   "fieldtype": "Table MultiSelect",
    "label": "Watchers",
    "options": "Watchers Table"
   }
@@ -391,7 +391,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-12 12:13:54.251398",
+ "modified": "2025-05-12 15:31:11.454386",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",
@@ -410,13 +410,16 @@
    "write": 1
   },
   {
+   "create": 1,
+   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Task Watcher",
-   "share": 1
+   "role": "CT HR",
+   "share": 1,
+   "write": 1
   }
  ],
  "quick_entry": 1,
