@@ -20,12 +20,6 @@ frappe.ready(function () {
         
         if (taskId) {
             frappe.web_form.set_value('task', taskId);
-            // frappe.web_form.set_df_property('task', 'reqd', 1);
-			// frappe.web_form.set_df_property('task', 'hidden', 1);
         }
-		// const taskFieldWrapper = document.querySelector('form.frappe-control.input-max-eidth');
-        // if (taskFieldWrapper) {
-        //     taskFieldWrapper.style.display = 'none';
-        // }
     });
 });
