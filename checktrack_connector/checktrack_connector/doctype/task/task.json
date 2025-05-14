@@ -363,9 +363,9 @@
   },
   {
    "fieldname": "assign_to",
-   "fieldtype": "Table MultiSelect",
+   "fieldtype": "Link",
    "label": "Assign to",
-   "options": "Task Assign To"
+   "options": "Employee"
   },
   {
    "fieldname": "mongo_task_id",
@@ -406,18 +406,6 @@
    "read": 1,
    "report": 1,
    "role": "Projects User",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "CT HR",
    "share": 1,
    "write": 1
   }

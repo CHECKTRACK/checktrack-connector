@@ -24,6 +24,7 @@ class Task(NestedSet):
 					title="Task Sync Error",
 					message=f"Failed to update {self.type} {self.task_type_doc} from Task {self.name}: {frappe.get_traceback()}"
 				)
+
 def get_permission_query_conditions(user):
 	if not user:
 		user = frappe.session.user
@@ -32,23 +33,44 @@ def get_permission_query_conditions(user):
 		return ""
 
 	user_email = frappe.db.get_value("User", user, "email")
+	employee = frappe.db.get_value("Employee", {"work_email": user}, "name")
 
-	return """exists (
-		select 1 from `tabWatchers Table` watcher
-		where watcher.parent = `tabTask`.name
-		and watcher.employee_email = '{user_email}'
-	)""".format(user_email=user_email)
+	conditions = []
 
-def has_permission(doc, user=None, permission_type=None):
+	# Condition for assign_to field
+	if employee:
+		conditions.append(f"`tabTask`.`assign_to` = '{employee}'")
+
+	# Condition for watchers
+	if user_email:
+		watcher_condition = f"""exists (
+			select 1 from `tabWatchers Table` watcher
+			where watcher.parent = `tabTask`.name
+			and watcher.employee_email = '{user_email}'
+		)"""
+		conditions.append(watcher_condition)
+
+	# Combine both conditions with OR if both exist
+	if conditions:
+		return "(" + " or ".join(conditions) + ")"
+	else:
+		return "1=0"  # Deny access if no match found
+
+def has_permission(doc, user=None):
 	if not user:
 		user = frappe.session.user
 
 	if user == "Administrator" or has_unrestricted_role(user):
 		return True
 
-		# Get email of the logged-in user
 	user_email = frappe.db.get_value("User", user, "email")
+	employee = frappe.db.get_value("Employee", {"work_email": user}, "name")
 
+	# Check assign_to field
+	if employee and doc.assign_to == employee:
+		return True
+
+	# Check watchers table
 	watchers = doc.get("watchers", [])
 	for watcher in watchers:
 		if watcher.employee_email == user_email:
