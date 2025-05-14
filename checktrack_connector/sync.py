@@ -23,7 +23,7 @@ def send_feedback_request(task_id):
 
         # Test email for now
 
-        feedback_url = f"http://erpnext.local:8001/feedback-web-form?task={task_id}"
+        feedback_url = f"http://erpnext.local:8001/feedback-web-form/new?task={task_id}"
 
         subject_of_mail = f"Feedback Request for Task {task.task_name}"
         message_of_mail = f"""

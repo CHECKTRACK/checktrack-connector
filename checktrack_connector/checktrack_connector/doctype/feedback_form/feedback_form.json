@@ -5,31 +5,11 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "customer_name",
-  "reference_doctype",
-  "feedback_date",
-  "task",
-  "rating_section",
   "rating",
-  "feedback_details"
+  "feedback_details",
+  "task"
  ],
  "fields": [
-  {
-   "fieldname": "reference_doctype",
-   "fieldtype": "Data",
-   "label": "Phone Number"
-  },
-  {
-   "default": "now",
-   "fieldname": "feedback_date",
-   "fieldtype": "Datetime",
-   "label": "Feedback Date"
-  },
-  {
-   "fieldname": "rating_section",
-   "fieldtype": "Section Break",
-   "label": "Rating"
-  },
   {
    "fieldname": "rating",
    "fieldtype": "Rating",
@@ -40,27 +20,21 @@
   {
    "fieldname": "feedback_details",
    "fieldtype": "Small Text",
-   "label": "Feedback Details"
-  },
-  {
-   "fieldname": "customer_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Customer Name",
+   "label": "Feedback Details",
    "reqd": 1
   },
   {
    "fieldname": "task",
-   "fieldtype": "Link",
-   "label": "Task",
-   "options": "Task"
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "task"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-13 11:44:34.807162",
- "modified_by": "Administrator",
+ "modified": "2025-05-14 18:30:12.659356",
+ "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Feedback Form",
  "owner": "Administrator",

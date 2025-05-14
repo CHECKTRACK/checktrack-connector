@@ -9,6 +9,7 @@ class FeedbackForm(Document):
     pass
 
 def after_insert(doc, method):
+    doc = frappe.get_doc(doc.doctype, doc.name)
     if doc.task:
         try:
             task = frappe.get_doc("Task", doc.task)
