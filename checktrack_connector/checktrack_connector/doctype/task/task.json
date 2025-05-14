@@ -24,6 +24,7 @@
   "completed_on",
   "completed_by",
   "mongo_task_id",
+  "watchers",
   "sb_timeline",
   "exp_start_date",
   "expected_time",
@@ -377,6 +378,12 @@
    "fieldtype": "Dynamic Link",
    "label": "Task Type Doc",
    "options": "type"
+  },
+  {
+   "fieldname": "watchers",
+   "fieldtype": "Table MultiSelect",
+   "label": "Watchers",
+   "options": "Watchers Table"
   }
  ],
  "icon": "fa fa-check",
@@ -384,7 +391,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-09 16:33:00.087895",
+ "modified": "2025-05-12 15:31:11.454386",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",

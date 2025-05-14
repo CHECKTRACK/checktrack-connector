@@ -672,7 +672,108 @@ def get_decrypted_password_for_doc(docname):
 @frappe.whitelist(allow_guest=True)
 def get_doc_data_list(doctype, filters=None):
     filters = json.loads(filters) if filters else {}
-    docs = frappe.get_all(doctype, filters=filters, fields=["*"])
+
+    employee_id = None
+    assign_to = None
+    company = None
+    # Flag to detect if this is the Today's Tasks dashboard view
+    is_todays_tasks_view = False
+    new_filters = []
+
+    # Analyze filters to detect if this is the Today's Tasks dashboard view
+    # Today's Tasks view has due_date and assign_to but no employee_id
+    has_due_date = False
+    has_assign_to = False
+    has_employee_id = False
+
+    for condition in filters:
+        if isinstance(condition, list) and len(condition) == 3:
+            key, op, value = condition
+            if key == "employee_id":
+                employee_id = value
+                has_employee_id = True
+            elif key == "assign_to":
+                assign_to = value
+                has_assign_to = True
+            elif key == "company":
+                company = value
+            elif key == "due_date":
+                has_due_date = True
+                new_filters.append(condition)
+            else:
+                new_filters.append(condition)
+
+    # If we have a due_date filter AND assign_to filter but NO employee_id filter,
+    # this is likely the Today's Tasks dashboard view
+    if has_due_date and has_assign_to and not has_employee_id:
+        is_todays_tasks_view = True
+
+    filters_dict = {}
+    task_ids = []
+
+    if doctype == "Task":
+        # Handle company filter if present
+        if company:
+            filters_dict["company"] = company
+
+        is_employee_filter = False
+        watcher_task_ids = []
+        assigned_task_ids = []
+
+        # Process employee filters
+        if employee_id or assign_to:
+            is_employee_filter = True
+            
+            # Get assigned tasks
+            if assign_to:
+                assigned_tasks = frappe.get_all("Task", filters={
+                    "assign_to": assign_to
+                }, fields=["name"])
+                assigned_task_ids = [t["name"] for t in assigned_tasks]
+            
+            # For Today's Tasks view, only include assigned tasks (no watcher tasks)
+            if is_todays_tasks_view:
+                task_ids = assigned_task_ids
+            else:
+                # For regular Task screen, include both assigned and watcher tasks
+                watcher_id = employee_id if employee_id else assign_to
+                if watcher_id:
+                    task_names = frappe.get_all(
+                        "Watchers Table",
+                        filters={"employee": watcher_id},
+                        fields=["parent"]
+                    )
+                    watcher_task_ids = [t["parent"] for t in task_names]
+                
+                # Combine both types of tasks
+                task_ids = list(set(assigned_task_ids + watcher_task_ids))
+            
+            if task_ids:
+                filters_dict["name"] = ["in", task_ids]
+            elif is_employee_filter:
+                # If employee filters were applied but no tasks found, return empty result
+                return {"data": []}
+
+        # Add all other filters
+        for condition in new_filters:
+            field, op, value = condition
+            if field not in ["employee_id", "assign_to"]:  # Exclude already processed special filters
+                if op == "=":
+                    filters_dict[field] = value
+                else:
+                    filters_dict[field] = [op, value]
+
+    else:
+        # For other doctypes - process all filters normally
+        for condition in new_filters:
+            field, op, value = condition
+            if op == "=":
+                filters_dict[field] = value
+            else:
+                filters_dict[field] = [op, value]
+
+    # Get the documents with the constructed filters
+    docs = frappe.get_all(doctype, filters=filters_dict, fields=["*"])
 
     def expand_links(doc_dict, doctype_name):
         meta = frappe.get_meta(doctype_name)
@@ -718,7 +819,6 @@ def get_doc_data_list(doctype, filters=None):
         result.append(expand_links(full_doc, doctype))
 
     return {"data": result}
-
 @frappe.whitelist()
 def get_expanded_doc(doctype, name):
     doc = frappe.get_doc(doctype, name).as_dict()
