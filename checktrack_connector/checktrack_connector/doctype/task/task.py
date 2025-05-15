@@ -1,3 +1,5 @@
+# For license information, please see license.txt
+
 import frappe
 from frappe.utils.nestedset import NestedSet
 
@@ -10,16 +12,16 @@ class Task(NestedSet):
             else:
                 old_doc = frappe.get_doc('Task', self.name)
                 self._original_status = old_doc.status.lower() if old_doc.status else None
-    
+
     def on_update(self):
         # First handle linked document status update
         self.update_linked_doc_status()
-        
+
         # Then handle submission logic when status changes to Completed/Cancelled
         try:
             current_status = self.status.lower() if self.status else None
             is_status_change = not hasattr(self, '_original_status') or self._original_status != current_status
-            
+
             # Check status in a case-insensitive way
             if is_status_change and current_status in ["completed", "cancelled"]:
                 self.try_submit_self()
@@ -50,7 +52,7 @@ class Task(NestedSet):
                 title="Linked Document Sync Error",
                 message=f"Failed to update status of linked doc '{self.type}' ({self.task_type_doc}) from Task '{self.name}':\n{frappe.get_traceback()}"
             )
-            
+
     def try_submit_self(self):
         try:
             self.reload()  # Make sure we have the latest version
@@ -64,7 +66,7 @@ class Task(NestedSet):
                 )
         except Exception:
             raise  # Error logged by caller
-            
+
     def try_submit_linked_doc(self):
         if not (self.type and self.task_type_doc):
             return
@@ -80,3 +82,70 @@ class Task(NestedSet):
                 )
         except Exception:
             raise  # Error logged by caller
+
+
+def get_permission_query_conditions(user):
+	if not user:
+		user = frappe.session.user
+
+	if user == "Administrator" or has_unrestricted_role(user):
+		return ""
+
+	user_email = frappe.db.get_value("User", user, "email")
+	employee = frappe.db.get_value("Employee", {"work_email": user}, "name")
+
+	conditions = []
+
+	# Condition for assign_to field
+	if employee:
+		conditions.append(f"`tabTask`.`assign_to` = '{employee}'")
+
+	# Condition for watchers
+	if user_email:
+		watcher_condition = f"""exists (
+			select 1 from `tabWatchers Table` watcher
+			where watcher.parent = `tabTask`.name
+			and watcher.employee_email = '{user_email}'
+		)"""
+		conditions.append(watcher_condition)
+
+	# Combine both conditions with OR if both exist
+	if conditions:
+		return "(" + " or ".join(conditions) + ")"
+	else:
+		return "1=0"  # Deny access if no match found
+
+def has_permission(doc, user=None):
+	if not user:
+		user = frappe.session.user
+
+	if user == "Administrator" or has_unrestricted_role(user):
+		return True
+
+	user_email = frappe.db.get_value("User", user, "email")
+	employee = frappe.db.get_value("Employee", {"work_email": user}, "name")
+
+	# Check assign_to field
+	if employee and doc.assign_to == employee:
+		return True
+
+	# Check watchers table
+	watchers = doc.get("watchers", [])
+	for watcher in watchers:
+		if watcher.employee_email == user_email:
+			return True
+
+	return False
+
+def has_unrestricted_role(user):
+    """Check if the user has any role that grants unrestricted access to all tasks"""
+
+    unrestricted_roles = ["System Manager","Projects User"]
+
+    user_roles = frappe.get_roles(user)
+
+    for role in unrestricted_roles:
+        if role in user_roles:
+            return True
+
+    return False

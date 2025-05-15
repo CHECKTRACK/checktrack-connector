@@ -14,7 +14,7 @@ def send_notification(doc,docname,prefix,tenantId):
         assigner_name = current_user.full_name or current_user.name
 
         # Extract employee IDs from child table 'assign_to'
-        list_of_employee_ids = [{"$oid": row.employee} for row in doc.assign_to]
+        list_of_employee_ids = [{"$oid": doc.assign_to}]
     
         if not list_of_employee_ids:
             frappe.logger().warn(f"No employees assigned to task {docname}, skipping notification.")
@@ -64,20 +64,22 @@ def send_notification(doc,docname,prefix,tenantId):
 
         frappe.logger().info(f"Notification sent for task {docname}")
 
+        return response
+
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Notification sending failed")
 
 def sync_or_update_task_in_mongo(doc, method):
     if doc.mongo_task_id:
-        update_task_in_mongo(doc, method)
+        response = update_task_in_mongo(doc, method)
     else:
-        sync_task_to_mongo(doc, method)
-        
+        response = sync_task_to_mongo(doc, method)
+      
 def sync_or_update_project_in_mongo(doc, method):
     if doc.mongo_project_id:
-        update_project_in_mongo(doc, method)
+        response = update_project_in_mongo(doc, method)
     else:
-        sync_project_to_mongo(doc, method)
+        response = sync_project_to_mongo(doc, method)
 
 def get_app_admin_bearer_auth():
 
@@ -170,11 +172,13 @@ def sync_task_to_mongo(doc, method):
 
         mongo_id = get_last_value(response.headers['Location'])
         if mongo_id:
-            doc.mongo_task_id = mongo_id
-            doc.save(ignore_permissions=True)
+            frappe.db.set_value(doc.doctype, doc.name, "mongo_task_id", mongo_id)
             frappe.logger().info(f"[SYNC SUCCESS] Task '{doc.name}' synced to MongoDB with ID: {mongo_id}")
         else:
             frappe.logger().error(f"[SYNC FAILED] Task '{doc.name}' created in MongoDB but no ID returned.")
+
+        notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
+        return response
 
     except Exception as e:
         frappe.logger().error(f"[SYNC ERROR] Task '{doc.name}' failed to sync to MongoDB.")
@@ -241,11 +245,11 @@ def update_task_in_mongo(doc, method):
         response = requests.patch(url, json=payload, headers=task_headers)
         response.raise_for_status()
 
-        send_notification(doc,doc.name,prefix,company_doc.tenant_id)
+        notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
+        return response
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Mongo Update Failed")
-
 
 def sync_project_to_mongo(doc, method):
 
@@ -296,6 +300,8 @@ def sync_project_to_mongo(doc, method):
         else:
             frappe.logger().error(f"[SYNC FAILED] Project '{doc.name}' created in MongoDB but no ID returned.")
 
+        return response
+
     except Exception as e:
         frappe.logger().error(f"[SYNC ERROR] Project '{doc.name}' failed to sync to MongoDB.")
         frappe.throw(e)
@@ -341,6 +347,7 @@ def update_project_in_mongo(doc, method):
         }
         response = requests.patch(url, json=payload, headers=project_headers)
         response.raise_for_status()
+        return response
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Mongo Update Failed")
