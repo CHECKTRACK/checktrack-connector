@@ -4,26 +4,85 @@ import frappe
 from frappe.utils.nestedset import NestedSet
 
 class Task(NestedSet):
-	def on_update(self):
-		if self.type and self.task_type_doc:
-			try:
-				# Check if the document exists
-				if frappe.db.exists(self.type, self.task_type_doc):
-					frappe.db.set_value(self.type, self.task_type_doc, "status", self.status)
-					frappe.log_error(
-						title="Task Sync Log",
-						message=f"Updated {self.type} {self.task_type_doc} status to {self.status} from Task {self.name}"
-					)
-				else:
-					frappe.log_error(
-						title="Task Sync Error",
-						message=f"Linked document {self.type} {self.task_type_doc} does not exist for Task {self.name}"
-					)
-			except Exception as e:
-				frappe.log_error(
-					title="Task Sync Error",
-					message=f"Failed to update {self.type} {self.task_type_doc} from Task {self.name}: {frappe.get_traceback()}"
-				)
+    def before_save(self):
+        # Store the status transition for use in on_update
+        if not hasattr(self, '_original_status'):
+            if self.is_new():
+                self._original_status = None
+            else:
+                old_doc = frappe.get_doc('Task', self.name)
+                self._original_status = old_doc.status.lower() if old_doc.status else None
+
+    def on_update(self):
+        # First handle linked document status update
+        self.update_linked_doc_status()
+
+        # Then handle submission logic when status changes to Completed/Cancelled
+        try:
+            current_status = self.status.lower() if self.status else None
+            is_status_change = not hasattr(self, '_original_status') or self._original_status != current_status
+
+            # Check status in a case-insensitive way
+            if is_status_change and current_status in ["completed", "cancelled"]:
+                self.try_submit_self()
+                self.try_submit_linked_doc()
+        except Exception:
+            frappe.log_error(
+                title="Task Submission Error",
+                message=f"Failed to submit Task {self.name} or linked doc:\n{frappe.get_traceback()}"
+            )
+
+    def update_linked_doc_status(self):
+        if not (self.type and self.task_type_doc):
+            return
+        try:
+            if frappe.db.exists(self.type, self.task_type_doc):
+                frappe.db.set_value(self.type, self.task_type_doc, "status", self.status)
+                frappe.log_error(
+                    title="Linked Document Status Sync",
+                    message=f"Updated status of linked doc '{self.type}' ({self.task_type_doc}) to '{self.status}' from Task '{self.name}'."
+                )
+            else:
+                frappe.log_error(
+                    title="Linked Document Missing",
+                    message=f"Linked document '{self.type}' ({self.task_type_doc}) not found for Task '{self.name}'."
+                )
+        except Exception:
+            frappe.log_error(
+                title="Linked Document Sync Error",
+                message=f"Failed to update status of linked doc '{self.type}' ({self.task_type_doc}) from Task '{self.name}':\n{frappe.get_traceback()}"
+            )
+
+    def try_submit_self(self):
+        try:
+            self.reload()  # Make sure we have the latest version
+            if self.docstatus == 0:
+                if hasattr(self, 'validate_for_submit'):
+                    self.validate_for_submit()
+                self.submit()
+                frappe.log_error(
+                    title="Task Self Submitted",
+                    message=f"Task '{self.name}' submitted successfully (status: {self.status})."
+                )
+        except Exception:
+            raise  # Error logged by caller
+
+    def try_submit_linked_doc(self):
+        if not (self.type and self.task_type_doc):
+            return
+        if not frappe.db.exists(self.type, self.task_type_doc):
+            return
+        try:
+            doc = frappe.get_doc(self.type, self.task_type_doc)
+            if doc.docstatus == 0:
+                doc.submit()
+                frappe.log_error(
+                    title="Linked Document Submitted",
+                    message=f"Linked doc '{self.type}' ({self.task_type_doc}) submitted from Task '{self.name}'."
+                )
+        except Exception:
+            raise  # Error logged by caller
+
 
 def get_permission_query_conditions(user):
 	if not user:
