@@ -88,7 +88,7 @@ def get_permission_query_conditions(user):
 	if not user:
 		user = frappe.session.user
 
-	if user == "Administrator" or has_unrestricted_role(user):
+	if user == "Administrator" :
 		return ""
 
 	user_email = frappe.db.get_value("User", user, "email")
@@ -119,7 +119,7 @@ def has_permission(doc, user=None):
 	if not user:
 		user = frappe.session.user
 
-	if user == "Administrator" or has_unrestricted_role(user):
+	if user == "Administrator" :
 		return True
 
 	user_email = frappe.db.get_value("User", user, "email")
