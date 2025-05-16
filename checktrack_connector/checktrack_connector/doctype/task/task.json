@@ -178,6 +178,7 @@
    "bold": 1,
    "fieldname": "exp_start_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Expected Start Date",
    "oldfieldname": "exp_start_date",
    "oldfieldtype": "Date"
@@ -186,6 +187,7 @@
    "default": "0",
    "fieldname": "expected_time",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Expected Time (in hours)",
    "oldfieldname": "exp_total_hrs",
    "oldfieldtype": "Data"
@@ -194,12 +196,14 @@
    "depends_on": "is_template",
    "fieldname": "start",
    "fieldtype": "Int",
+   "hidden": 1,
    "label": "Begin On (Days)"
   },
   {
    "bold": 1,
    "fieldname": "exp_end_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Expected End Date",
    "oldfieldname": "exp_end_date",
    "oldfieldtype": "Date",
@@ -208,6 +212,7 @@
   {
    "fieldname": "progress",
    "fieldtype": "Percent",
+   "hidden": 1,
    "label": "% Progress",
    "no_copy": 1
   },
@@ -215,12 +220,14 @@
    "depends_on": "is_template",
    "fieldname": "duration",
    "fieldtype": "Int",
+   "hidden": 1,
    "label": "Duration (Days)"
   },
   {
    "default": "0",
    "fieldname": "is_milestone",
    "fieldtype": "Check",
+   "hidden": 1,
    "in_list_view": 1,
    "label": "Is Milestone"
   },
@@ -430,7 +437,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-16 10:05:49.540433",
+ "modified": "2025-05-16 11:32:30.580183",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
@@ -487,6 +494,6 @@
  "sort_order": "DESC",
  "states": [],
  "timeline_field": "project",
- "title_field": "subject",
+ "title_field": "task_name",
  "track_seen": 1
 }
