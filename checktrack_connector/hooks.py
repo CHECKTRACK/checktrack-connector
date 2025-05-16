@@ -124,13 +124,13 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # -----------
 # Permissions evaluated in scripted ways
 
-permission_query_conditions = {
-	"Task": "checktrack_connector.checktrack_connector.doctype.task.task.get_permission_query_conditions",
-}
+# permission_query_conditions = {
+# 	"Task": "checktrack_connector.checktrack_connector.doctype.task.task.get_permission_query_conditions",
+# }
 
-has_permission = {
-	"Task": "checktrack_connector.checktrack_connector.doctype.task.task.has_permission",
-}
+# has_permission = {
+# 	"Task": "checktrack_connector.checktrack_connector.doctype.task.task.has_permission",
+# }
 
 # Document Events
 # ---------------
