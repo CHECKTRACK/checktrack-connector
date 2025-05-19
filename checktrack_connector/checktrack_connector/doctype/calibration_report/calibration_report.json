@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "format:CC-{customer_name}-{####}",
  "creation": "2025-04-09 09:48:40.438031",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -81,10 +82,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-09 11:58:29.335425",
+ "modified": "2025-05-19 16:58:08.431367",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Calibration Report",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {
