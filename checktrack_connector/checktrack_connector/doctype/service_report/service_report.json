@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "format:format:SR-{customer_name}-{####}",
  "creation": "2025-04-09 16:56:31.967128",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -311,10 +312,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-10 11:51:14.595505",
+ "modified": "2025-05-19 16:58:55.447985",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Service Report",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

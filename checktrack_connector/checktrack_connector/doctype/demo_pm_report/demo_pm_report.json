@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "format:PM Report-{####}",
  "creation": "2025-05-06 14:14:58.281539",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -16,10 +17,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-06 14:16:53.841730",
+ "modified": "2025-05-19 16:59:22.727462",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Demo PM Report",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

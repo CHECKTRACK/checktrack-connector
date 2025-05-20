@@ -14,6 +14,8 @@
   "task_type_doc",
   "subject",
   "project",
+  "watchers",
+  "completed_on",
   "issue",
   "color",
   "is_group",
@@ -21,7 +23,6 @@
   "status",
   "priority",
   "parent_task",
-  "completed_on",
   "completed_by",
   "mongo_task_id",
   "feedback",
@@ -51,13 +52,15 @@
   "lft",
   "rgt",
   "old_parent",
-  "template_task"
+  "template_task",
+  "amended_from"
  ],
  "fields": [
   {
    "allow_in_quick_entry": 1,
    "fieldname": "subject",
    "fieldtype": "Data",
+   "hidden": 1,
    "in_global_search": 1,
    "in_standard_filter": 1,
    "label": "Subject",
@@ -81,6 +84,7 @@
   {
    "fieldname": "issue",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Issue",
    "options": "Issue"
   },
@@ -93,6 +97,7 @@
   {
    "fieldname": "color",
    "fieldtype": "Color",
+   "hidden": 1,
    "label": "Color"
   },
   {
@@ -100,6 +105,7 @@
    "default": "0",
    "fieldname": "is_group",
    "fieldtype": "Check",
+   "hidden": 1,
    "in_list_view": 1,
    "label": "Is Group"
   },
@@ -107,12 +113,15 @@
    "default": "0",
    "fieldname": "is_template",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Is Template"
   },
   {
    "bold": 1,
+   "default": "Pending",
    "fieldname": "status",
    "fieldtype": "Data",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
@@ -123,6 +132,7 @@
   {
    "fieldname": "priority",
    "fieldtype": "Data",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Priority",
@@ -135,6 +145,7 @@
    "bold": 1,
    "fieldname": "parent_task",
    "fieldtype": "Link",
+   "hidden": 1,
    "ignore_user_permissions": 1,
    "label": "Parent Task",
    "options": "Task",
@@ -151,6 +162,7 @@
    "depends_on": "eval: doc.status == \"Completed\"",
    "fieldname": "completed_by",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Completed By",
    "no_copy": 1,
    "options": "User"
@@ -160,12 +172,14 @@
    "collapsible_depends_on": "eval:doc.__islocal",
    "fieldname": "sb_timeline",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Timeline"
   },
   {
    "bold": 1,
    "fieldname": "exp_start_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Expected Start Date",
    "oldfieldname": "exp_start_date",
    "oldfieldtype": "Date"
@@ -174,6 +188,7 @@
    "default": "0",
    "fieldname": "expected_time",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Expected Time (in hours)",
    "oldfieldname": "exp_total_hrs",
    "oldfieldtype": "Data"
@@ -182,12 +197,14 @@
    "depends_on": "is_template",
    "fieldname": "start",
    "fieldtype": "Int",
+   "hidden": 1,
    "label": "Begin On (Days)"
   },
   {
    "bold": 1,
    "fieldname": "exp_end_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Expected End Date",
    "oldfieldname": "exp_end_date",
    "oldfieldtype": "Date",
@@ -196,6 +213,7 @@
   {
    "fieldname": "progress",
    "fieldtype": "Percent",
+   "hidden": 1,
    "label": "% Progress",
    "no_copy": 1
   },
@@ -203,12 +221,14 @@
    "depends_on": "is_template",
    "fieldname": "duration",
    "fieldtype": "Int",
+   "hidden": 1,
    "label": "Duration (Days)"
   },
   {
    "default": "0",
    "fieldname": "is_milestone",
    "fieldtype": "Check",
+   "hidden": 1,
    "in_list_view": 1,
    "label": "Is Milestone"
   },
@@ -220,12 +240,14 @@
   {
    "fieldname": "sb_depends_on",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Dependencies",
    "oldfieldtype": "Section Break"
   },
   {
    "fieldname": "depends_on",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Dependent Tasks",
    "options": "Task Depends On"
   },
@@ -239,6 +261,7 @@
   {
    "fieldname": "sb_actual",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "oldfieldtype": "Column Break",
    "print_width": "50%",
    "width": "50%"
@@ -246,6 +269,7 @@
   {
    "fieldname": "act_start_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Actual Start Date (via Timesheet)",
    "oldfieldname": "act_start_date",
    "oldfieldtype": "Date",
@@ -254,12 +278,14 @@
   {
    "fieldname": "actual_time",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Actual Time in Hours (via Timesheet)",
    "read_only": 1
   },
   {
    "fieldname": "act_end_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Actual End Date (via Timesheet)",
    "oldfieldname": "act_end_date",
    "oldfieldtype": "Date",
@@ -269,11 +295,13 @@
    "collapsible": 1,
    "fieldname": "sb_costing",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Costing"
   },
   {
    "fieldname": "total_costing_amount",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Total Costing Amount (via Timesheet)",
    "oldfieldname": "actual_budget",
    "oldfieldtype": "Currency",
@@ -283,6 +311,7 @@
   {
    "fieldname": "total_billing_amount",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Total Billable Amount (via Timesheet)",
    "read_only": 1
   },
@@ -290,12 +319,14 @@
    "collapsible": 1,
    "fieldname": "sb_more_info",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "More Info"
   },
   {
    "depends_on": "eval:doc.status == \"Closed\" || doc.status == \"Pending Review\"",
    "fieldname": "review_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Review Date",
    "oldfieldname": "review_date",
    "oldfieldtype": "Date"
@@ -304,6 +335,7 @@
    "depends_on": "eval:doc.status == \"Closed\"",
    "fieldname": "closing_date",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Closing Date",
    "oldfieldname": "closing_date",
    "oldfieldtype": "Date"
@@ -311,6 +343,7 @@
   {
    "fieldname": "department",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Department",
    "options": "Department"
   },
@@ -354,7 +387,8 @@
   {
    "fieldname": "task_name",
    "fieldtype": "Data",
-   "label": "Name"
+   "label": "Name",
+   "reqd": 1
   },
   {
    "fieldname": "due_date",
@@ -363,9 +397,10 @@
   },
   {
    "fieldname": "assign_to",
-   "fieldtype": "Table MultiSelect",
+   "fieldtype": "Link",
    "label": "Assign to",
-   "options": "Task Assign To"
+   "options": "Employee",
+   "reqd": 1
   },
   {
    "fieldname": "mongo_task_id",
@@ -380,6 +415,23 @@
    "options": "type"
   },
   {
+   "fieldname": "watchers",
+   "fieldtype": "Table MultiSelect",
+   "label": "Watchers",
+   "options": "Watchers Table"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Task",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
    "fieldname": "feedback",
    "fieldtype": "Link",
    "label": "Feedback",
@@ -388,10 +440,11 @@
  ],
  "icon": "fa fa-check",
  "idx": 1,
+ "is_submittable": 1,
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-13 11:47:07.242132",
+ "modified": "2025-05-16 11:32:30.580183",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
@@ -406,12 +459,41 @@
    "read": 1,
    "report": 1,
    "role": "Projects User",
+   "select": 1,
    "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Item Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],
  "quick_entry": 1,
- "row_format": "Dynamic",
  "search_fields": "subject",
  "show_name_in_global_search": 1,
  "show_preview_popup": 1,
@@ -419,6 +501,6 @@
  "sort_order": "DESC",
  "states": [],
  "timeline_field": "project",
- "title_field": "subject",
+ "title_field": "task_name",
  "track_seen": 1
 }
