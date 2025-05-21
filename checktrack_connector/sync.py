@@ -380,10 +380,11 @@ def update_task_in_mongo(doc, method):
 
         notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
         send_status_change_notification(doc,doc.name,prefix,company_doc.tenant_id)
-        return response
 
         if doc.status.strip().lower() == 'complete':
             send_feedback_request(doc.name)
+
+        return response
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Mongo Update Failed")
