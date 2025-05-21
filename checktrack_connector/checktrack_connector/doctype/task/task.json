@@ -25,6 +25,7 @@
   "parent_task",
   "completed_by",
   "mongo_task_id",
+  "feedback",
   "sb_timeline",
   "exp_start_date",
   "expected_time",
@@ -429,6 +430,12 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "feedback",
+   "fieldtype": "Link",
+   "label": "Feedback",
+   "options": "Feedback Form"
   }
  ],
  "icon": "fa fa-check",

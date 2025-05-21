@@ -8,6 +8,7 @@ from frappe.auth import LoginManager
 from frappe import _
 from frappe.utils.password import get_decrypted_password
 from checktrack_connector.onboard_api import automated_import_users
+from frappe.utils import get_url
 
 @frappe.whitelist(allow_guest=True)
 def sso_login(token):
