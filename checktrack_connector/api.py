@@ -1051,7 +1051,7 @@ def login_with_jwt(token: str):
     try:
         # 🔑 Replace with your Flutter app's secret or public key
         secret = "e6H9QQMGBx33KaOd"
-        decoded = jwt.decode(token, secret, algorithms=["HS256"])
+        decoded = jwt.decode(token, secret, algorithms=["HS256"], options={"verify_aud": False})
 
         email = decoded.get("user.email")
 
