@@ -1080,6 +1080,15 @@ def login_with_jwt(token: str):
         frappe.local.login_manager.user = email
         frappe.local.login_manager.post_login()
 
+        # Set session manually
+        from frappe.sessions import Session
+        session = Session(user=email)
+        frappe.local.session = session
+        frappe.local.session_obj = session
+        frappe.local.session.sid = session.sid
+        frappe.response["sid"] = session.sid
+        frappe.response["user"] = email
+
         # ✅ Return Frappe session ID
         return {
             "sid": frappe.session.sid,
