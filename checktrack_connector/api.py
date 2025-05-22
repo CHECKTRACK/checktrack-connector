@@ -1072,6 +1072,9 @@ def login_with_jwt(token: str):
         #     user.insert(ignore_permissions=True)
         #     frappe.db.commit()
 
+        if frappe.session.user == "Guest":
+            frappe.local.login_manager.logout()
+
         # 👤 Log the user in
         frappe.local.login_manager = LoginManager()
         frappe.local.login_manager.user = email
