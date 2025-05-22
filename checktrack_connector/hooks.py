@@ -125,11 +125,11 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # Permissions evaluated in scripted ways
 
 # permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
+# 	"Task": "checktrack_connector.checktrack_connector.doctype.task.task.get_permission_query_conditions",
 # }
-#
+
 # has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
+# 	"Task": "checktrack_connector.checktrack_connector.doctype.task.task.has_permission",
 # }
 
 # Document Events
@@ -176,6 +176,9 @@ override_whitelisted_methods = {
 }
 
 doc_events = {
+    "Feedback Form": {
+        "after_insert": "checktrack_connector.checktrack_connector.doctype.feedback_form.feedback_form.after_insert"
+    },
     "*": {
         "before_request": "checktrack_connector.middleware.validate_jwt_token"
     },
@@ -184,6 +187,9 @@ doc_events = {
     },
     "Task": {
        "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo"
+    },
+    "Project": {
+       "on_update": "checktrack_connector.sync.sync_or_update_project_in_mongo"
     },
     "*": {
         "on_request": "checktrack_connector.utils.validate_cors",
