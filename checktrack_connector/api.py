@@ -1045,3 +1045,47 @@ def update_related_tasks(doc, method):
         task_doc = frappe.get_doc("Task", task.name)
         task_doc.status = doc.status
         task_doc.save()
+
+@frappe.whitelist(allow_guest=True)
+def login_with_jwt(token: str):
+    try:
+        # 🔑 Replace with your Flutter app's secret or public key
+        secret = "e6H9QQMGBx33KaOd"
+        decoded = jwt.decode(token, secret, algorithms=["HS256"])
+
+        email = decoded.get("user.email")
+
+        if not email:
+            frappe.throw("Email not provided in token")
+
+        # # ✅ Check if the user exists
+        # if not frappe.db.exists("User", email):
+        #     # 🆕 Optionally auto-create user
+        #     user = frappe.get_doc({
+        #         "doctype": "User",
+        #         "email": email,
+        #         "first_name": full_name,
+        #         "enabled": 1,
+        #         "new_password": frappe.generate_hash(),
+        #         "send_welcome_email": 0
+        #     })
+        #     user.insert(ignore_permissions=True)
+        #     frappe.db.commit()
+
+        # 👤 Log the user in
+        frappe.local.login_manager = LoginManager()
+        frappe.local.login_manager.user = email
+        frappe.local.login_manager.post_login()
+
+        # ✅ Return Frappe session ID
+        return {
+            "sid": frappe.session.sid,
+            "user": frappe.session.user
+        }
+
+    except jwt.ExpiredSignatureError:
+        frappe.throw("JWT has expired")
+    except jwt.InvalidTokenError:
+        frappe.throw("Invalid JWT")
+    except Exception as e:
+        frappe.throw(str(e))
