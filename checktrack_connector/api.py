@@ -1053,7 +1053,7 @@ def login_with_jwt(token: str):
         secret = "e6H9QQMGBx33KaOd"
         decoded = jwt.decode(token, secret, algorithms=["HS256"], audience="app.checktrack.dev")
 
-        email = decoded.get("user.email")
+        email = decoded.get("email")
 
         if not email:
             frappe.throw("Email not provided in token")
