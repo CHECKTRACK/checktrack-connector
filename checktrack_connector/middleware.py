@@ -57,19 +57,22 @@ def patch_session_from_authorization():
 
     if sid:
         try:
-            session = Session(None)
-            session.sid = sid
-            session.resume()
+            # Create a Session object to resume the session
+            session_obj = Session(None)
+            session_obj.sid = sid
+            session_obj.resume()
 
-            # Assign to local context
-            frappe.local.session = session
-            frappe.local.session_obj = session
-
-            # Ensure frappe.local.session behaves like a dict if needed
-            frappe.local.session.data = {
-                "sid": session.sid,
-                "user": session.user,
+            # The crucial part: Ensure frappe.local.session is a dictionary
+            # containing the necessary data like 'user'.
+            frappe.local.session = {
+                "sid": session_obj.sid,
+                "user": session_obj.user,
+                # Copy all data from session_obj.data if it exists and is a dict
+                **getattr(session_obj, 'data', {})
             }
+
+            # Keep a reference to the actual Session object if needed for other operations
+            frappe.local.session_obj = session_obj
 
         except Exception as e:
             frappe.log_error(f"Failed to resume session from sid: {sid}\nError: {str(e)}")
