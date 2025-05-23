@@ -64,8 +64,12 @@ def patch_session_from_authorization():
             # Assign to local context
             frappe.local.session = session
             frappe.local.session_obj = session
-            frappe.local.session.sid = sid
-            frappe.local.session.user = session.user
+
+            # Ensure frappe.local.session behaves like a dict if needed
+            frappe.local.session.data = {
+                "sid": session.sid,
+                "user": session.user,
+            }
 
         except Exception as e:
             frappe.log_error(f"Failed to resume session from sid: {sid}\nError: {str(e)}")
