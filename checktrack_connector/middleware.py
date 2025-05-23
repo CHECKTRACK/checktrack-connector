@@ -1,6 +1,7 @@
 import jwt
 import frappe
 from frappe import _
+from frappe.sessions import Session
 
 # def validate_jwt_token():
 #     """Middleware to validate JWT token before processing requests."""
