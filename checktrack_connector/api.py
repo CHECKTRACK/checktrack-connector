@@ -9,62 +9,8 @@ from frappe import _
 from frappe.utils.password import get_decrypted_password
 from checktrack_connector.onboard_api import automated_import_users
 
-@frappe.whitelist(allow_guest=True)
-def sso_login(token):
-    """Custom login using JWT token"""
-    try:
-
-
-        print("LOGINNNNNNNNNNNN--------------");
-
-        # Decode JWT token
-        secret_key = "e6H9QQMGBx33KaOd"
-        decoded = jwt.decode(token, secret_key, algorithms=["HS256"], audience="app.checktrack.dev")
-
-        # Extract user information
-        email = decoded.get("email")
-
-        if not email:
-            frappe.throw(_("Invalid JWT token"))
-
-        # Check if the user exists in ERPNext
-        try:
-            user = frappe.get_doc("User", email)
-        except frappe.DoesNotExistError:
-            error_message = f"User {email} not found"
-            frappe.log_error(error_message, "SSO Login Error")  # Log the error
-            frappe.throw(error_message)
-
-        # Authenticate the user
-        login_manager = LoginManager()
-        login_manager.user = user.name
-        login_manager.post_login()
-
-        frappe.response.update({
-            "sid": frappe.session.sid,
-            # "csrf-token": frappe.local.session.data
-        })
-
-    except jwt.ExpiredSignatureError:
-        frappe.throw(_("JWT token has expired"))
-        frappe.log_error(error_message, "SSO Login Error")
-        frappe.throw(_(error_message))
-    except Exception as e:
-        frappe.log_error(str(e), "SSO Login Error")
-        frappe.throw(str(e))
-
-# Get API URLs from hooks with better error handling
-try:
-    USER_API_URL = frappe.get_hooks().get("user_api_url")
-    DATA_API_URL = frappe.get_hooks().get("data_api_url")
-
-    if isinstance(USER_API_URL, list) and USER_API_URL:
-        USER_API_URL = USER_API_URL[0]
-    if isinstance(DATA_API_URL, list) and DATA_API_URL:
-        DATA_API_URL = DATA_API_URL[0]
-
-except Exception as e:
-    frappe.log_error(f"Error getting API URLs from hooks: {str(e)}", "API Configuration Error")
+USER_API_URL = frappe.get_hooks().get("user_api_url")
+DATA_API_URL = frappe.get_hooks().get("data_api_url")
 
 @frappe.whitelist(allow_guest=True)
 def checktrack_integration(email, password=""):
