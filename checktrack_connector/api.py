@@ -10,6 +10,9 @@ from frappe.utils.password import get_decrypted_password
 from checktrack_connector.onboard_api import automated_import_users
 from frappe.utils import get_url
 
+USER_API_URL = frappe.get_hooks().get("user_api_url")
+DATA_API_URL = frappe.get_hooks().get("data_api_url")
+
 @frappe.whitelist()
 def checktrack_integration(email, password=""):
 
