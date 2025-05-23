@@ -176,6 +176,9 @@ override_whitelisted_methods = {
 }
 
 doc_events = {
+    "Feedback Form": {
+        "after_insert": "checktrack_connector.checktrack_connector.doctype.feedback_form.feedback_form.after_insert"
+    },
     "*": {
         "before_request": "checktrack_connector.middleware.validate_jwt_token"
     },
@@ -203,6 +206,7 @@ override_whitelisted_methods = {
 }
 
 after_request = ["checktrack_connector.utils.add_cors_headers"]
+
 
 #
 # each overriding function accepts a `data` argument;

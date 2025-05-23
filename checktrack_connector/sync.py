@@ -1,13 +1,70 @@
 import requests
 from checktrack_connector.api import DATA_API_URL, USER_API_URL
 import frappe
+from frappe import _
+
 
 def get_last_value(url):
     parts = url.rstrip('/').split('/')
     return parts[-1]
 
-def send_notification(doc,docname,prefix,tenantId):
+@frappe.whitelist()
+def send_feedback_request(task_id):
     try:
+        task = frappe.get_doc('Task', task_id)
+
+        # if not task.customer:
+        #     frappe.throw(_("No customer linked to this task."))
+
+        # customer = frappe.get_doc("Customer", task.customer)
+        # email = customer.email_id or customer.primary_contact_email
+        # if not email:
+        #     frappe.throw(_("Customer email not found."))
+
+        # Test email for now
+
+        feedback_url = f"http://erpnext.local:8001/feedback-web-form/new?task={task_id}"
+
+        subject_of_mail = f"Feedback Request for Task {task.task_name}"
+        message_of_mail = f"""
+            Dear Customer,<br><br>
+            We would love to hear your thoughts on the task <b>{task.task_name}</b>.<br>
+            Please provide your feedback using the link below:<br><br>
+            <a href="{feedback_url}">Give Feedback</a><br><br>
+            Regards,<br>
+            Your Team
+        """
+
+        frappe.sendmail(
+            recipients=["mihir.patel@team.satat.tech"],
+            subject=subject_of_mail,
+            message=message_of_mail
+        )
+
+    except Exception as e:
+        frappe.msgprint(_("Failed to send feedback request: ") + str(e), alert=True)
+
+def send_notification(doc, docname, prefix, tenantId):
+    try:
+        # Check if assign_to has changed or it's a new assignment
+        previous_doc = doc.get_doc_before_save()
+        current_assign_to = doc.assign_to
+
+        # Determine if we should send the notification
+        send_notification = False
+        if previous_doc is None:
+            # New document: send notification if assign_to is set
+            if current_assign_to:
+                send_notification = True
+        else:
+            # Existing document: send notification if assign_to changed
+            previous_assign_to = previous_doc.assign_to
+            if previous_assign_to != current_assign_to:
+                send_notification = True
+
+        if not send_notification:
+            frappe.logger().info(f"No change in assign_to for {docname}, skipping notification.")
+            return
 
         # Get the current user (assigner) details
         current_user = frappe.get_doc("User", frappe.session.user)
@@ -15,7 +72,7 @@ def send_notification(doc,docname,prefix,tenantId):
 
         # Extract employee IDs from child table 'assign_to'
         list_of_employee_ids = [{"$oid": doc.assign_to}]
-    
+
         if not list_of_employee_ids:
             frappe.logger().warn(f"No employees assigned to task {docname}, skipping notification.")
             return
@@ -24,10 +81,8 @@ def send_notification(doc,docname,prefix,tenantId):
         USER_API_URL = frappe.get_hooks().get("user_api_url")
         DATA_API_URL = frappe.get_hooks().get("data_api_url")
 
-        if isinstance(USER_API_URL, list) and USER_API_URL:
-            USER_API_URL = USER_API_URL[0]
-        if isinstance(DATA_API_URL, list) and DATA_API_URL:
-            DATA_API_URL = DATA_API_URL[0]
+        USER_API_URL = USER_API_URL[0] if isinstance(USER_API_URL, list) and USER_API_URL else USER_API_URL
+        DATA_API_URL = DATA_API_URL[0] if isinstance(DATA_API_URL, list) and DATA_API_URL else DATA_API_URL
 
         # Prepare notification payload
         notification_data = {
@@ -68,6 +123,84 @@ def send_notification(doc,docname,prefix,tenantId):
 
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Notification sending failed")
+
+def send_status_change_notification(doc, docname, prefix, tenantId):
+    try:
+        # Check if status has changed
+        previous_doc = doc.get_doc_before_save()
+        
+        # Determine if notification should be sent
+        send_notification = False
+        
+        if previous_doc is None:
+            # New document: no status change to notify
+            frappe.logger().info(f"New task {docname}, no status change notification.")
+            return
+        else:
+            # Existing document: check if status changed
+            previous_status = previous_doc.status
+            current_status = doc.status
+            if previous_status != current_status:
+                send_notification = True
+
+        if not send_notification:
+            frappe.logger().info(f"Status unchanged for task {docname}, skipping notification.")
+            return
+
+        # Get current user (who changed the status)
+        current_user = frappe.get_doc("User", frappe.session.user)
+        changer_name = current_user.full_name or current_user.name
+
+        # Get watchers from child table
+        list_of_employee_ids = [{"$oid": row.employee} for row in doc.watchers]  # Adjust field name if different
+
+        if not list_of_employee_ids:
+            frappe.logger().warn(f"No watchers found for task {docname}, skipping notification.")
+            return
+
+        # Get API URLs (same as original function)
+        USER_API_URL = frappe.get_hooks().get("user_api_url")
+        if isinstance(USER_API_URL, list) and USER_API_URL:
+            USER_API_URL = USER_API_URL[0]
+
+        # Prepare notification payload
+        notification_data = {
+            "prefix": prefix,
+            "listOfEmployeeIds": list_of_employee_ids,
+            "notificationPayload": {
+                "title": "Task Status Updated",
+                "body": f"The status of task \"{doc.task_name}\" has changed from \"{previous_status}\" to \"{current_status}\" by \"{changer_name}\"",  # Include previous status for clarity
+                "data": {
+                    "route": "/tasks/view",
+                    "arguments": {
+                        "doctype": "Task",
+                        "docname": docname,
+                        "isEdit": False,
+                        "readOnly": True,
+                        "selectedMenu": "summary"
+                    }
+                }
+            },
+            "tenantId": tenantId
+        }
+
+        # Send notification
+        url = f"{USER_API_URL}/notification/send"
+        access_token = get_app_admin_bearer_auth()
+        notification_headers = {
+            "Authorization": access_token,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'No-Auth-Challenge': 'true'
+        }
+
+        response = requests.post(url, json=notification_data, headers=notification_headers)
+        response.raise_for_status()
+
+        frappe.logger().info(f"Status change notification sent for task {docname}")
+        return response
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Status change notification failed")
 
 def sync_or_update_task_in_mongo(doc, method):
     if doc.mongo_task_id:
@@ -246,6 +379,11 @@ def update_task_in_mongo(doc, method):
         response.raise_for_status()
 
         notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
+        send_status_change_notification(doc,doc.name,prefix,company_doc.tenant_id)
+
+        if doc.status.strip().lower() == 'complete':
+            send_feedback_request(doc.name)
+
         return response
 
     except Exception as e:
