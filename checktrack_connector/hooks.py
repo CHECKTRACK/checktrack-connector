@@ -207,6 +207,8 @@ override_whitelisted_methods = {
 
 after_request = ["checktrack_connector.utils.add_cors_headers"]
 
+before_request = "checktrack_connector.middleware.patch_session_from_authorization"
+
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
