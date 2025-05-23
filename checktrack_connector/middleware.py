@@ -50,29 +50,3 @@ def validate_jwt_middleware():
     except jwt.InvalidTokenError:
         frappe.throw(_("Invalid token"))
 
-def patch_session_from_authorization():
-    sid = frappe.get_request_header("Authorization") or frappe.get_request_header("X-Frappe-SID")
-    if sid and sid.startswith("sid="):
-        sid = sid[4:]
-
-    if sid:
-        try:
-            # Create a Session object to resume the session
-            session_obj = Session(None)
-            session_obj.sid = sid
-            session_obj.resume()
-
-            # The crucial part: Ensure frappe.local.session is a dictionary
-            # containing the necessary data like 'user'.
-            frappe.local.session = {
-                "sid": session_obj.sid,
-                "user": session_obj.user,
-                # Copy all data from session_obj.data if it exists and is a dict
-                **getattr(session_obj, 'data', {})
-            }
-
-            # Keep a reference to the actual Session object if needed for other operations
-            frappe.local.session_obj = session_obj
-
-        except Exception as e:
-            frappe.log_error(f"Failed to resume session from sid: {sid}\nError: {str(e)}")
