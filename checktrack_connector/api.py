@@ -151,7 +151,7 @@ def checktrack_integration(email, password=""):
         frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name):
     try:
         fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)
@@ -195,7 +195,7 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
             "message": f"Exception: {str(e)}"
         }
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_all_team_members(tenant_id, tenant_prefix, access_token):
     try:
         limit = 1000
@@ -236,7 +236,7 @@ def get_all_team_members(tenant_id, tenant_prefix, access_token):
             "message": "Something went wrong!"
         }
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def create_all_team_members(team_members_data, company_name):
     if not isinstance(team_members_data, list):
         team_members_data = frappe.parse_json(team_members_data)
@@ -310,7 +310,7 @@ def create_all_team_members(team_members_data, company_name):
         if should_rollback and successfully_processed_ids and not rollback_results:
             rollback_results = rollback_team_members(successfully_processed_ids)
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def update_all_team_members(team_members_data, company_name):
     if not isinstance(team_members_data, list):
         team_members_data = frappe.parse_json(team_members_data)
@@ -341,7 +341,7 @@ def update_all_team_members(team_members_data, company_name):
             "message": reason,
         }
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def create_team_member(data):
     try:
         if not isinstance(data, dict):
@@ -366,7 +366,7 @@ def create_team_member(data):
         frappe.db.rollback()
         frappe.throw(f"Something went wrong!")
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def update_team_member(data):
     try:
         teammember_id = data.get('teammember_id')
@@ -820,7 +820,7 @@ def get_doc_data_list(doctype, filters=None):
         result.append(expand_links(full_doc, doctype))
 
     return {"data": result}
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_expanded_doc(doctype, name):
     doc = frappe.get_doc(doctype, name).as_dict()
     meta = get_meta(doctype)
@@ -882,7 +882,7 @@ def get_specific_doc_data(doctype, name=None, filters=None):
 
         return {"data": result}
 
-def expand_links(doc_dict, doctype_name):
+def expand_links(doc_dict, doctype_name, allow_guest=True):
     """Recursively expands all Link fields in a document"""
     meta = frappe.get_meta(doctype_name)
     for field in meta.fields:
