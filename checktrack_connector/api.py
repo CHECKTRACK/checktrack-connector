@@ -10,64 +10,7 @@ from frappe.utils.password import get_decrypted_password
 from checktrack_connector.onboard_api import automated_import_users
 from frappe.utils import get_url
 
-@frappe.whitelist(allow_guest=True)
-def sso_login(token):
-    """Custom login using JWT token"""
-    try:
-
-
-        print("LOGINNNNNNNNNNNN--------------");
-
-        # Decode JWT token
-        secret_key = "e6H9QQMGBx33KaOd"
-        decoded = jwt.decode(token, secret_key, algorithms=["HS256"], audience="app.checktrack.dev")
-
-        # Extract user information
-        email = decoded.get("email")
-
-        if not email:
-            frappe.throw(_("Invalid JWT token"))
-
-        # Check if the user exists in ERPNext
-        try:
-            user = frappe.get_doc("User", email)
-        except frappe.DoesNotExistError:
-            error_message = f"User {email} not found"
-            frappe.log_error(error_message, "SSO Login Error")  # Log the error
-            frappe.throw(error_message)
-
-        # Authenticate the user
-        login_manager = LoginManager()
-        login_manager.user = user.name
-        login_manager.post_login()
-
-        frappe.response.update({
-            "sid": frappe.session.sid,
-            # "csrf-token": frappe.local.session.data
-        })
-
-    except jwt.ExpiredSignatureError:
-        frappe.throw(_("JWT token has expired"))
-        frappe.log_error(error_message, "SSO Login Error")
-        frappe.throw(_(error_message))
-    except Exception as e:
-        frappe.log_error(str(e), "SSO Login Error")
-        frappe.throw(str(e))
-
-# Get API URLs from hooks with better error handling
-try:
-    USER_API_URL = frappe.get_hooks().get("user_api_url")
-    DATA_API_URL = frappe.get_hooks().get("data_api_url")
-
-    if isinstance(USER_API_URL, list) and USER_API_URL:
-        USER_API_URL = USER_API_URL[0]
-    if isinstance(DATA_API_URL, list) and DATA_API_URL:
-        DATA_API_URL = DATA_API_URL[0]
-
-except Exception as e:
-    frappe.log_error(f"Error getting API URLs from hooks: {str(e)}", "API Configuration Error")
-
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def checktrack_integration(email, password=""):
 
     # Authenticate and get access token
@@ -151,7 +94,7 @@ def checktrack_integration(email, password=""):
         frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name):
     try:
         fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)
@@ -195,7 +138,7 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
             "message": f"Exception: {str(e)}"
         }
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_all_team_members(tenant_id, tenant_prefix, access_token):
     try:
         limit = 1000
@@ -236,7 +179,7 @@ def get_all_team_members(tenant_id, tenant_prefix, access_token):
             "message": "Something went wrong!"
         }
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def create_all_team_members(team_members_data, company_name):
     if not isinstance(team_members_data, list):
         team_members_data = frappe.parse_json(team_members_data)
@@ -310,7 +253,7 @@ def create_all_team_members(team_members_data, company_name):
         if should_rollback and successfully_processed_ids and not rollback_results:
             rollback_results = rollback_team_members(successfully_processed_ids)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def update_all_team_members(team_members_data, company_name):
     if not isinstance(team_members_data, list):
         team_members_data = frappe.parse_json(team_members_data)
@@ -341,7 +284,7 @@ def update_all_team_members(team_members_data, company_name):
             "message": reason,
         }
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def create_team_member(data):
     try:
         if not isinstance(data, dict):
@@ -366,7 +309,7 @@ def create_team_member(data):
         frappe.db.rollback()
         frappe.throw(f"Something went wrong!")
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def update_team_member(data):
     try:
         teammember_id = data.get('teammember_id')
@@ -600,7 +543,7 @@ def map_team_member_data(input_data, company_name, updateEmployee):
 #     user.insert(ignore_permissions=True)
 #     return {"message": "User synced successfully"}
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def check_tenant_exists(email, password=""):
     """
     Check if a tenant already exists for the given credentials.
@@ -651,7 +594,7 @@ def check_tenant_exists(email, password=""):
         frappe.log_error(message=f"Error checking company exists: {str(e)}", title="Employee Check Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_decrypted_password_for_doc(docname):
     try:
         raw_password = frappe.db.get_value("CheckTrack Integration", docname, "password")
@@ -670,7 +613,7 @@ def get_decrypted_password_for_doc(docname):
         return {"error": "Could not decrypt password due to an internal error."}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_doc_data_list(doctype, filters=None):
     filters = json.loads(filters) if filters else {}
 
@@ -820,7 +763,7 @@ def get_doc_data_list(doctype, filters=None):
         result.append(expand_links(full_doc, doctype))
 
     return {"data": result}
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_expanded_doc(doctype, name):
     doc = frappe.get_doc(doctype, name).as_dict()
     meta = get_meta(doctype)
@@ -860,7 +803,7 @@ def get_expanded_doc(doctype, name):
 
     return {"data": expanded_doc}
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_specific_doc_data(doctype, name=None, filters=None):
     if name:
         try:
@@ -882,7 +825,7 @@ def get_specific_doc_data(doctype, name=None, filters=None):
 
         return {"data": result}
 
-def expand_links(doc_dict, doctype_name, allow_guest=True):
+def expand_links(doc_dict, doctype_name):
     """Recursively expands all Link fields in a document"""
     meta = frappe.get_meta(doctype_name)
     for field in meta.fields:
@@ -938,7 +881,7 @@ def update_mongodb_tenant_flag(tenant_id, access_token):
         frappe.log_error(str(e), "CheckTrack Tenant Update Error")
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def login_with_checktrack_jwt(token: str):
     try:
         secret_key = "e6H9QQMGBx33KaOd"  # Use your secret
