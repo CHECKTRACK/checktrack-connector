@@ -1,6 +1,7 @@
 import jwt
 import frappe
 from frappe import _
+from frappe.sessions import Session
 
 # def validate_jwt_token():
 #     """Middleware to validate JWT token before processing requests."""
@@ -55,13 +56,16 @@ def patch_session_from_authorization():
         sid = sid[4:]
 
     if sid:
-        from frappe.sessions import Session
-        session = Session(None)
-        session.sid = sid
-        session.resume()
+        try:
+            session = Session(None)
+            session.sid = sid
+            session.resume()
 
-        frappe.local.session = session
-        frappe.local.session_obj = session
-        frappe.local.session.sid = sid
-        frappe.local.session.user = session.user
+            # Assign to local context
+            frappe.local.session = session
+            frappe.local.session_obj = session
+            frappe.local.session.sid = sid
+            frappe.local.session.user = session.user
 
+        except Exception as e:
+            frappe.log_error(f"Failed to resume session from sid: {sid}\nError: {str(e)}")
