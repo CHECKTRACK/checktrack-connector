@@ -49,16 +49,4 @@ def validate_jwt_middleware():
     except jwt.InvalidTokenError:
         frappe.throw(_("Invalid token"))
 
-def before_request():
-    sid = frappe.get_request_header("Authorization") or frappe.get_request_header("X-Frappe-SID")
-    if sid and sid.startswith("sid="):
-        sid = sid[4:]
-
-    if sid:
-        from frappe.sessions import Session
-        session = Session(None)
-        session.sid = sid
-        session.resume()
-        frappe.local.session = session
-        frappe.local.session_obj = session
 
