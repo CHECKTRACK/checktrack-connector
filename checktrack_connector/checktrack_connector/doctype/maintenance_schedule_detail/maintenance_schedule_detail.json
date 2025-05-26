@@ -130,7 +130,7 @@
    "fieldname": "serial_no",
    "fieldtype": "Link",
    "label": "Serial No",
-   "options": "Device"
+   "options": "Customer Items"
   },
   {
    "fieldname": "customer",
@@ -152,7 +152,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-30 14:53:01.745797",
+ "modified": "2025-05-26 10:16:29.249782",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule Detail",

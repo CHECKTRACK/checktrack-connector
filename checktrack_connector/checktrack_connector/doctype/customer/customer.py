@@ -16,14 +16,14 @@ class Customer(Document):
 		today = nowdate()
 		for item in self.customer_items:
 
-			if not frappe.db.exists("Device", {"serial_no": item.serial_no}):
-				device = frappe.new_doc("Device")
-				device.serial_no = item.serial_no
-				device.item_code = item.item_code
-				device.item_name = item.item_name
-				device.amc = item.amc
-				device.customer = self.name
-				device.insert(ignore_permissions=True)
-				frappe.logger().info(f"Device created for Serial No: {item.serial_no}, Customer: {self.name}")
+			if not frappe.db.exists("Customer Items", {"serial_no": item.serial_no}):
+				customer_items = frappe.new_doc("Customer Items")
+				customer_items.serial_no = item.serial_no
+				customer_items.item_code = item.item_code
+				customer_items.item_name = item.item_name
+				customer_items.amc = item.amc
+				customer_items.customer = self.name
+				customer_items.insert(ignore_permissions=True)
+				frappe.logger().info(f"Customer Items created for Serial No: {item.serial_no}, Customer: {self.name}")
 			else:
-				frappe.logger().info(f"Device already exists for Serial No: {item.serial_no}, skipping creation.")
+				frappe.logger().info(f"Customer Items already exists for Serial No: {item.serial_no}, skipping creation.")

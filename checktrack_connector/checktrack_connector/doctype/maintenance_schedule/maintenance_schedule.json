@@ -14,8 +14,13 @@
   "customer",
   "customer_name",
   "customer_email_id",
-  "items_section",
-  "items",
+  "serial_no",
+  "item_code",
+  "item_name",
+  "amc_start_date",
+  "amc_end_date",
+  "periodicity",
+  "no_of_visits",
   "schedule",
   "generate_schedule",
   "schedules",
@@ -60,21 +65,6 @@
    "label": "Transaction Date",
    "oldfieldname": "transaction_date",
    "oldfieldtype": "Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "items_section",
-   "fieldtype": "Section Break",
-   "oldfieldtype": "Section Break",
-   "options": "fa fa-shopping-cart"
-  },
-  {
-   "fieldname": "items",
-   "fieldtype": "Table",
-   "label": "Items",
-   "oldfieldname": "item_maintenance_detail",
-   "oldfieldtype": "Table",
-   "options": "Maintenance Schedule Item",
    "reqd": 1
   },
   {
@@ -131,10 +121,49 @@
    "label": "Customer Name"
   },
   {
-   "fetch_from": "customer.email_id",
+   "fetch_from": "customer.customer_email",
    "fieldname": "customer_email_id",
    "fieldtype": "Data",
-   "label": "Customer Email_ID"
+   "label": "Customer Email ID"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "label": "Serial No",
+   "options": "Customer Items"
+  },
+  {
+   "fetch_from": "serial_no.item_code",
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "label": "Item Code"
+  },
+  {
+   "fetch_from": "serial_no.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name"
+  },
+  {
+   "fieldname": "amc_start_date",
+   "fieldtype": "Date",
+   "label": "AMC Start Date"
+  },
+  {
+   "fieldname": "amc_end_date",
+   "fieldtype": "Date",
+   "label": "AMC End Date"
+  },
+  {
+   "fieldname": "periodicity",
+   "fieldtype": "Select",
+   "label": "Periodicity",
+   "options": "\nWeekly\nMonthly\nQuarterly\nHalf Yearly\nYearly\nRandom"
+  },
+  {
+   "fieldname": "no_of_visits",
+   "fieldtype": "Int",
+   "label": "No of Visits"
   }
  ],
  "icon": "fa fa-calendar",
@@ -147,8 +176,8 @@
    "link_fieldname": "maintenance_schedule"
   }
  ],
- "modified": "2025-05-15 10:59:56.485125",
- "modified_by": "da.1@yopmail.com",
+ "modified": "2025-05-26 10:43:54.075774",
+ "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule",
  "naming_rule": "By \"Naming Series\" field",
