@@ -22,14 +22,23 @@ class MaintenanceSchedule(TransactionBase):
 		from erpnext.maintenance.doctype.maintenance_schedule_detail.maintenance_schedule_detail import (
 			MaintenanceScheduleDetail,
 		)
-		from erpnext.maintenance.doctype.maintenance_schedule_item.maintenance_schedule_item import (
-			MaintenanceScheduleItem,
-		)
 
 		address_display: DF.TextEditor | None
 		amended_from: DF.Link | None
 		company: DF.Link
-		items: DF.Table[MaintenanceScheduleItem]
+		# Individual fields instead of items table
+		item_code: DF.Link | None
+		item_name: DF.Data | None
+		serial_no: DF.Data | None
+		start_date: DF.Date | None
+		end_date: DF.Date | None
+		periodicity: DF.Select | None
+		no_of_visits: DF.Int | None
+		sales_person: DF.Link | None
+		employee: DF.Data | None
+		customer: DF.Link | None
+		customer_name: DF.Data | None
+		customer_email_id: DF.Data | None
 		naming_series: DF.Literal["MAT-MSH-.YYYY.-"]
 		schedules: DF.Table[MaintenanceScheduleDetail]
 		status: DF.Literal["", "Draft", "Submitted", "Cancelled"]
@@ -42,96 +51,87 @@ class MaintenanceSchedule(TransactionBase):
 		if self.docstatus != 0:
 			return
 		self.set("schedules", [])
-		count = 1
-		for d in self.get("items"):
-			self.validate_maintenance_detail()
-			s_list = []
-			s_list = self.create_schedule_list(d.start_date, d.end_date, d.no_of_visits, d.sales_person)
-			for i in range(d.no_of_visits):
-				child = self.append("schedules")
-				child.serial_no = d.serial_no
-				child.item_code = d.item_code
-				child.item_name = d.item_name
-				child.scheduled_date = s_list[i].strftime("%Y-%m-%d")
-				child.idx = count
-				count = count + 1
-				child.sales_person = d.sales_person
-				child.employee_id = d.employee_id
-				child.employee_name = d.employee_name
-				child.customer_name = d.customer_name
-				child.customer_email_id = d.customer_email_id
-				child.completion_status = "Pending"
-				child.item_reference = d.name
+		
+		# Validate that we have the required individual fields
+		self.validate_maintenance_detail()
+		
+		s_list = self.create_schedule_list(self.start_date, self.end_date, self.no_of_visits, self.sales_person)
+		
+		for i in range(self.no_of_visits):
+			child = self.append("schedules")
+			child.serial_no = self.serial_no
+			child.item_code = self.item_code
+			child.item_name = self.item_name
+			child.scheduled_date = s_list[i].strftime("%Y-%m-%d")
+			child.idx = i + 1
+			child.sales_person = self.sales_person
+			child.employee = self.employee
+			child.customer = self.customer
+			child.customer_name = self.customer_name
+			child.customer_email_id = self.customer_email_id
+			child.completion_status = "Pending"
 
 	@frappe.whitelist()
 	def validate_end_date_visits(self):
 		days_in_period = {"Weekly": 7, "Monthly": 30, "Quarterly": 91, "Half Yearly": 182, "Yearly": 365}
-		for item in self.items:
-			if item.periodicity and item.periodicity != "Random" and item.start_date:
-				if not item.end_date:
-					if item.no_of_visits:
-						item.end_date = add_days(
-							item.start_date, item.no_of_visits * days_in_period[item.periodicity]
-						)
-					else:
-						item.end_date = add_days(item.start_date, days_in_period[item.periodicity])
-
-				diff = date_diff(item.end_date, item.start_date) + 1
-				no_of_visits = cint(diff / days_in_period[item.periodicity])
-
-				if not item.no_of_visits or item.no_of_visits == 0:
-					item.end_date = add_days(item.start_date, days_in_period[item.periodicity])
-					diff = date_diff(item.end_date, item.start_date) + 1
-					item.no_of_visits = cint(diff / days_in_period[item.periodicity])
-
-				elif item.no_of_visits > no_of_visits:
-					item.end_date = add_days(
-						item.start_date, item.no_of_visits * days_in_period[item.periodicity]
+		
+		if self.periodicity and self.periodicity != "Random" and self.start_date:
+			if not self.end_date:
+				if self.no_of_visits:
+					self.end_date = add_days(
+						self.start_date, self.no_of_visits * days_in_period[self.periodicity]
 					)
+				else:
+					self.end_date = add_days(self.start_date, days_in_period[self.periodicity])
 
-				elif item.no_of_visits < no_of_visits:
-					item.end_date = add_days(
-						item.start_date, item.no_of_visits * days_in_period[item.periodicity]
-					)
+			diff = date_diff(self.end_date, self.start_date) + 1
+			no_of_visits = cint(diff / days_in_period[self.periodicity])
+
+			if not self.no_of_visits or self.no_of_visits == 0:
+				self.end_date = add_days(self.start_date, days_in_period[self.periodicity])
+				diff = date_diff(self.end_date, self.start_date) + 1
+				self.no_of_visits = cint(diff / days_in_period[self.periodicity])
+
+			elif self.no_of_visits > no_of_visits:
+				self.end_date = add_days(
+					self.start_date, self.no_of_visits * days_in_period[self.periodicity]
+				)
+
+			elif self.no_of_visits < no_of_visits:
+				self.end_date = add_days(
+					self.start_date, self.no_of_visits * days_in_period[self.periodicity]
+				)
 
 	def on_submit(self):
 		if not self.get("schedules"):
 			throw(_("Please click on 'Generate Schedule' to get schedule"))
 		self.validate_schedule()
 
-		for d in self.get("items"):
-			scheduled_date = frappe.db.get_all(
-				"Maintenance Schedule Detail",
-				{"parent": self.name, "item_code": d.item_code},
-				["scheduled_date"],
-				as_list=False,
-			)
+		# Update Customer AMC
+		if self.customer and self.serial_no:
+			customer_doc = frappe.get_doc("Customer", self.customer)
+			for customer_item in customer_doc.customer_items:
+				if customer_item.serial_no == self.serial_no:
+					customer_item.amc = self.name
+					customer_item.amc_expiry_date = self.end_date
+					break
+			customer_doc.save()
+			frappe.msgprint(f"Updated Customer AMC for {self.customer}")
 
-		for item in self.items:
-			if item.customer and item.serial_no:
-				customer_doc = frappe.get_doc("Customer", item.customer)
-				for customer_item in customer_doc.customer_items:
-					if customer_item.serial_no == item.serial_no:
-						customer_item.amc = self.name
-						customer_item.amc_expiry_date = item.end_date
-						break
-				customer_doc.save()
-				frappe.msgprint(f"Updated Customer AMC for {item.customer}")
-
-		for item in self.items:
-			if item.serial_no:
-				# Find Device by serial_no
-				devices = frappe.get_all("Device", filters={"serial_no": item.serial_no}, fields=["name"])
-				if not devices:
-					frappe.msgprint(f"No Device found with Serial No: {item.device}", raise_exception=True)
-					continue
-				# Get the first matching Device
-				device_name = devices[0]["name"]
-				device = frappe.get_doc("Device", device_name)
-				device.amc = self.name
-				device.amc_expiry_date = item.end_date
-				device.save()
-				frappe.msgprint(f"Updated AMC and AMC expiry for {device.serial_no}")
+		# Update Customer Items AMC
+		if self.serial_no:
+			# Find Customer Items by serial_no
+			customer_items = frappe.get_all("Customer Items", filters={"serial_no": self.serial_no}, fields=["name"])
+			if not customer_items:
+				frappe.msgprint(f"No Customer Items found with Serial No: {self.serial_no}", raise_exception=True)
+			else:
+				# Get the first matching Customer Items
+				customer_items_name = customer_items[0]["name"]
+				customer_items = frappe.get_doc("Customer Items", customer_items_name)
+				customer_items.amc = self.name
+				customer_items.amc_expiry_date = self.end_date
+				customer_items.save()
+				frappe.msgprint(f"Updated AMC and AMC expiry for {customer_items.serial_no}")
 
 		self.db_set("status", "Submitted")
 
@@ -179,64 +179,57 @@ class MaintenanceSchedule(TransactionBase):
 		return schedule_date
 
 	def validate_dates_with_periodicity(self):
-		for d in self.get("items"):
-			if d.start_date and d.end_date and d.periodicity and d.periodicity != "Random":
-				date_diff = (getdate(d.end_date) - getdate(d.start_date)).days + 1
-				days_in_period = {
-					"Weekly": 7,
-					"Monthly": 30,
-					"Quarterly": 90,
-					"Half Yearly": 180,
-					"Yearly": 365,
-				}
+		if self.start_date and self.end_date and self.periodicity and self.periodicity != "Random":
+			date_diff = (getdate(self.end_date) - getdate(self.start_date)).days + 1
+			days_in_period = {
+				"Weekly": 7,
+				"Monthly": 30,
+				"Quarterly": 90,
+				"Half Yearly": 180,
+				"Yearly": 365,
+			}
 
-				if date_diff < days_in_period[d.periodicity]:
-					throw(
-						_(
-							"Row {0}: To set {1} periodicity, difference between from and to date must be greater than or equal to {2}"
-						).format(d.idx, d.periodicity, days_in_period[d.periodicity])
-					)
+			if date_diff < days_in_period[self.periodicity]:
+				throw(
+					_(
+						"To set {0} periodicity, difference between from and to date must be greater than or equal to {1}"
+					).format(self.periodicity, days_in_period[self.periodicity])
+				)
 
 	def validate_maintenance_detail(self):
-		if not self.get("items"):
-			throw(_("Please enter Maintenance Details first"))
+		if not self.item_code:
+			throw(_("Please select item code"))
+		elif not self.start_date or not self.end_date:
+			throw(_("Please select Start Date and End Date for Item {0}").format(self.item_code))
+		elif not self.no_of_visits:
+			throw(_("Please mention no of visits required"))
 
-		for d in self.get("items"):
-			if not d.item_code:
-				throw(_("Please select item code"))
-			elif not d.start_date or not d.end_date:
-				throw(_("Please select Start Date and End Date for Item {0}").format(d.item_code))
-			elif not d.no_of_visits:
-				throw(_("Please mention no of visits required"))
-
-			if getdate(d.start_date) >= getdate(d.end_date):
-				throw(_("Start date should be less than end date for Item {0}").format(d.item_code))
+		if getdate(self.start_date) >= getdate(self.end_date):
+			throw(_("Start date should be less than end date for Item {0}").format(self.item_code))
 
 	def validate_items_table_change(self):
 		doc_before_save = self.get_doc_before_save()
 		if not doc_before_save:
-			return
-		for prev_item, item in zip(doc_before_save.items, self.items, strict=False):
-			fields = [
-				"item_code",
-				"start_date",
-				"end_date",
-				"periodicity",
-				"sales_person",
-				"no_of_visits",
-			]
-			for field in fields:
-				b_doc = prev_item.as_dict()
-				doc = item.as_dict()
-				if cstr(b_doc[field]) != cstr(doc[field]):
-					return True
+			return False
+		
+		fields = [
+			"item_code",
+			"start_date", 
+			"end_date",
+			"periodicity",
+			"sales_person",
+			"no_of_visits",
+		]
+		
+		for field in fields:
+			if cstr(getattr(doc_before_save, field, "")) != cstr(getattr(self, field, "")):
+				return True
+		return False
 
 	def validate_no_of_visits(self):
-		return len(self.schedules) != sum(d.no_of_visits for d in self.items)
+		return len(self.schedules) != self.no_of_visits
 
 	def validate(self):
-		self.sync_customer_to_items()
-
 		self.validate_end_date_visits()
 		self.validate_maintenance_detail()
 		self.validate_dates_with_periodicity()
@@ -244,48 +237,14 @@ class MaintenanceSchedule(TransactionBase):
 			self.generate_schedule()
 
 	def on_update(self):
-		self.sync_customer_to_items()
 		self.db_set("status", "Draft")
 
-	def sync_customer_to_items(self):
-		if self.customer and self.customer_name and self.customer_email_id:
-			for item in self.get("items", []):
-				if self.customer and (not item.customer or item.customer != self.customer):
-					item.customer = self.customer
-				if self.customer_name and (not item.customer_name or item.customer_name != self.customer_name):
-					item.customer_name = self.customer_name
-				if self.customer_email_id and (not item.customer_email_id or item.customer_email_id != self.customer_email_id):
-					item.customer_email_id = self.customer_email_id
-
-			for schedule in self.get("schedules", []):
-				if self.customer and (not schedule.customer or schedule.customer != self.customer):
-					schedule.customer = self.customer
-				if self.customer_name and (not schedule.customer_name or schedule.customer_name != self.customer_name):
-					schedule.customer_name = self.customer_name
-				if self.customer_email_id and (not schedule.customer_email_id or schedule.customer_email_id != self.customer_email_id):
-					schedule.customer_email_id = self.customer_email_id
-					
 	def validate_schedule(self):
-		item_lst1 = []
-		item_lst2 = []
-		for d in self.get("items"):
-			if d.item_code not in item_lst1:
-				item_lst1.append(d.item_code)
-
-		for m in self.get("schedules"):
-			if m.item_code not in item_lst2:
-				item_lst2.append(m.item_code)
-
-		if len(item_lst1) != len(item_lst2):
-			throw(
-				_(
-					"Maintenance Schedule is not generated for all the items. Please click on 'Generate Schedule'"
-				)
-			)
-		else:
-			for x in item_lst1:
-				if x not in item_lst2:
-					throw(_("Please click on 'Generate Schedule'"))
+		# Since we only have one item now, just check if schedules exist for the item
+		schedule_items = [m.item_code for m in self.get("schedules")]
+		
+		if not schedule_items or self.item_code not in schedule_items:
+			throw(_("Maintenance Schedule is not generated for the item. Please click on 'Generate Schedule'"))
 
 	def on_cancel(self):
 		self.db_set("status", "Cancelled")
@@ -303,13 +262,11 @@ class MaintenanceSchedule(TransactionBase):
 					dates = dates + "\n" + formatdate(schedule.scheduled_date, "dd-MM-yyyy")
 			return dates
 		elif data_type == "items":
-			items = ""
-			for item in self.items:
-				for schedule in self.schedules:
-					if item.item_name == schedule.item_name and schedule.completion_status == "Pending":
-						items = items + "\n" + item.item_name
-						break
-			return items
+			# Since we only have one item now, return it if it has pending schedules
+			for schedule in self.schedules:
+				if schedule.completion_status == "Pending":
+					return self.item_name
+			return ""
 		elif data_type == "id":
 			for schedule in self.schedules:
 				if schedule.item_name == item_name and s_date == formatdate(
@@ -319,46 +276,68 @@ class MaintenanceSchedule(TransactionBase):
 
 
 def create_schedule_logs(doc, method):
-		for row in doc.schedules:
-			frappe.msgprint(f"Creating log for Item Code: {row.item_code}")
-			
-			log = frappe.new_doc("Schedule Log")
-			log.serial_no = row.serial_no
-			log.item_code = row.item_code
-			log.item_name = row.item_name
-			log.scheduled_date = row.scheduled_date
-			log.actual_date = row.actual_date
-			log.assign_to_id = row.employee_id
-			log.assign_to = row.employee_name
-			log.completion_status = row.completion_status
-			log.customer = row.customer
-			log.customer_name = row.customer_name
-			log.customer_email_id = row.customer_email_id
-			log.maintenance_schedule = doc.name
-			log.insert()
+	for row in doc.schedules:
+		frappe.msgprint(f"Creating log for Item Code: {row.item_code}")
+		
+		log = frappe.new_doc("Schedule Log")
+		log.serial_no = row.serial_no
+		log.item_code = row.item_code
+		log.item_name = row.item_name
+		log.scheduled_date = row.scheduled_date
+		log.actual_date = row.actual_date
+		log.assign_to = row.employee
+		log.completion_status = row.completion_status
+		log.customer = row.customer
+		log.customer_name = row.customer_name
+		log.customer_email_id = row.customer_email_id
+		log.maintenance_schedule = doc.name
+		log.insert()
 
-			if row.employee_id:
-				employee = row.employee_id.strip()
-				employee = frappe.get_list(
-					"Employee",
-					filters={"teammember_id": employee},
-					fields=["name"],
-					limit=1
-				)
+		if row.employee:
+			employee = row.employee.strip()
+			employee = frappe.get_list(
+				"Employee",
+				filters={"teammember_id": employee},
+				fields=["name"],
+				limit=1
+			)
 
-				if employee:
-					emp_doc = frappe.get_doc("Employee", employee[0].name)
+			if employee:
+				emp_doc = frappe.get_doc("Employee", employee[0].name)
 
-					task_row = emp_doc.append("tasks", {})
-					task_row.serial_no = row.serial_no
-					task_row.item_code = row.item_code
-					task_row.item_name = row.item_name
-					task_row.scheduled_date = row.scheduled_date
-					task_row.actual_date = row.actual_date
-					task_row.completion_status = row.completion_status
-					task_row.maintenance_schedule = doc.name
+				task_row = emp_doc.append("tasks", {})
+				task_row.serial_no = row.serial_no
+				task_row.item_code = row.item_code
+				task_row.item_name = row.item_name
+				task_row.scheduled_date = row.scheduled_date
+				task_row.actual_date = row.actual_date
+				task_row.completion_status = row.completion_status
+				task_row.maintenance_schedule = doc.name
 
-					emp_doc.save()
-					frappe.msgprint(f"Task added for Employee (id): {employee}")
-				else:
-					frappe.log_error(f"Employee with id '{employee}' not found.", "Task Creation Failed")
+				emp_doc.save()
+				frappe.msgprint(f"Task added for Employee (id): {employee}")
+			else:
+				frappe.log_error(f"Employee with id '{employee}' not found.", "Task Creation Failed")
+				
+@frappe.whitelist()
+def get_assigned_employee(customer):
+    # Get the first open ToDo for the customer
+    todo = frappe.get_all(
+        "ToDo",
+        filters={
+            "reference_type": "Customer",
+            "reference_name": customer,
+            "status": "Open"
+        },
+        fields=["allocated_to"],
+        limit=1
+    )
+
+    if not todo:
+        return None
+
+    email = todo[0]["allocated_to"]
+
+    # Get employee by matching ToDo email with work_email in Employee
+    employee = frappe.get_value("Employee", {"work_email": email}, "name")
+    return employee  # returns employee ID (i.e., the "name" field of Employee)

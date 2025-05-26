@@ -12,7 +12,6 @@
   "item_name",
   "scheduled_date",
   "actual_date",
-  "assign_to_id",
   "assign_to",
   "completion_status",
   "maintenance_schedule",
@@ -47,16 +46,6 @@
    "label": "Actual Date"
   },
   {
-   "fieldname": "assign_to_id",
-   "fieldtype": "Data",
-   "label": "Assign To Id"
-  },
-  {
-   "fieldname": "assign_to",
-   "fieldtype": "Data",
-   "label": "Assign To"
-  },
-  {
    "fieldname": "completion_status",
    "fieldtype": "Select",
    "label": "Completion Status",
@@ -87,12 +76,17 @@
    "fieldname": "customer",
    "fieldtype": "Data",
    "label": "Customer"
+  },
+  {
+   "fieldname": "assign_to",
+   "fieldtype": "Data",
+   "label": "Assign To"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-28 10:07:32.182496",
+ "modified": "2025-05-26 15:35:23.522332",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Schedule Log",
