@@ -126,7 +126,8 @@
    "fetch_from": "customer.customer_email",
    "fieldname": "customer_email_id",
    "fieldtype": "Data",
-   "label": "Customer Email ID"
+   "label": "Customer Email ID",
+   "options": "Email"
   },
   {
    "fieldname": "serial_no",
@@ -190,8 +191,8 @@
    "link_fieldname": "maintenance_schedule"
   }
  ],
- "modified": "2025-05-26 15:03:57.781301",
- "modified_by": "Administrator",
+ "modified": "2025-05-27 11:48:41.215097",
+ "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule",
  "naming_rule": "By \"Naming Series\" field",
