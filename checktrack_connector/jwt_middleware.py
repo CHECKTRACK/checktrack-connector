@@ -21,54 +21,62 @@ SECURE_API_PATHS = [
 ]
 
 def authenticate_jwt_token():
-    # --- TEMPORARY DEBUG LOG ---
-    frappe.logger("jwt_auth").info(f"--- JWT Middleware START ---")
-    frappe.logger("jwt_auth").info(f"Request Path: {frappe.request.path}")
-    frappe.logger("jwt_auth").info(f"Request Method: {frappe.request.method}")
-    frappe.logger("jwt_auth").info(f"Request Headers: {dict(frappe.request.headers)}")
-    frappe.logger("jwt_auth").info(f"Current Frappe User (before middleware): {frappe.session.user}")
-    frappe.logger("jwt_auth").info(f"--- JWT Middleware END DEBUG START ---")
-    # --- END TEMPORARY DEBUG LOG ---
-
+    # 1. Basic checks: Is it an API request? Is user already authenticated?
+    # Ensure it's an API request AND that the request path is in our secure list
+    # Use .startswith() for general paths (like modules or resources) or exact match for specific methods
     is_secure_path = False
     for path_prefix in SECURE_API_PATHS:
-        # Check for prefix match or exact match
-        if frappe.request.path.startswith(path_prefix):
+        if frappe.request.path.startswith(path_prefix): # Checks for prefix or exact match
             is_secure_path = True
             break
 
     if not is_secure_path:
-        frappe.logger("jwt_auth").info(f"Path {frappe.request.path} not in SECURE_API_PATHS. Skipping JWT auth.")
+        # This path is not in our list of secure paths, so let Frappe's default authentication handle it.
         return
 
+    # If the path is secure and the user is already authenticated by Frappe's native session/API Key, skip.
+    # This prevents double authentication and ensures existing Frappe auth works.
     if frappe.session.user and frappe.session.user != "Guest":
-        frappe.logger("jwt_auth").info(f"User {frappe.session.user} already authenticated. Skipping JWT auth.")
         return
 
+    # 2. Extract JWT from Authorization header
     auth_header = frappe.request.headers.get("Authorization")
 
     if not auth_header or not auth_header.startswith("Bearer "):
-        frappe.logger("jwt_auth").error(f"Secure path {frappe.request.path} requested, but no valid Bearer token provided.")
+        # If the path requires JWT, but no valid Bearer token is provided, raise an error.
         raise AuthenticationError("Authentication required: Bearer token missing or invalid for this secure endpoint.")
 
     jwt_token = auth_header.split("Bearer ")[1]
 
+    # 3. Validate JWT and set user
     try:
-        # ... (rest of your JWT validation and frappe.set_user logic) ...
-        frappe.logger("jwt_auth").info(f"User {user_name} successfully authenticated via JWT for {frappe.request.path}")
+        decoded_jwt = jwt.decode(
+            jwt_token,
+            JWT_SECRET,
+            algorithms=[JWT_ALGORITHM],
+            audience=EXPECTED_AUDIENCE,
+            options={"verify_aud": True}
+        )
+
+        user_email = decoded_jwt.get("email")
+        if not user_email:
+            raise AuthenticationError("JWT does not contain a valid user identifier (e.g., 'email').")
+
+        user_name = frappe.db.get_value("User", {"email": user_email}, "name")
+
+        if not user_name:
+            raise AuthenticationError(f"Frappe user for email '{user_email}' not found.")
+
+        # Set the Frappe session user based on the validated JWT
+        frappe.set_user(user_name)
+        frappe.logger("jwt_auth").info(f"User {user_name} authenticated via JWT middleware for {frappe.request.path}")
 
     except jwt.ExpiredSignatureError:
-        frappe.logger("jwt_auth").error(f"JWT expired for {frappe.request.path}")
         raise AuthenticationError("JWT has expired.")
     except jwt.InvalidAudienceError:
-        frappe.logger("jwt_auth").error(f"Invalid JWT audience for {frappe.request.path}")
         raise AuthenticationError("Invalid JWT: Invalid audience.")
     except jwt.InvalidTokenError as e:
-        frappe.logger("jwt_auth").error(f"General JWT invalidity for {frappe.request.path}: {e}")
         raise AuthenticationError(f"Invalid JWT: {e}")
-    except AuthenticationError as e:
-        frappe.logger("jwt_auth").error(f"JWT auth failed for {frappe.request.path}: {e}")
-        raise
     except Exception as e:
-        frappe.logger("jwt_auth").error(frappe.get_traceback(), f"Unexpected error in JWT middleware for {frappe.request.path}")
+        frappe.logger("jwt_auth").error(frappe.get_traceback(), "JWT Middleware Error")
         raise AuthenticationError(f"An unexpected error occurred during JWT authentication: {e}")
