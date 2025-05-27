@@ -9,6 +9,11 @@ from frappe import _
 from frappe.utils.password import get_decrypted_password
 from checktrack_connector.onboard_api import automated_import_users
 from frappe.utils import get_url
+from datetime import datetime, timedelta
+
+# Replace with your actual JWT secret from Node.js app
+JWT_SECRET = "e6H9QQMGBx33KaOd" 
+JWT_ALGORITHM = "HS256" # Or whatever your Node.js app uses
 
 @frappe.whitelist()
 def checktrack_integration(email, password=""):
@@ -1044,3 +1049,59 @@ def login_with_jwt(token: str):
         frappe.throw("Invalid JWT")
     except Exception as e:
         frappe.throw(str(e))
+
+@frappe.whitelist(allow_guest=True)
+def authenticate_with_jwt_and_get_frappe_token(jwt_token):
+    try:
+        # 1. Verify and decode the JWT
+        decoded_jwt = jwt.decode(jwt_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="app.checktrack.dev")
+
+        # Extract user identification from JWT
+        user_email = decoded_jwt.get('email') 
+        if not user_email:
+            frappe.throw("JWT does not contain user email.")
+
+        # 2. Find or create Frappe user
+        user = frappe.db.get_value("User", {"email": user_email})
+
+        if not user:
+            # Option A: Create a new Frappe user if allowed
+            if frappe.get_doc("System Settings").allow_new_user_signup: # Check if new user signup is enabled
+                new_user_doc = frappe.new_doc("User")
+                new_user_doc.email = user_email
+                new_user_doc.full_name = decoded_jwt.get('full_name', user_email)
+                new_user_doc.user_type = "Website User" # Or appropriate user type
+                # Assign default roles, e.g., ["Website User"]
+                new_user_doc.add_roles("Website User") 
+                new_user_doc.enabled = 1
+                new_user_doc.save(ignore_permissions=True) # Save as system user to avoid permission issues
+                user = new_user_doc.name
+            else:
+                frappe.throw("User does not exist and new user signup is not allowed.")
+        
+        # 3. Get or generate API Key/Secret for the Frappe user
+        api_key = frappe.db.get_value("User", user, "api_key")
+        api_secret = frappe.db.get_value("User", user, "api_secret")
+
+        if not (api_key and api_secret):
+            # Generate new API Key and Secret
+            user_doc = frappe.get_doc("User", user)
+            user_doc.generate_keys() # This method generates API Key and Secret
+            user_doc.save(ignore_permissions=True) # Save as system user
+            api_key = user_doc.api_key
+            api_secret = user_doc.api_secret
+            
+        return {
+            "message": "Authentication successful",
+            "frappe_api_key": api_key,
+            "frappe_api_secret": api_secret,
+            "username": user_email # Or whatever identifies the user in Frappe
+        }
+
+    except jwt.ExpiredSignatureError:
+        frappe.throw("JWT has expired.")
+    except jwt.InvalidTokenError as e:
+        frappe.throw(f"Invalid JWT: {e}")
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "JWT Authentication Error")
+        frappe.throw(f"An error occurred during authentication: {e}")
