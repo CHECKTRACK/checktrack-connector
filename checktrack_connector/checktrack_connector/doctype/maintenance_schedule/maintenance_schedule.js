@@ -37,6 +37,23 @@ frappe.ui.form.on("Maintenance Schedule", {
 
         // Optionally clear serial_no if customer changes
         frm.set_value('serial_no', null);
+
+        if (frm.doc.customer) {
+            frappe.call({
+                method: "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.get_assigned_employee",
+                args: {
+                    customer: frm.doc.customer
+                },
+                callback: function(r) {
+                    if (r.message) {
+                        frm.set_value('employee', r.message);
+                    } else {
+                        frm.set_value('employee', null);
+                        frappe.msgprint("No employee assigned to this customer.");
+                    }
+                }
+            });
+        }
     }
 });
 
