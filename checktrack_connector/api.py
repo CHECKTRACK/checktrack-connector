@@ -1081,7 +1081,7 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
         
         # 3. Get or generate API Key/Secret for the Frappe user
         api_key = frappe.db.get_value("User", user, "api_key")
-        api_secret = frappe.db.get_value("User", user, "api_secret")
+        api_secret = frappe.get_doc("User", user).get_password("api_secret")
 
         if not (api_key and api_secret):
             # Generate new API Key and Secret
