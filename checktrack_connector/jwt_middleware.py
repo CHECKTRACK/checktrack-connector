@@ -17,7 +17,7 @@ EXPECTED_AUDIENCE = "app.checktrack.dev"
 # - "/api/method/your_custom_secure_method": Specific custom method
 # - "/api/resource/My Secure DocType": Specific custom DocType
 SECURE_API_PATHS = [
-    "/api/method/frappe.desk.form.load.getdoctype"
+    "/api/resource"
 ]
 
 def authenticate_jwt_token():
@@ -34,6 +34,7 @@ def authenticate_jwt_token():
         # This path is not in our list of secure paths, so let Frappe's default authentication handle it.
         return
 
+    
     # If the path is secure and the user is already authenticated by Frappe's native session/API Key, skip.
     # This prevents double authentication and ensures existing Frappe auth works.
     if frappe.session.user and frappe.session.user != "Guest":
@@ -47,6 +48,8 @@ def authenticate_jwt_token():
         raise AuthenticationError("Authentication required: Bearer token missing or invalid for this secure endpoint.")
 
     jwt_token = auth_header.split("Bearer ")[1]
+
+    print(jwt_token)
 
     # 3. Validate JWT and set user
     try:
