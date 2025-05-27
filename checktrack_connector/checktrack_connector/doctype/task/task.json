@@ -92,7 +92,8 @@
    "fieldname": "type",
    "fieldtype": "Link",
    "label": "Type",
-   "options": "DocType"
+   "options": "DocType",
+   "set_only_once": 1
   },
   {
    "fieldname": "color",
@@ -412,7 +413,8 @@
    "fieldname": "task_type_doc",
    "fieldtype": "Dynamic Link",
    "label": "Task Type Doc",
-   "options": "type"
+   "options": "type",
+   "set_only_once": 1
   },
   {
    "fieldname": "watchers",
@@ -444,7 +446,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-05-16 11:32:30.580183",
+ "modified": "2025-05-26 15:09:49.843862",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task",
