@@ -183,7 +183,9 @@ doc_events = {
         "on_save": "checktrack_connector.doctype.demo_pm_task.demo_pm_task.on_update",
     },
     "Task": {
-       "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo"
+       "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo",
+       "on_submit": "checktrack_connector.sync.handle_task_submit",
+       "on_cancel": "checktrack_connector.sync.handle_task_cancel"
     },
     "Project": {
        "on_update": "checktrack_connector.sync.sync_or_update_project_in_mongo"
@@ -204,6 +206,7 @@ override_whitelisted_methods = {
 
 after_request = ["checktrack_connector.utils.add_cors_headers"]
 
+
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
@@ -223,7 +226,7 @@ after_request = ["checktrack_connector.utils.add_cors_headers"]
 
 # Request Events
 # ----------------
-# before_request = ["checktrack_connector.utils.before_request"]
+before_request = ["checktrack_connector.jwt_middleware.authenticate_jwt_token"]
 # after_request = ["checktrack_connector.utils.after_request"]
 
 # Job Events

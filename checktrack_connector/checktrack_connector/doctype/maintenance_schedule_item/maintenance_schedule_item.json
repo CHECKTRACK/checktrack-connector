@@ -134,7 +134,7 @@
    "in_list_view": 1,
    "label": "Serial No",
    "no_copy": 1,
-   "options": "Device",
+   "options": "Customer Items",
    "reqd": 1,
    "unique": 1
   },
@@ -171,7 +171,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-30 14:53:25.406619",
+ "modified": "2025-05-26 10:16:29.563608",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule Item",
