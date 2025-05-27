@@ -20,8 +20,7 @@
   "customer_email_id",
   "column_break_8",
   "sales_person",
-  "employee_id",
-  "employee_name",
+  "employee",
   "section_break_10",
   "item_reference"
  ],
@@ -130,7 +129,7 @@
    "fieldname": "serial_no",
    "fieldtype": "Link",
    "label": "Serial No",
-   "options": "Device"
+   "options": "Customer Items"
   },
   {
    "fieldname": "customer",
@@ -138,21 +137,16 @@
    "label": "Customer"
   },
   {
-   "fieldname": "employee_id",
-   "fieldtype": "Data",
-   "label": "Employee ID"
-  },
-  {
-   "fetch_from": "teammember_id.first_name",
-   "fieldname": "employee_name",
-   "fieldtype": "Data",
-   "label": "Employee Name"
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-30 14:53:01.745797",
+ "modified": "2025-05-26 15:16:18.909852",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule Detail",

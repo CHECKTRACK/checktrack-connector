@@ -25,20 +25,34 @@ frappe.ui.form.on("Maintenance Schedule", {
 	},
 
     customer: function(frm) {
-        // Set filter for the items table's serial_no field
-        frm.fields_dict.items.grid.get_field('serial_no').get_query = function(doc, cdt, cdn) {
-            var child = locals[cdt][cdn];
+        // Set query filter for serial_no field (now standalone)
+        frm.set_query('serial_no', function() {
             return {
                 filters: {
                     'customer': frm.doc.customer,
                     'amc': ''
                 }
             };
-        };
-        
-        // Refresh the items table to apply the filter
-        if(frm.doc.items && frm.doc.items.length > 0) {
-            frm.refresh_field('items');
+        });
+
+        // Optionally clear serial_no if customer changes
+        frm.set_value('serial_no', null);
+
+        if (frm.doc.customer) {
+            frappe.call({
+                method: "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.get_assigned_employee",
+                args: {
+                    customer: frm.doc.customer
+                },
+                callback: function(r) {
+                    if (r.message) {
+                        frm.set_value('employee', r.message);
+                    } else {
+                        frm.set_value('employee', null);
+                        frappe.msgprint("No employee assigned to this customer.");
+                    }
+                }
+            });
         }
     }
 });

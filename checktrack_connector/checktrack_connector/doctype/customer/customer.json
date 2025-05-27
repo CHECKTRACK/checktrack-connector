@@ -17,6 +17,7 @@
   "customer_name",
   "customer_type",
   "customer_group",
+  "customer_email",
   "column_break0",
   "territory",
   "gender",
@@ -609,7 +610,7 @@
    "fieldname": "customer_items",
    "fieldtype": "Table",
    "label": "Customer Items",
-   "options": "Customer Items"
+   "options": "Customer Items Table"
   },
   {
    "fieldname": "customer_id",
@@ -620,6 +621,11 @@
    "no_copy": 1,
    "options": "naming_series",
    "unique": 1
+  },
+  {
+   "fieldname": "customer_email",
+   "fieldtype": "Data",
+   "label": "Customer Email"
   }
  ],
  "icon": "fa fa-user",
@@ -633,7 +639,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-04-25 10:21:44.284013",
+ "modified": "2025-05-26 10:43:15.683391",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Customer",
