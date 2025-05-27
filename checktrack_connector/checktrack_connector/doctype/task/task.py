@@ -23,9 +23,9 @@ class Task(NestedSet):
             is_status_change = not hasattr(self, '_original_status') or self._original_status != current_status
 
             # Check status in a case-insensitive way
-            # if is_status_change and current_status in ["completed", "cancelled"]:
-            #     self.try_submit_self()
-            #     self.try_submit_linked_doc()
+            if is_status_change and current_status in ["completed", "cancelled"]:
+                self.try_submit_self()
+                self.try_submit_linked_doc()
         except Exception:
             frappe.log_error(
                 title="Task Submission Error",
