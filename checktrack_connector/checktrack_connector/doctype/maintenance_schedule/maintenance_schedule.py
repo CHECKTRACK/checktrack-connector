@@ -133,6 +133,28 @@ class MaintenanceSchedule(TransactionBase):
 				customer_items.save()
 				frappe.msgprint(f"Updated AMC and AMC expiry for {customer_items.serial_no}")
 
+		for entry in self.schedules:
+			# Create a new Preventive Maintenance Task record
+			pm_task = frappe.new_doc("Preventive Maintenance Task")
+			pm_task.customer = entry.customer
+			pm_task.item = entry.serial_no
+			pm_task.insert()
+
+			# Get the User linked to the Employee (if needed)
+			# Skip this if 'assigned_to' links to Employee directly
+			user_id = frappe.db.get_value("Employee", entry.employee, "name")
+			if not user_id:
+				frappe.throw(f"No User found for Employee {entry.employee}")
+
+			# Create a new Task
+			task = frappe.new_doc("Task")
+			task.task_name = f"Preventive Maintenance - {entry.scheduled_date}"
+			task.due_date = entry.scheduled_date
+			task.assign_to = user_id  # or entry.employee if linked directly
+			task.type = "Preventive Maintenance Task"
+			task.task_type_doc = pm_task.name
+			task.insert()
+
 		self.db_set("status", "Submitted")
 
 	def create_schedule_list(self, start_date, end_date, no_of_visit, sales_person):
