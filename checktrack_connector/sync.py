@@ -8,42 +8,6 @@ def get_last_value(url):
     parts = url.rstrip('/').split('/')
     return parts[-1]
 
-@frappe.whitelist()
-def send_feedback_request(task_id):
-    try:
-        task = frappe.get_doc('Task', task_id)
-
-        # if not task.customer:
-        #     frappe.throw(_("No customer linked to this task."))
-
-        # customer = frappe.get_doc("Customer", task.customer)
-        # email = customer.email_id or customer.primary_contact_email
-        # if not email:
-        #     frappe.throw(_("Customer email not found."))
-
-        # Test email for now
-
-        feedback_url = f"http://erpnext.local:8001/feedback-web-form/new?task={task_id}"
-
-        subject_of_mail = f"Feedback Request for Task {task.task_name}"
-        message_of_mail = f"""
-            Dear Customer,<br><br>
-            We would love to hear your thoughts on the task <b>{task.task_name}</b>.<br>
-            Please provide your feedback using the link below:<br><br>
-            <a href="{feedback_url}">Give Feedback</a><br><br>
-            Regards,<br>
-            Your Team
-        """
-
-        frappe.sendmail(
-            recipients=["mihir.patel@team.satat.tech"],
-            subject=subject_of_mail,
-            message=message_of_mail
-        )
-
-    except Exception as e:
-        frappe.msgprint(_("Failed to send feedback request: ") + str(e), alert=True)
-
 def send_notification(doc, docname, prefix, tenantId):
     try:
         # Check if assign_to has changed or it's a new assignment
@@ -380,9 +344,6 @@ def update_task_in_mongo(doc, method):
 
         notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
         send_status_change_notification(doc,doc.name,prefix,company_doc.tenant_id)
-
-        if doc.status.strip().lower() == 'complete':
-            send_feedback_request(doc.name)
 
         return response
 
