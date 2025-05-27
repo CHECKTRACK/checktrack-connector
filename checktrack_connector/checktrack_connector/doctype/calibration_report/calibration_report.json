@@ -9,9 +9,10 @@
   "customer_id",
   "customer_name",
   "customer_email",
+  "item_id",
   "instrument",
-  "model",
   "serial_no",
+  "model",
   "calibration_std_used",
   "parameters",
   "criteria",
@@ -28,8 +29,7 @@
    "label": "Customer Name"
   },
   {
-   "fetch_from": "customer_id.customer_details",
-   "fetch_if_empty": 1,
+   "fetch_from": "item_id.item_name",
    "fieldname": "instrument",
    "fieldtype": "Data",
    "label": "Instrument"
@@ -40,6 +40,7 @@
    "label": "Model"
   },
   {
+   "fetch_from": "item_id.serial_no",
    "fieldname": "serial_no",
    "fieldtype": "Data",
    "label": "Serial No"
@@ -81,6 +82,7 @@
   },
   {
    "fetch_from": "customer_id.customer_email",
+   "fetch_if_empty": 1,
    "fieldname": "customer_email",
    "fieldtype": "Data",
    "label": "Customer Email"
@@ -88,14 +90,23 @@
   {
    "fieldname": "customer_id",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Customer ID",
    "options": "Customer",
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "item_id",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Item ID",
+   "options": "Customer Items",
    "set_only_once": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-26 16:37:07.227139",
+ "modified": "2025-05-27 15:49:14.416857",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Calibration Report",
