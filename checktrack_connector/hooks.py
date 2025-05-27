@@ -229,7 +229,7 @@ after_request = ["checktrack_connector.utils.add_cors_headers"]
 
 # Request Events
 # ----------------
-# before_request = ["checktrack_connector.jwt_middleware.authenticate_jwt_token"]
+before_request = ["checktrack_connector.jwt_middleware.authenticate_jwt_token"]
 # after_request = ["checktrack_connector.utils.after_request"]
 
 # Job Events
