@@ -23,9 +23,9 @@ class Task(NestedSet):
             is_status_change = not hasattr(self, '_original_status') or self._original_status != current_status
 
             # Check status in a case-insensitive way
-            if is_status_change and current_status in ["completed", "cancelled"]:
-                self.try_submit_self()
-                self.try_submit_linked_doc()
+            # if is_status_change and current_status in ["completed", "cancelled"]:
+            #     self.try_submit_self()
+            #     self.try_submit_linked_doc()
         except Exception:
             frappe.log_error(
                 title="Task Submission Error",
@@ -37,7 +37,9 @@ class Task(NestedSet):
             return
         try:
             if frappe.db.exists(self.type, self.task_type_doc):
-                frappe.db.set_value(self.type, self.task_type_doc, "status", self.status)
+                doc = frappe.get_doc(self.type, self.task_type_doc)
+                doc.status = self.status
+                doc.save()
                 frappe.log_error(
                     title="Linked Document Status Sync",
                     message=f"Updated status of linked doc '{self.type}' ({self.task_type_doc}) to '{self.status}' from Task '{self.name}'."
