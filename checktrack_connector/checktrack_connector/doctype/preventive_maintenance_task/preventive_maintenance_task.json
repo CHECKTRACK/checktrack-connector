@@ -9,12 +9,14 @@
   "amended_from",
   "status",
   "customer",
+  "customer_email",
   "item",
   "calibration_certificate",
   "pm_report",
   "service_report",
   "completion_date",
-  "cancellation_reason"
+  "cancellation_reason",
+  "feedback"
  ],
  "fields": [
   {
@@ -35,7 +37,6 @@
   {
    "fieldname": "status",
    "fieldtype": "Data",
-   "hidden": 1,
    "label": "Status"
   },
   {
@@ -71,6 +72,22 @@
    "fieldtype": "Link",
    "label": "Service Report",
    "options": "Service Report"
+  },
+  {
+   "fetch_from": "customer.email_id",
+   "fieldname": "customer_email",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Customer Email",
+   "options": "Email"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "feedback",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Feedback",
+   "options": "Feedback Form"
   },
   {
    "fieldname": "item",

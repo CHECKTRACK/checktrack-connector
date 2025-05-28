@@ -1108,3 +1108,28 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "JWT Authentication Error")
         frappe.throw(f"An error occurred during authentication: {e}")
+
+@frappe.whitelist(allow_guest=True)
+def get_task_and_service_report(task_id):
+    if not task_id:
+        return {"error": "Missing task_id"}
+
+    task = frappe.get_doc("Preventive Maintenance Task", task_id)
+
+    # optionally restrict which fields you expose
+    result = {
+        "task": {
+            "name": task.name,
+            "service_report": task.service_report,
+            "feedback": task.feedback
+        }
+    }
+
+    if task.service_report:
+        report = frappe.get_doc("Service Report", task.service_report)
+        result["service_report"] = {
+            "name": report.name,
+            "remarks": report.remarks
+        }
+
+    return result

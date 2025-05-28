@@ -4,20 +4,13 @@
 import frappe
 from frappe.model.document import Document
 
-
 class FeedbackForm(Document):
-    pass
-
-def after_insert(doc, method):
-    doc = frappe.get_doc(doc.doctype, doc.name)
-    if doc.task:
-        try:
-            task = frappe.get_doc("Task", doc.task)
-            
-            if task:
-                frappe.db.set_value(task.doctype, task.name, "feedback", doc.name)
-
-                frappe.log_error(f"Linked feedback {doc.name} to task {task.name}", "Feedback Link Success")
-
-        except Exception as e:
-            frappe.log_error(f"Failed to link feedback {doc.name} to Task {doc.task}: {str(e)}", "Feedback Link Error")
+    def after_insert(self):
+        if self.task_type_id:
+            # Update the Preventive Maintenance Task with feedback link
+            frappe.db.set_value(
+                "Preventive Maintenance Task",
+                self.task_type_id,
+                "feedback",  # Make sure this field exists in the Task DocType
+                self.name
+            )
