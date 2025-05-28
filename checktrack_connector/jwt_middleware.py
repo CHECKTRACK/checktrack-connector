@@ -17,7 +17,7 @@ EXPECTED_AUDIENCE = "app.checktrack.dev"
 # - "/api/method/your_custom_secure_method": Specific custom method
 # - "/api/resource/My Secure DocType": Specific custom DocType
 SECURE_API_PATHS = [
-    "/api/resource"
+    # "/api/resource"
 ]
 
 def authenticate_jwt_token():
