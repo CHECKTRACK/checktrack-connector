@@ -1,4 +1,5 @@
 (function () {
+    document.documentElement.style.display = 'none';
     function getUrlParameter(name) {
         name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
         var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -9,8 +10,6 @@
     const taskId = getUrlParameter('task_type_id');
 
     if (!taskId) return;
-
-    document.documentElement.style.display = 'none';
 
     fetch('/api/method/checktrack_connector.api.get_task_and_service_report?' + new URLSearchParams({
         task_id: taskId
@@ -25,31 +24,52 @@
           if (feedback) {
               window.location.href = '/thank-you-form';
           } else {
-              document.documentElement.style.display = '';
-              frappe.ready(async function() {
-                  const navBar = document.querySelector('nav.navbar.navbar-light.navbar-expand-lg');
-                    if (navBar) {
-                        navBar.style.display = 'none';
-                    }
-                    const footer = document.querySelector('footer.web-footer');
-                    if (footer) {
-                        footer.style.display = 'none';
-                    }
-              });
+            document.documentElement.style.display = '';
+            const navBar = document.querySelector('nav.navbar.navbar-light.navbar-expand-lg');
+            if (navBar) {
+                navBar.style.display = 'none';
+            }
+            const footer = document.querySelector('footer.web-footer');
+            if (footer) {
+                footer.style.display = 'none';
+            }
+            const discardButton = document.querySelector('button.discard-btn.btn.btn-default.btn-sm');
+            if (discardButton) {
+                discardButton.style.display = 'none';
+            }
+            frappe.web_form.after_save = () => {
+                const successPage = document.querySelector('.success-page');
+                if (successPage) {
+                    successPage.remove();
+                }
+
+                window.location.href = "/thank-you-form";
+            };
+            
           }
       })
       .catch(err => {
           console.error("API failed:", err);
-          document.documentElement.style.display = '';
-          frappe.ready(async function() {
-                const navBar = document.querySelector('nav.navbar.navbar-light.navbar-expand-lg');
-                if (navBar) {
-                    navBar.style.display = 'none';
+            document.documentElement.style.display = '';
+            const navBar = document.querySelector('nav.navbar.navbar-light.navbar-expand-lg');
+            if (navBar) {
+                navBar.style.display = 'none';
+            }
+            const footer = document.querySelector('footer.web-footer');
+            if (footer) {
+                footer.style.display = 'none';
+            }
+            const discardButton = document.querySelector('button.discard-btn.btn.btn-default.btn-sm');
+            if (discardButton) {
+                discardButton.style.display = 'none';
+            }
+            frappe.web_form.after_save = () => {
+                const successPage = document.querySelector('.success-page');
+                if (successPage) {
+                    successPage.remove();
                 }
-                const footer = document.querySelector('footer.web-footer');
-                if (footer) {
-                    footer.style.display = 'none';
-                }
-          });
+
+                window.location.href = "/thank-you-form";
+            };
       });
 })();

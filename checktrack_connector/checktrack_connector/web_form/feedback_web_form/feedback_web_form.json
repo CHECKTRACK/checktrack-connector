@@ -12,7 +12,7 @@
  "client_script": "",
  "condition_json": "[]",
  "creation": "2025-05-13 11:09:43.151297",
- "custom_css": "html {\n  display: none;\n}",
+ "custom_css": ".success-page {\n    display: none\n}",
  "doc_type": "Feedback Form",
  "docstatus": 0,
  "doctype": "Web Form",
@@ -21,7 +21,7 @@
  "list_columns": [],
  "login_required": 0,
  "max_attachment_size": 0,
- "modified": "2025-05-28 10:59:12.190454",
+ "modified": "2025-05-28 12:18:20.753965",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "feedback-web-form",
@@ -32,8 +32,8 @@
  "show_list": 0,
  "show_sidebar": 0,
  "success_message": "",
- "success_title": "Feedback Successfully Submited.",
- "success_url": "thank-you-form",
+ "success_title": "",
+ "success_url": "",
  "title": "Customer Feedback",
  "web_form_fields": [
   {
@@ -78,7 +78,7 @@
   {
    "allow_read_on_all_link_options": 0,
    "fieldname": "task_type_id",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "hidden": 1,
    "label": "Task Type Id",
    "max_length": 0,

@@ -39,7 +39,7 @@
   },
   {
    "fieldname": "task_type_id",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Task Type Id",
    "options": "Preventive Maintenance Task"
   }
@@ -47,7 +47,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-27 14:33:46.071903",
+ "modified": "2025-05-28 12:13:52.640811",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Feedback Form",
