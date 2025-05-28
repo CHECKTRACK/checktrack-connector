@@ -12,6 +12,7 @@
  "client_script": "",
  "condition_json": "[]",
  "creation": "2025-05-13 11:09:43.151297",
+ "custom_css": "html {\n  display: none;\n}",
  "doc_type": "Feedback Form",
  "docstatus": 0,
  "doctype": "Web Form",
@@ -20,7 +21,7 @@
  "list_columns": [],
  "login_required": 0,
  "max_attachment_size": 0,
- "modified": "2025-05-27 18:11:27.974111",
+ "modified": "2025-05-28 10:59:12.190454",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "feedback-web-form",
@@ -30,7 +31,9 @@
  "show_attachments": 0,
  "show_list": 0,
  "show_sidebar": 0,
+ "success_message": "",
  "success_title": "Feedback Successfully Submited.",
+ "success_url": "thank-you-form",
  "title": "Customer Feedback",
  "web_form_fields": [
   {

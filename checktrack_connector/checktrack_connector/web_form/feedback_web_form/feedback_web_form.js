@@ -1,6 +1,5 @@
-frappe.ready(async function () {
-
-   function getUrlParameter(name) {
+(function () {
+    function getUrlParameter(name) {
         name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
         var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
         var results = regex.exec(location.search);
@@ -8,29 +7,49 @@ frappe.ready(async function () {
     }
 
     const taskId = getUrlParameter('task_type_id');
-    frappe.msgprint(taskId);
 
-    const result = await frappe.call({
-        method: "checktrack_connector.api.get_task_and_service_report",
-        type: "GET",
-        args: {
-            task_id: taskId,
+    if (!taskId) return;
+
+    document.documentElement.style.display = 'none';
+
+    fetch('/api/method/checktrack_connector.api.get_task_and_service_report?' + new URLSearchParams({
+        task_id: taskId
+    }), {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
         }
-    });
-
-    const feedback = result.message.task.feedback;
-    if (feedback) {
-        window.location.href = '/thank-you-form';
-        return;
-    }
-
-	const navBar = document.querySelector('nav.navbar.navbar-light.navbar-expand-lg');
-    if (navBar) {
-        navBar.style.display = 'none';
-    }
-	const footer = document.querySelector('footer.web-footer');
-    if (footer) {
-        footer.style.display = 'none';
-    }
-    
-});
+    }).then(res => res.json())
+      .then(result => {
+          const feedback = result.message?.task?.feedback;
+          if (feedback) {
+              window.location.href = '/thank-you-form';
+          } else {
+              document.documentElement.style.display = '';
+              frappe.ready(async function() {
+                  const navBar = document.querySelector('nav.navbar.navbar-light.navbar-expand-lg');
+                    if (navBar) {
+                        navBar.style.display = 'none';
+                    }
+                    const footer = document.querySelector('footer.web-footer');
+                    if (footer) {
+                        footer.style.display = 'none';
+                    }
+              });
+          }
+      })
+      .catch(err => {
+          console.error("API failed:", err);
+          document.documentElement.style.display = '';
+          frappe.ready(async function() {
+                const navBar = document.querySelector('nav.navbar.navbar-light.navbar-expand-lg');
+                if (navBar) {
+                    navBar.style.display = 'none';
+                }
+                const footer = document.querySelector('footer.web-footer');
+                if (footer) {
+                    footer.style.display = 'none';
+                }
+          });
+      });
+})();
