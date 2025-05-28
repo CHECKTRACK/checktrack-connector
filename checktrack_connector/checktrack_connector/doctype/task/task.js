@@ -35,7 +35,7 @@ function render_status_ui(frm) {
     frappe.call({
         method: "frappe.client.get_list",
         args: {
-            doctype: "CT Task Flow",
+            doctype: "Task Type",
             filters: {
                 name: frm.doc.type
             },
@@ -52,7 +52,7 @@ function render_status_ui(frm) {
             frappe.call({
                 method: "frappe.client.get",
                 args: {
-                    doctype: "CT Task Flow",
+                    doctype: "Task Type",
                     name: doc.name
                 },
                 callback: function (r) {
