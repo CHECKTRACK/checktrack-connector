@@ -163,14 +163,33 @@ def send_status_change_notification(doc, docname, prefix, tenantId):
         current_user = frappe.get_doc("User", frappe.session.user)
         changer_name = current_user.full_name or current_user.name
 
-        # Get watchers from child table
-        list_of_employee_ids = [{"$oid": row.employee} for row in doc.watchers]  # Adjust field name if different
+        # Collect all employees to notify (watchers + assigned person)
+        employee_ids_to_notify = set()
+        
+        # Add watchers from child table
+        for row in doc.watchers:
+            employee_ids_to_notify.add(row.employee)
+        
+        # Add assigned person if exists
+        if doc.assign_to:
+            employee_ids_to_notify.add(doc.assign_to)
+
+        # Get current user's linked employee to exclude from notifications
+        current_user_employee = frappe.db.get_value("Employee", {"work_email": frappe.session.user}, "name")
+        
+        # Remove current user's employee from notification list if present
+        if current_user_employee and current_user_employee in employee_ids_to_notify:
+            employee_ids_to_notify.remove(current_user_employee)
+            frappe.logger().info(f"Excluded current user's employee {current_user_employee} from notifications for {docname}")
+
+        # Convert to required format
+        list_of_employee_ids = [{"$oid": emp_id} for emp_id in employee_ids_to_notify]
 
         if not list_of_employee_ids:
-            frappe.logger().warn(f"No watchers found for task {docname}, skipping notification.")
+            frappe.logger().warn(f"No valid recipients for task {docname} status change notification, skipping.")
             return
 
-        # Get API URLs (same as original function)
+        # Get API URLs
         USER_API_URL = frappe.get_hooks().get("user_api_url")
         if isinstance(USER_API_URL, list) and USER_API_URL:
             USER_API_URL = USER_API_URL[0]
@@ -181,7 +200,7 @@ def send_status_change_notification(doc, docname, prefix, tenantId):
             "listOfEmployeeIds": list_of_employee_ids,
             "notificationPayload": {
                 "title": "Task Status Updated",
-                "body": f"The status of task \"{doc.task_name}\" has changed from \"{previous_status}\" to \"{current_status}\" by \"{changer_name}\"",  # Include previous status for clarity
+                "body": f"The status of task \"{doc.task_name}\" has changed from \"{previous_status}\" to \"{current_status}\" by \"{changer_name}\"",
                 "data": {
                     "route": "/tasks/view",
                     "arguments": {
@@ -208,7 +227,7 @@ def send_status_change_notification(doc, docname, prefix, tenantId):
         response = requests.post(url, json=notification_data, headers=notification_headers)
         response.raise_for_status()
 
-        frappe.logger().info(f"Status change notification sent for task {docname}")
+        frappe.logger().info(f"Status change notification sent for task {docname} to {len(list_of_employee_ids)} recipients")
         return response
 
     except Exception:
@@ -257,17 +276,35 @@ def send_status_change_notification_for_submit_cancel(doc, docname, prefix, tena
     """Send notification for submit/cancel actions"""
     try:
         # Get current user (who performed the action)
-    
         current_user = frappe.get_doc("User", frappe.session.user)
         changer_name = current_user.full_name or current_user.name
 
         current_status = doc.status
         
-        # Get watchers from child table
-        list_of_employee_ids = [{"$oid": row.employee} for row in doc.watchers]
+        # Collect all employees to notify (watchers + assigned person)
+        employee_ids_to_notify = set()
+        
+        # Add watchers from child table
+        for row in doc.watchers:
+            employee_ids_to_notify.add(row.employee)
+        
+        # Add assigned person if exists
+        if doc.assign_to:
+            employee_ids_to_notify.add(doc.assign_to)
+
+        # Get current user's linked employee to exclude from notifications
+        current_user_employee = frappe.db.get_value("Employee", {"work_email": frappe.session.user}, "name")
+        
+        # Remove current user's employee from notification list if present
+        if current_user_employee and current_user_employee in employee_ids_to_notify:
+            employee_ids_to_notify.remove(current_user_employee)
+            frappe.logger().info(f"Excluded current user's employee {current_user_employee} from {status_action} notifications for {docname}")
+
+        # Convert to required format
+        list_of_employee_ids = [{"$oid": emp_id} for emp_id in employee_ids_to_notify]
 
         if not list_of_employee_ids:
-            frappe.logger().warn(f"No watchers found for task {docname}, skipping notification.")
+            frappe.logger().warn(f"No valid recipients for task {docname} {status_action} notification, skipping.")
             return
 
         # Get API URLs
@@ -309,7 +346,7 @@ def send_status_change_notification_for_submit_cancel(doc, docname, prefix, tena
         response = requests.post(url, json=notification_data, headers=notification_headers)
         response.raise_for_status()
 
-        frappe.logger().info(f"Status change notification sent for task {docname} - {action_text}")
+        frappe.logger().info(f"Status change notification sent for task {docname} - {action_text} to {len(list_of_employee_ids)} recipients")
         return response
 
     except Exception:
