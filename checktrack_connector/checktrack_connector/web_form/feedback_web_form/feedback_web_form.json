@@ -21,7 +21,7 @@
  "list_columns": [],
  "login_required": 0,
  "max_attachment_size": 0,
- "modified": "2025-05-28 12:18:20.753965",
+ "modified": "2025-05-28 13:18:47.887242",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "feedback-web-form",
@@ -78,7 +78,7 @@
   {
    "allow_read_on_all_link_options": 0,
    "fieldname": "task_type_id",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "hidden": 1,
    "label": "Task Type Id",
    "max_length": 0,
