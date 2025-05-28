@@ -1,162 +1,120 @@
-// Copyright (c) 2025, satat tech llp and contributors
-// For license information, please see license.txt
-
 frappe.ui.form.on("Task", {
     refresh(frm) {
-        // Remove any existing status circle
-        frm.dashboard.clear_headline();
-        
-        // Create and display status circle
-        if (frm.doc.status) {
-            create_status_circle(frm);
-        }
+        render_status_ui(frm);
     },
-    
-    // Update circle when status field changes
+
     status(frm) {
-        if (frm.doc.status) {
-            create_status_circle(frm);
-        }
+        render_status_ui(frm);
+    },
+
+    type(frm) {
+        render_status_ui(frm); // re-render when type changes
     }
 });
 
-function create_status_circle(frm) {
-    const status = frm.doc.status;
-    
-    // Define status colors
-    const status_colors = {
-        'Open': '#ff6b6b',
-        'Working': '#4ecdc4',
-        'Pending Review': '#45b7d1',
-        'Overdue': '#f39c12',
-        'Template': '#9b59b6',
-        'Completed': '#2ecc71',
-        'Cancelled': '#e74c3c'
-    };
-    
-    // Get color for current status (default to gray if not found)
-    const color = status_colors[status] || '#95a5a6';
-    
-    // Create HTML for status circle
-    const circle_html = `
-        <div class="status-circle-container" style="
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 15px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        ">
-            <div class="status-circle" style="
-                width: 60px;
-                height: 60px;
+function render_status_ui(frm) {
+    const wrapper_id = 'custom-status-overview-wrapper';
+
+    let wrapper = $(`#${wrapper_id}`);
+    if (!wrapper.length) {
+        frm.dashboard.add_section(`
+            <div id="${wrapper_id}" style="padding-top: 12px;"></div>
+        `, __("Status Overview"));
+        wrapper = $(`#${wrapper_id}`);
+    }
+
+    wrapper.empty();
+
+    // Show "Pending" only if no type selected
+    if (!frm.doc.type) {
+        render_status_dropdown(wrapper, frm, ['Pending']);
+        return;
+    }
+
+    // Call server to get status list based on selected type
+    frappe.call({
+        method: "frappe.client.get_list",
+        args: {
+            doctype: "Task Type",
+            filters: {
+                name: frm.doc.type
+            },
+            fields: ["name"],
+            limit: 1
+        },
+        callback: function (res) {
+            const doc = res.message?.[0];
+            if (!doc) {
+                render_status_dropdown(wrapper, frm, ['Pending']);
+                return;
+            }
+
+            frappe.call({
+                method: "frappe.client.get",
+                args: {
+                    doctype: "Task Type",
+                    name: doc.name
+                },
+                callback: function (r) {
+                    const status_list = (r.message.status_flow || []).map(row => row.status);
+                    if (!status_list.length) status_list.push('Pending');
+                    render_status_dropdown(wrapper, frm, status_list);
+                }
+            });
+        }
+    });
+}
+
+function render_status_dropdown(wrapper, frm, status_list) {
+    const is_submitted = frm.doc.docstatus === 1;
+
+
+    const status_display = `
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="
+                width: 40px;
+                height: 40px;
                 border-radius: 50%;
-                background: ${color};
+                background-color: #d1d1d1;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: white;
                 font-weight: bold;
-                font-size: 12px;
-                text-align: center;
-                margin-right: 15px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                animation: pulse 2s infinite;
+                color: #fff;
+                font-size: 14px;
             ">
-                ${status.charAt(0).toUpperCase()}
+                ${frm.doc.status ? frm.doc.status.charAt(0).toUpperCase() : '-'}
             </div>
-            <div class="status-info">
-                <div style="
-                    font-weight: 600;
-                    font-size: 16px;
-                    color: #2c3e50;
-                    margin-bottom: 4px;
-                ">
-                    Status: ${status}
+            <div>
+                <div style="font-weight: 600; font-size: 14px;">
+                    Current Status: ${frm.doc.status || 'Not Set'}
                 </div>
-                <div style="
-                    font-size: 12px;
-                    color: #7f8c8d;
-                ">
+                <div style="font-size: 12px; color: #888;">
                     Last Updated: ${frappe.datetime.get_datetime_as_string(frm.doc.modified)}
                 </div>
+                ${!is_submitted ? `
+                <div style="margin-top: 8px;">
+                    <select id="status-dropdown" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+                        ${status_list.map(s => `
+                            <option value="${s}" ${s === frm.doc.status ? "selected" : ""}>${s}</option>
+                        `).join('')}
+                    </select>
+                </div>` : ''}
             </div>
         </div>
-        <style>
-            @keyframes pulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-                100% { transform: scale(1); }
-            }
-            .status-circle-container:hover {
-                transform: translateY(-2px);
-                transition: all 0.3s ease;
-            }
-        </style>
     `;
-    
-    // Add the circle to form dashboard
-    frm.dashboard.add_section(circle_html, __("Task Status"));
-}
 
-// Alternative approach: Add to specific section
-function add_status_circle_to_section(frm) {
-    const status = frm.doc.status;
-    if (!status) return;
-    
-    // Find a section to add the circle (you can customize this)
-    const section = frm.fields_dict.section_break_1 || frm.fields_dict.details_section;
-    
-    if (section && section.wrapper) {
-        // Remove existing circle if any
-        $(section.wrapper).find('.custom-status-circle').remove();
-        
-        const circle_element = $(`
-            <div class="custom-status-circle" style="
-                text-align: center;
-                margin: 20px 0;
-                padding: 15px;
-            ">
-                <div style="
-                    width: 80px;
-                    height: 80px;
-                    border-radius: 50%;
-                    background: ${get_status_color(status)};
-                    margin: 0 auto 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 14px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                ">
-                    ${status}
-                </div>
-                <div style="
-                    font-size: 12px;
-                    color: #666;
-                    margin-top: 8px;
-                ">
-                    Current Status
-                </div>
-            </div>
-        `);
-        
-        $(section.wrapper).prepend(circle_element);
+    wrapper.html(status_display);
+
+    if (!is_submitted) {
+        setTimeout(() => {
+            $('#status-dropdown').on('change', function () {
+                const new_status = $(this).val();
+                if (new_status !== frm.doc.status) {
+                    frm.set_value('status', new_status);
+                    frappe.show_alert(`Status set to ${new_status}. Don't forget to Save.`);
+                }
+            });
+        }, 100);
     }
-}
-
-function get_status_color(status) {
-    const colors = {
-        'Open': '#ff6b6b',
-        'Working': '#4ecdc4',
-        'Pending Review': '#45b7d1',
-        'Overdue': '#f39c12',
-        'Template': '#9b59b6',
-        'Completed': '#2ecc71',
-        'Cancelled': '#e74c3c'
-    };
-    return colors[status] || '#95a5a6';
 }
