@@ -6,7 +6,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "status",
+  "workflow_status",
   "color",
   "visible_fields",
   "required_fields",
@@ -45,10 +45,10 @@
    "label": "Status Change To"
   },
   {
-   "fieldname": "status",
+   "fieldname": "workflow_status",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Status"
+   "label": "Workflow Status"
   }
  ],
  "index_web_pages_for_search": 1,

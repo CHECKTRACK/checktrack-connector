@@ -138,8 +138,8 @@ def send_status_change_notification(doc, docname, prefix, tenantId):
             return
         else:
             # Existing document: check if status changed
-            previous_status = previous_doc.status
-            current_status = doc.status
+            previous_status = previous_doc.workflow_status
+            current_status = doc.workflow_status
             if previous_status != current_status:
                 send_notification = True
 
@@ -287,8 +287,8 @@ def sync_task_to_mongo(doc, method):
         except Exception as e:
             frappe.log_error(frappe.get_traceback(), f"Failed to sync project '{doc.project}'")
 
-    if doc.status:
-        payload["status"] = doc.status
+    if doc.workflow_status:
+        payload["status"] = doc.workflow_status
     else:
         payload["status"] = ""
 
@@ -362,8 +362,8 @@ def update_task_in_mongo(doc, method):
         except Exception as e:
             frappe.log_error(frappe.get_traceback(), f"Failed to sync project '{doc.project}'")
 
-    if doc.status:
-        payload["status"] = doc.status
+    if doc.workflow_status:
+        payload["status"] = doc.workflow_status
     else:
         payload["status"] = ""
 
@@ -381,7 +381,7 @@ def update_task_in_mongo(doc, method):
         notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
         send_status_change_notification(doc,doc.name,prefix,company_doc.tenant_id)
 
-        if doc.status.strip().lower() == 'complete':
+        if doc.workflow_status.strip().lower() == 'complete':
             send_feedback_request(doc.name)
 
         return response

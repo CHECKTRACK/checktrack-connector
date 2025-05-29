@@ -7,7 +7,7 @@
  "field_order": [
   "section_break_hhk8",
   "amended_from",
-  "status",
+  "workflow_status",
   "customer",
   "item",
   "calibration_certificate",
@@ -33,10 +33,10 @@
    "search_index": 1
   },
   {
-   "fieldname": "status",
+   "fieldname": "workflow_status",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Status"
+   "label": "Workflow Status"
   },
   {
    "fieldname": "customer",
