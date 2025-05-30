@@ -12,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestAMCRenewal(UnitTestCase):
+class UnitTestAMCRenewalSetting(UnitTestCase):
 	"""
-	Unit tests for AMCRenewal.
+	Unit tests for AMCRenewalSetting.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestAMCRenewal(IntegrationTestCase):
+class IntegrationTestAMCRenewalSetting(IntegrationTestCase):
 	"""
-	Integration tests for AMCRenewal.
+	Integration tests for AMCRenewalSetting.
 	Use this class for testing interactions between multiple components.
 	"""
 
