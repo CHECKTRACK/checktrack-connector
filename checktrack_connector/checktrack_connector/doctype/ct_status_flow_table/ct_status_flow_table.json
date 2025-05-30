@@ -11,7 +11,7 @@
   "visible_fields",
   "required_fields",
   "read_only_fields",
-  "status_change_to"
+  "workflow_status_change_to"
  ],
  "fields": [
   {
@@ -39,10 +39,10 @@
    "label": "Read Only Fields"
   },
   {
-   "fieldname": "status_change_to",
+   "fieldname": "workflow_status_change_to",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Status Change To"
+   "label": "Workflow Status Change To"
   },
   {
    "fieldname": "workflow_status",
