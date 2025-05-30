@@ -6,16 +6,17 @@ from frappe.model.document import Document
 
 class AMCRenewal(Document):
     def on_update(self):
-        """
-        Update the 'days_in_advance' field in the Notification document
-        when the 'days' field in AMC Renewal is changed.
-        """
-        notification_name = "AMC Renewal"  # Name of the Notification document
-        
-        if frappe.db.exists("Notification", notification_name):
-            notification = frappe.get_doc("Notification", notification_name)
-            notification.days_in_advance = self.days
-            notification.save()
-            frappe.db.commit()
-        else:
-            frappe.msgprint(f"Notification document '{notification_name}' not found.", alert=True)
+        notifications = {
+            "AMC Renewal Customer": self.customer_days,
+            "AMC Renewal Owner": self.owner_days
+        }
+
+        for notification_name, days in notifications.items():
+            if frappe.db.exists("Notification", notification_name):
+                notification = frappe.get_doc("Notification", notification_name)
+                notification.days_in_advance = days
+                notification.save()
+            else:
+                frappe.msgprint(f"Notification document '{notification_name}' not found.", alert=True)
+
+        frappe.db.commit()

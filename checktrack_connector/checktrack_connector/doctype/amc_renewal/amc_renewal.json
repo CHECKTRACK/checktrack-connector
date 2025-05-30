@@ -5,21 +5,40 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "days"
+  "customer_section",
+  "customer_days",
+  "business_section",
+  "owner_days"
  ],
  "fields": [
   {
-   "fieldname": "days",
+   "fieldname": "customer_days",
    "fieldtype": "Select",
-   "label": "Days",
-   "options": "7\n3\n1"
+   "label": "Days Before",
+   "options": "10\n9\n8\n7\n6\n5\n4\n3\n2\n1"
+  },
+  {
+   "fieldname": "owner_days",
+   "fieldtype": "Select",
+   "label": "Days Before",
+   "options": "10\n9\n8\n7\n6\n5\n4\n3\n2\n1"
+  },
+  {
+   "fieldname": "customer_section",
+   "fieldtype": "Section Break",
+   "label": "Customer"
+  },
+  {
+   "fieldname": "business_section",
+   "fieldtype": "Section Break",
+   "label": "Business"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-05-27 14:55:24.102576",
+ "modified": "2025-05-30 09:36:00.030035",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "AMC Renewal",
