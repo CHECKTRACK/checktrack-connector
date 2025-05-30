@@ -37,7 +37,9 @@ class Task(NestedSet):
             return
         try:
             if frappe.db.exists(self.type, self.task_type_doc):
-                frappe.db.set_value(self.type, self.task_type_doc, "workflow_status", self.workflow_status)
+                doc = frappe.get_doc(self.type, self.task_type_doc)
+                doc.workflow_status = self.workflow_status
+                doc.save()
                 frappe.log_error(
                     title="Linked Document Status Sync",
                     message=f"Updated workflow_status of linked doc '{self.type}' ({self.task_type_doc}) to '{self.workflow_status}' from Task '{self.name}'."

@@ -8,47 +8,22 @@ def get_last_value(url):
     parts = url.rstrip('/').split('/')
     return parts[-1]
 
-@frappe.whitelist()
-def send_feedback_request(task_id):
-    try:
-        task = frappe.get_doc('Task', task_id)
-
-        # if not task.customer:
-        #     frappe.throw(_("No customer linked to this task."))
-
-        # customer = frappe.get_doc("Customer", task.customer)
-        # email = customer.email_id or customer.primary_contact_email
-        # if not email:
-        #     frappe.throw(_("Customer email not found."))
-
-        # Test email for now
-
-        feedback_url = f"http://erpnext.local:8001/feedback-web-form/new?task={task_id}"
-
-        subject_of_mail = f"Feedback Request for Task {task.task_name}"
-        message_of_mail = f"""
-            Dear Customer,<br><br>
-            We would love to hear your thoughts on the task <b>{task.task_name}</b>.<br>
-            Please provide your feedback using the link below:<br><br>
-            <a href="{feedback_url}">Give Feedback</a><br><br>
-            Regards,<br>
-            Your Team
-        """
-
-        frappe.sendmail(
-            recipients=["mihir.patel@team.satat.tech"],
-            subject=subject_of_mail,
-            message=message_of_mail
-        )
-
-    except Exception as e:
-        frappe.msgprint(_("Failed to send feedback request: ") + str(e), alert=True)
-
 def send_notification(doc, docname, prefix, tenantId):
     try:
         # Check if assign_to has changed or it's a new assignment
         previous_doc = doc.get_doc_before_save()
         current_assign_to = doc.assign_to
+
+        if not current_assign_to:
+            return
+
+        # Get the User email linked to the assigned Employee
+        assigned_user_email = frappe.db.get_value("Employee", current_assign_to, "work_email")
+
+        # Check if the task is assigned to the current user's linked Employee
+        if assigned_user_email == frappe.session.user:
+            frappe.logger().info(f"Skipping self-assignment notification for {docname}")
+            return
 
         # Determine if we should send the notification
         send_notification = False
@@ -65,6 +40,7 @@ def send_notification(doc, docname, prefix, tenantId):
         if not send_notification:
             frappe.logger().info(f"No change in assign_to for {docname}, skipping notification.")
             return
+        
 
         # Get the current user (assigner) details
         current_user = frappe.get_doc("User", frappe.session.user)
@@ -151,14 +127,33 @@ def send_status_change_notification(doc, docname, prefix, tenantId):
         current_user = frappe.get_doc("User", frappe.session.user)
         changer_name = current_user.full_name or current_user.name
 
-        # Get watchers from child table
-        list_of_employee_ids = [{"$oid": row.employee} for row in doc.watchers]  # Adjust field name if different
+        # Collect all employees to notify (watchers + assigned person)
+        employee_ids_to_notify = set()
+        
+        # Add watchers from child table
+        for row in doc.watchers:
+            employee_ids_to_notify.add(row.employee)
+        
+        # Add assigned person if exists
+        if doc.assign_to:
+            employee_ids_to_notify.add(doc.assign_to)
+
+        # Get current user's linked employee to exclude from notifications
+        current_user_employee = frappe.db.get_value("Employee", {"work_email": frappe.session.user}, "name")
+        
+        # Remove current user's employee from notification list if present
+        if current_user_employee and current_user_employee in employee_ids_to_notify:
+            employee_ids_to_notify.remove(current_user_employee)
+            frappe.logger().info(f"Excluded current user's employee {current_user_employee} from notifications for {docname}")
+
+        # Convert to required format
+        list_of_employee_ids = [{"$oid": emp_id} for emp_id in employee_ids_to_notify]
 
         if not list_of_employee_ids:
-            frappe.logger().warn(f"No watchers found for task {docname}, skipping notification.")
+            frappe.logger().warn(f"No valid recipients for task {docname} status change notification, skipping.")
             return
 
-        # Get API URLs (same as original function)
+        # Get API URLs
         USER_API_URL = frappe.get_hooks().get("user_api_url")
         if isinstance(USER_API_URL, list) and USER_API_URL:
             USER_API_URL = USER_API_URL[0]
@@ -169,7 +164,7 @@ def send_status_change_notification(doc, docname, prefix, tenantId):
             "listOfEmployeeIds": list_of_employee_ids,
             "notificationPayload": {
                 "title": "Task Status Updated",
-                "body": f"The status of task \"{doc.task_name}\" has changed from \"{previous_status}\" to \"{current_status}\" by \"{changer_name}\"",  # Include previous status for clarity
+                "body": f"The status of task \"{doc.task_name}\" has changed from \"{previous_status}\" to \"{current_status}\" by \"{changer_name}\"",
                 "data": {
                     "route": "/tasks/view",
                     "arguments": {
@@ -196,7 +191,7 @@ def send_status_change_notification(doc, docname, prefix, tenantId):
         response = requests.post(url, json=notification_data, headers=notification_headers)
         response.raise_for_status()
 
-        frappe.logger().info(f"Status change notification sent for task {docname}")
+        frappe.logger().info(f"Status change notification sent for task {docname} to {len(list_of_employee_ids)} recipients")
         return response
 
     except Exception:
@@ -207,6 +202,119 @@ def sync_or_update_task_in_mongo(doc, method):
         response = update_task_in_mongo(doc, method)
     else:
         response = sync_task_to_mongo(doc, method)
+
+# NEW HANDLERS FOR SUBMIT/CANCEL EVENTS
+def handle_task_submit(doc, method):
+    """Handle task submission - sync to mongo and send notifications"""
+    try:
+        # Update task in mongo when submitted
+        if doc.mongo_task_id:
+            response = update_task_in_mongo(doc, method)
+        else:
+            response = sync_task_to_mongo(doc, method)
+        
+        # Send feedback request if task is completed
+        if doc.status and doc.status.strip().lower() == 'completed':
+            send_feedback_request(doc.name)
+            
+        frappe.logger().info(f"Task {doc.name} submitted and synced successfully")
+        
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"Failed to handle task submit for {doc.name}")
+
+def handle_task_cancel(doc, method):
+    """Handle task cancellation - sync to mongo and send notifications"""
+    try:
+        # Update task in mongo when cancelled
+        if doc.mongo_task_id:
+            response = update_task_in_mongo(doc, method)
+        else:
+            response = sync_task_to_mongo(doc, method)
+            
+        frappe.logger().info(f"Task {doc.name} cancelled and synced successfully")
+        
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"Failed to handle task cancel for {doc.name}")
+
+def send_status_change_notification_for_submit_cancel(doc, docname, prefix, tenantId, status_action):
+    """Send notification for submit/cancel actions"""
+    try:
+        # Get current user (who performed the action)
+        current_user = frappe.get_doc("User", frappe.session.user)
+        changer_name = current_user.full_name or current_user.name
+
+        current_status = doc.status
+        
+        # Collect all employees to notify (watchers + assigned person)
+        employee_ids_to_notify = set()
+        
+        # Add watchers from child table
+        for row in doc.watchers:
+            employee_ids_to_notify.add(row.employee)
+        
+        # Add assigned person if exists
+        if doc.assign_to:
+            employee_ids_to_notify.add(doc.assign_to)
+
+        # Get current user's linked employee to exclude from notifications
+        current_user_employee = frappe.db.get_value("Employee", {"work_email": frappe.session.user}, "name")
+        
+        # Remove current user's employee from notification list if present
+        if current_user_employee and current_user_employee in employee_ids_to_notify:
+            employee_ids_to_notify.remove(current_user_employee)
+            frappe.logger().info(f"Excluded current user's employee {current_user_employee} from {status_action} notifications for {docname}")
+
+        # Convert to required format
+        list_of_employee_ids = [{"$oid": emp_id} for emp_id in employee_ids_to_notify]
+
+        if not list_of_employee_ids:
+            frappe.logger().warn(f"No valid recipients for task {docname} {status_action} notification, skipping.")
+            return
+
+        # Get API URLs
+        USER_API_URL = frappe.get_hooks().get("user_api_url")
+        if isinstance(USER_API_URL, list) and USER_API_URL:
+            USER_API_URL = USER_API_URL[0]
+
+        # Prepare notification payload
+        action_text = "completed" if status_action == "submit" else "cancelled"
+        notification_data = {
+            "prefix": prefix,
+            "listOfEmployeeIds": list_of_employee_ids,
+            "notificationPayload": {
+                "title": f"Task {current_status}",
+                "body": f"Task \"{doc.task_name}\" has been {current_status} by {changer_name}",
+                "data": {
+                    "route": "/tasks/view",
+                    "arguments": {
+                        "doctype": "Task",
+                        "docname": docname,
+                        "isEdit": False,
+                        "readOnly": True,
+                        "selectedMenu": "summary"
+                    }
+                }
+            },
+            "tenantId": tenantId
+        }
+
+        # Send notification
+        url = f"{USER_API_URL}/notification/send"
+        access_token = get_app_admin_bearer_auth()
+        notification_headers = {
+            "Authorization": access_token,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'No-Auth-Challenge': 'true'
+        }
+
+        response = requests.post(url, json=notification_data, headers=notification_headers)
+        response.raise_for_status()
+
+        frappe.logger().info(f"Status change notification sent for task {docname} - {action_text} to {len(list_of_employee_ids)} recipients")
+        return response
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), f"Status change notification failed for {status_action}")
       
 def sync_or_update_project_in_mongo(doc, method):
     if doc.mongo_project_id:
@@ -310,7 +418,14 @@ def sync_task_to_mongo(doc, method):
         else:
             frappe.logger().error(f"[SYNC FAILED] Task '{doc.name}' created in MongoDB but no ID returned.")
 
+        # Send assignment notification
         notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
+        
+        # For submit/cancel events, send appropriate status notification
+        if method in ['on_submit', 'on_cancel']:
+            status_action = 'submit' if method == 'on_submit' else 'cancel'
+            send_status_change_notification_for_submit_cancel(doc, doc.name, prefix, company_doc.tenant_id, status_action)
+        
         return response
 
     except Exception as e:
@@ -378,11 +493,17 @@ def update_task_in_mongo(doc, method):
         response = requests.patch(url, json=payload, headers=task_headers)
         response.raise_for_status()
 
+        # Send assignment notification
         notification_res = send_notification(doc,doc.name,prefix,company_doc.tenant_id)
-        send_status_change_notification(doc,doc.name,prefix,company_doc.tenant_id)
-
-        if doc.workflow_status.strip().lower() == 'complete':
-            send_feedback_request(doc.name)
+        
+        # Handle different methods appropriately
+        if method == 'on_update':
+            # Regular update - send status change notification
+            send_status_change_notification(doc,doc.name,prefix,company_doc.tenant_id)
+        elif method in ['on_submit', 'on_cancel']:
+            # Submit/Cancel - send appropriate notification
+            status_action = 'submit' if method == 'on_submit' else 'cancel'
+            send_status_change_notification_for_submit_cancel(doc, doc.name, prefix, company_doc.tenant_id, status_action)
 
         return response
 
