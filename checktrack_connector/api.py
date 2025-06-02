@@ -928,49 +928,74 @@ def update_related_tasks(doc, method):
 @frappe.whitelist(allow_guest=True)
 def authenticate_with_jwt_and_get_frappe_token(jwt_token):
     try:
-        # 1. Verify and decode the JWT
         decoded_jwt = jwt.decode(jwt_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="app.checktrack.dev")
-
-        # Extract user identification from JWT
         user_email = decoded_jwt.get('email') 
+
         if not user_email:
             frappe.throw("JWT does not contain user email.")
 
-        # 2. Find or create Frappe user
+        # Check if user exists
         user = frappe.db.get_value("User", {"email": user_email})
 
         if not user:
-            # Option A: Create a new Frappe user if allowed
-            if frappe.get_doc("System Settings").allow_new_user_signup: # Check if new user signup is enabled
+            if frappe.get_doc("System Settings").allow_new_user_signup:
                 new_user_doc = frappe.new_doc("User")
                 new_user_doc.email = user_email
                 new_user_doc.full_name = decoded_jwt.get('full_name', user_email)
-                new_user_doc.user_type = "Website User" # Or appropriate user type
-                # Assign default roles, e.g., ["Website User"]
+                new_user_doc.user_type = "Website User"
                 new_user_doc.add_roles("Website User") 
                 new_user_doc.enabled = 1
-                new_user_doc.save(ignore_permissions=True) # Save as system user to avoid permission issues
+                new_user_doc.save(ignore_permissions=True)
                 user = new_user_doc.name
             else:
                 frappe.throw("User does not exist and new user signup is not allowed.")
-        
-        # 3. Get or generate API Key/Secret for the Frappe user
-        api_key = frappe.db.get_value("User", user, "api_key")
-        api_secret = frappe.get_doc("User", user).get_password("api_secret")
 
-        if not (api_key and api_secret):
-            # Generate new API Key and Secret
+        cache = frappe.cache()
+        cache_key_time = f"api_key_rotation_time:{user}"
+        cache_key_data = f"api_key_data:{user}"
+
+        last_rotation = cache.get_value(cache_key_time)
+        rotate = False
+
+        if not last_rotation:
+            rotate = True
+        else:
+            last_rotation = get_datetime(last_rotation)
+            if now_datetime() > add_to_date(last_rotation, hours=8):
+                rotate = True
+
+        if rotate:
+            # Generate new keys and update both cache and DB
             user_doc = frappe.get_doc("User", user)
-            user_doc.generate_keys() # This method generates API Key and Secret
-            user_doc.save(ignore_permissions=True) # Save as system user
+            user_doc.generate_keys()
+            user_doc.save(ignore_permissions=True)
             api_key = user_doc.api_key
             api_secret = user_doc.api_secret
-            
+
+            cache.set_value(cache_key_data, {"api_key": api_key, "api_secret": api_secret})
+            cache.set_value(cache_key_time, now_datetime())
+
+        else:
+            creds = cache.get_value(cache_key_data)
+            if not creds:
+                # Fallback if cache was cleared
+                user_doc = frappe.get_doc("User", user)
+                if not (user_doc.api_key and user_doc.api_secret):
+                    user_doc.generate_keys()
+                    user_doc.save(ignore_permissions=True)
+                api_key = user_doc.api_key
+                api_secret = user_doc.api_secret
+                cache.set_value(cache_key_data, {"api_key": api_key, "api_secret": api_secret})
+                cache.set_value(cache_key_time, now_datetime())
+            else:
+                api_key = creds["api_key"]
+                api_secret = creds["api_secret"]
+
         return {
             "message": "Authentication successful",
             "frappe_api_key": api_key,
             "frappe_api_secret": api_secret,
-            "username": user_email # Or whatever identifies the user in Frappe
+            "username": user_email
         }
 
     except jwt.ExpiredSignatureError:
