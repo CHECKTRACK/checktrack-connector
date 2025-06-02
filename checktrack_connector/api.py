@@ -991,10 +991,10 @@ def update_related_tasks(doc, method):
 
     # Iterate through each task and update its status field
     for task in tasks:
-        frappe.db.set_value("Task", task.name, "status", doc.status)
+        frappe.db.set_value("Task", task.name, "workflow_status", doc.workflow_status)
         # Alternatively, if you want the document to be reloaded and triggers to fire, use:
         task_doc = frappe.get_doc("Task", task.name)
-        task_doc.status = doc.status
+        task_doc.workflow_status = doc.workflow_status
         task_doc.save()
 
 @frappe.whitelist(allow_guest=True)
