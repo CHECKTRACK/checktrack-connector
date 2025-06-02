@@ -30,7 +30,6 @@ frappe.ui.form.on("Maintenance Schedule", {
             return {
                 filters: {
                     'customer': frm.doc.customer,
-                    'amc': ''
                 }
             };
         });

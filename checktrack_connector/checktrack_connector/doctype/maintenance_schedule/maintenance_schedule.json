@@ -24,6 +24,7 @@
   "periodicity",
   "no_of_visits",
   "schedule",
+  "column_break_jaet",
   "generate_schedule",
   "schedules",
   "amended_from"
@@ -179,6 +180,11 @@
    "fieldname": "end_date",
    "fieldtype": "Date",
    "label": "AMC End Date"
+  },
+  {
+   "fieldname": "column_break_jaet",
+   "fieldtype": "Column Break",
+   "hidden": 1
   }
  ],
  "icon": "fa fa-calendar",
@@ -191,8 +197,8 @@
    "link_fieldname": "maintenance_schedule"
   }
  ],
- "modified": "2025-05-27 11:48:41.215097",
- "modified_by": "da.1@yopmail.com",
+ "modified": "2025-05-30 10:33:13.338147",
+ "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Maintenance Schedule",
  "naming_rule": "By \"Naming Series\" field",
