@@ -15,6 +15,17 @@ from datetime import datetime, timedelta
 JWT_SECRET = "e6H9QQMGBx33KaOd" 
 JWT_ALGORITHM = "HS256" # Or whatever your Node.js app uses
 
+def handle_cors_preflight():
+    if frappe.request.method == "OPTIONS":
+        origin = frappe.get_request_header("Origin") or "*"
+        response = Response()
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+        response.status_code = 204
+        return response
+
+
 @frappe.whitelist()
 def checktrack_integration(email, password=""):
 
@@ -885,86 +896,6 @@ def update_mongodb_tenant_flag(tenant_id, access_token):
     except Exception as e:
         frappe.log_error(str(e), "CheckTrack Tenant Update Error")
 
-
-@frappe.whitelist()
-def login_with_checktrack_jwt(token: str):
-    try:
-        secret_key = "e6H9QQMGBx33KaOd"  # Use your secret
-        decoded = jwt.decode(token, secret_key, algorithms=["HS256"], audience="app.checktrack.dev")
-
-        email = decoded.get("email")
-        if not email:
-            frappe.throw(_("Invalid JWT token"))
-
-        if not frappe.db.exists("User", email):
-            frappe.throw(_("User {0} not found").format(email))
-
-        # Authenticate user
-        login_manager = LoginManager()
-        login_manager.user = email
-        login_manager.post_login()
-
-        frappe.response.update({
-            "sid": frappe.session.sid,
-            "message": "Login successful",
-            "redirect_to": f"https://checktrack-dev.frappe.cloud/app?sid={frappe.session.sid}"
-        })
-
-    except jwt.ExpiredSignatureError:
-        frappe.throw(_("JWT token has expired"))
-    except Exception as e:
-        frappe.log_error(str(e), "SSO Login Error")
-        frappe.throw(str(e))
-
-
-
-@frappe.whitelist(allow_guest=True)
-def get_frappe_sid_if_integrated(access_token: str, tenant_id: str):
-    try:
-        # 1. Get tenant info from CheckTrack via DATA_API
-        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-
-        response = requests.get(tenant_url, headers=headers)
-        if response.status_code != 200:
-            frappe.throw(_("Failed to fetch tenant information from CheckTrack."))
-
-        tenant_data = response.json()
-
-        if not tenant_data.get("isFrappeIntegrated"):
-            frappe.throw(_("Tenant is not yet integrated with Frappe."))
-
-        # 2. Get first team member’s email (or handle this logic based on your needs)
-        team_member = frappe.get_all(
-            "Team Member",
-            filters={"tenant": tenant_id},
-            fields=["work_email"],
-            limit=1
-        )
-
-        if not team_member:
-            frappe.throw(_("No associated team members found in Frappe."))
-
-        user_email = team_member[0].get("work_email")
-
-        if not frappe.db.exists("User", user_email):
-            frappe.throw(_("Frappe user not found for {0}").format(user_email))
-
-        # 3. Log in as this user and return SID
-        login_manager = LoginManager()
-        login_manager.user = user_email
-        login_manager.post_login()
-
-        return frappe.session.sid  # Return string as required for Flutter
-
-    except Exception as e:
-        frappe.log_error(str(e), "get_frappe_sid_if_integrated Error")
-        frappe.throw(str(e))
-
-
 def update_related_tasks(doc, method):
     """
     This function is triggered when a Demo PM Task document is updated.
@@ -993,62 +924,6 @@ def update_related_tasks(doc, method):
         task_doc = frappe.get_doc("Task", task.name)
         task_doc.status = doc.status
         task_doc.save()
-
-@frappe.whitelist(allow_guest=True)
-def login_with_jwt(token: str):
-    try:
-        # 🔑 Replace with your Flutter app's secret or public key
-        secret = "e6H9QQMGBx33KaOd"
-        decoded = jwt.decode(token, secret, algorithms=["HS256"], audience="app.checktrack.dev")
-
-        email = decoded.get("email")
-
-        if not email:
-            frappe.throw("Email not provided in token")
-
-        # # ✅ Check if the user exists
-        # if not frappe.db.exists("User", email):
-        #     # 🆕 Optionally auto-create user
-        #     user = frappe.get_doc({
-        #         "doctype": "User",
-        #         "email": email,
-        #         "first_name": full_name,
-        #         "enabled": 1,
-        #         "new_password": frappe.generate_hash(),
-        #         "send_welcome_email": 0
-        #     })
-        #     user.insert(ignore_permissions=True)
-        #     frappe.db.commit()
-
-        if frappe.session.user == "Guest":
-            frappe.local.login_manager.logout()
-
-        # 👤 Log the user in
-        frappe.local.login_manager = LoginManager()
-        frappe.local.login_manager.user = email
-        frappe.local.login_manager.post_login()
-
-        # Set session manually
-        from frappe.sessions import Session
-        session = Session(user=email)
-        frappe.local.session = session
-        frappe.local.session_obj = session
-        frappe.local.session.sid = session.sid
-        frappe.response["sid"] = session.sid
-        frappe.response["user"] = email
-
-        # ✅ Return Frappe session ID
-        return {
-            "sid": frappe.session.sid,
-            "user": frappe.session.user
-        }
-
-    except jwt.ExpiredSignatureError:
-        frappe.throw("JWT has expired")
-    except jwt.InvalidTokenError:
-        frappe.throw("Invalid JWT")
-    except Exception as e:
-        frappe.throw(str(e))
 
 @frappe.whitelist(allow_guest=True)
 def authenticate_with_jwt_and_get_frappe_token(jwt_token):
