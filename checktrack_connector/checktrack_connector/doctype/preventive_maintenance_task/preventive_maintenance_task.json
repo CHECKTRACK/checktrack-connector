@@ -7,14 +7,16 @@
  "field_order": [
   "section_break_hhk8",
   "amended_from",
-  "status",
+  "workflow_status",
   "customer",
-  "product",
+  "customer_email",
+  "item",
   "calibration_certificate",
   "pm_report",
   "service_report",
   "completion_date",
-  "cancellation_reason"
+  "cancellation_reason",
+  "feedback"
  ],
  "fields": [
   {
@@ -33,22 +35,18 @@
    "search_index": 1
   },
   {
-   "fieldname": "status",
+   "fieldname": "workflow_status",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Status"
+   "label": "Workflow Status"
   },
   {
    "fieldname": "customer",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Customer",
-   "options": "Customer"
-  },
-  {
-   "fieldname": "product",
-   "fieldtype": "Link",
-   "label": "Product",
-   "options": "Product"
+   "options": "Customer",
+   "reqd": 1
   },
   {
    "fieldname": "calibration_certificate",
@@ -77,13 +75,36 @@
    "fieldtype": "Link",
    "label": "Service Report",
    "options": "Service Report"
+  },
+  {
+   "fetch_from": "customer.email_id",
+   "fieldname": "customer_email",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Customer Email",
+   "options": "Email"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "feedback",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Feedback",
+   "options": "Feedback Form"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Customer Items",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "is_task_type": 1,
  "links": [],
- "modified": "2025-05-19 12:28:11.480102",
+ "modified": "2025-05-29 18:08:03.970469",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Preventive Maintenance Task",

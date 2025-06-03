@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class CTTaskFlow(Document):
+class CustomerItemsTable(Document):
 	pass

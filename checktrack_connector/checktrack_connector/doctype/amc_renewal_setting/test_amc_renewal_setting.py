@@ -12,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestCTTaskFlow(UnitTestCase):
+class UnitTestAMCRenewalSetting(UnitTestCase):
 	"""
-	Unit tests for CTTaskFlow.
+	Unit tests for AMCRenewalSetting.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestCTTaskFlow(IntegrationTestCase):
+class IntegrationTestAMCRenewalSetting(IntegrationTestCase):
 	"""
-	Integration tests for CTTaskFlow.
+	Integration tests for AMCRenewalSetting.
 	Use this class for testing interactions between multiple components.
 	"""
 

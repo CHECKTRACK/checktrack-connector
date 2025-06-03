@@ -1,16 +1,18 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:CC-{customer_name}-{####}",
+ "autoname": "format:CC-{####}",
  "creation": "2025-04-09 09:48:40.438031",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "customer_id",
   "customer_name",
   "customer_email",
+  "item_id",
   "instrument",
-  "model",
   "serial_no",
+  "model",
   "calibration_std_used",
   "parameters",
   "criteria",
@@ -20,14 +22,21 @@
  ],
  "fields": [
   {
+   "fetch_from": "customer_id.customer_name",
+   "fetch_if_empty": 1,
    "fieldname": "customer_name",
    "fieldtype": "Data",
-   "label": "Customer Name"
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "reqd": 1
   },
   {
+   "fetch_from": "item_id.item_name",
    "fieldname": "instrument",
    "fieldtype": "Data",
-   "label": "Instrument"
+   "in_list_view": 1,
+   "label": "Instrument",
+   "reqd": 1
   },
   {
    "fieldname": "model",
@@ -35,9 +44,12 @@
    "label": "Model"
   },
   {
+   "fetch_from": "item_id.serial_no",
    "fieldname": "serial_no",
    "fieldtype": "Data",
-   "label": "Serial No"
+   "in_list_view": 1,
+   "label": "Serial No",
+   "reqd": 1
   },
   {
    "fieldname": "calibration_std_used",
@@ -75,14 +87,35 @@
    "label": "Due Date of Calibration"
   },
   {
+   "fetch_from": "customer_id.customer_email",
+   "fetch_if_empty": 1,
    "fieldname": "customer_email",
    "fieldtype": "Data",
-   "label": "Customer Email"
+   "in_list_view": 1,
+   "label": "Customer Email",
+   "options": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer_id",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Customer ID",
+   "options": "Customer",
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "item_id",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Item ID",
+   "options": "Customer Items",
+   "set_only_once": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-19 16:58:08.431367",
+ "modified": "2025-05-29 18:06:18.957547",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Calibration Report",

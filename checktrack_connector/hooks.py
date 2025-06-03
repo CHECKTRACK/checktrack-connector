@@ -171,9 +171,6 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # }
 
 doc_events = {
-    "Feedback Form": {
-        "after_insert": "checktrack_connector.checktrack_connector.doctype.feedback_form.feedback_form.after_insert"
-    },
     "*": {
         "before_request": "checktrack_connector.middleware.validate_jwt_token"
     },
@@ -181,7 +178,9 @@ doc_events = {
         "on_save": "checktrack_connector.doctype.demo_pm_task.demo_pm_task.on_update",
     },
     "Task": {
-       "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo"
+       "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo",
+       "on_submit": "checktrack_connector.sync.handle_task_submit",
+       "on_cancel": "checktrack_connector.sync.handle_task_cancel"
     },
     "Project": {
        "on_update": "checktrack_connector.sync.sync_or_update_project_in_mongo"

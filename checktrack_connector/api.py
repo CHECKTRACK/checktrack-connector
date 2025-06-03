@@ -26,6 +26,8 @@ def handle_cors_preflight():
         response.status_code = 204
         return response
 
+USER_API_URL = frappe.get_hooks().get("user_api_url")
+DATA_API_URL = frappe.get_hooks().get("data_api_url")
 
 @frappe.whitelist()
 def checktrack_integration(email, password=""):
@@ -920,10 +922,10 @@ def update_related_tasks(doc, method):
 
     # Iterate through each task and update its status field
     for task in tasks:
-        frappe.db.set_value("Task", task.name, "status", doc.status)
+        frappe.db.set_value("Task", task.name, "workflow_status", doc.workflow_status)
         # Alternatively, if you want the document to be reloaded and triggers to fire, use:
         task_doc = frappe.get_doc("Task", task.name)
-        task_doc.status = doc.status
+        task_doc.workflow_status = doc.workflow_status
         task_doc.save()
 
 @frappe.whitelist(allow_guest=True)
@@ -981,3 +983,28 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "JWT Authentication Error")
         frappe.throw(f"An error occurred during authentication: {e}")
+
+@frappe.whitelist(allow_guest=True)
+def get_task_and_service_report(task_id):
+    if not task_id:
+        return {"error": "Missing task_id"}
+
+    task = frappe.get_doc("Preventive Maintenance Task", task_id)
+
+    # optionally restrict which fields you expose
+    result = {
+        "task": {
+            "name": task.name,
+            "service_report": task.service_report,
+            "feedback": task.feedback
+        }
+    }
+
+    if task.service_report:
+        report = frappe.get_doc("Service Report", task.service_report)
+        result["service_report"] = {
+            "name": report.name,
+            "remarks": report.remarks
+        }
+
+    return result
