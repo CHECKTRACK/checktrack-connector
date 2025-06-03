@@ -193,6 +193,9 @@ doc_events = {
            "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.create_schedule_logs",
         ]
     },
+    "User": {
+        "after_insert": "checktrack_connector.user.generate_api_credentials"
+    }
 }
 
 override_whitelisted_methods = {
