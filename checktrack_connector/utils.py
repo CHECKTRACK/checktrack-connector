@@ -38,7 +38,7 @@ def handle_preflight():
 
 def add_cors_headers(response):
     """Add CORS headers to the response."""
-    print("CORS middleware executed");
+    print("CORS middleware executed")
     origin = frappe.get_request_header("Origin")
     allowed_origins = [
     "http://localhost:8002",  # Local development

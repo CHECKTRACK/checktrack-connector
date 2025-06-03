@@ -170,11 +170,6 @@ data_api_url = "https://app.checktrack.dev/api/data-api"
 # 	"frappe.desk.doctype.event.event.get_events": "checktrack_connector.event.get_events"
 # }
 
-override_whitelisted_methods = {
-    "frappe.www.login": "checktrack_connector.api.sso_login",
-    "checktrack_connector.api.auth.login_with_checktrack_jwt": "checktrack_connector.api.login_with_checktrack_jwt"
-}
-
 doc_events = {
     "*": {
         "before_request": "checktrack_connector.middleware.validate_jwt_token"
@@ -226,7 +221,7 @@ after_request = ["checktrack_connector.utils.add_cors_headers"]
 
 # Request Events
 # ----------------
-before_request = ["checktrack_connector.jwt_middleware.authenticate_jwt_token"]
+# before_request = ["checktrack_connector.jwt_middleware.authenticate_jwt_token"]
 # after_request = ["checktrack_connector.utils.after_request"]
 
 # Job Events
