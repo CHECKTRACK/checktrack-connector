@@ -107,16 +107,16 @@ class MaintenanceSchedule(TransactionBase):
 			throw(_("Please click on 'Generate Schedule' to get schedule"))
 		self.validate_schedule()
 
-		# Update Customer AMC
-		if self.customer and self.serial_no:
-			customer_doc = frappe.get_doc("Customer", self.customer)
-			for customer_item in customer_doc.customer_items:
-				if customer_item.serial_no == self.serial_no:
-					customer_item.amc = self.name
-					customer_item.amc_expiry_date = self.end_date
-					break
-			customer_doc.save()
-			frappe.msgprint(f"Updated Customer AMC for {self.customer}")
+		# # Update Customer AMC
+		# if self.customer and self.serial_no:
+		# 	customer_doc = frappe.get_doc("Customer", self.customer)
+		# 	for customer_item in customer_doc.customer_items:
+		# 		if customer_item.serial_no == self.serial_no:
+		# 			customer_item.amc = self.name
+		# 			customer_item.amc_expiry_date = self.end_date
+		# 			break
+		# 	customer_doc.save()
+		# 	frappe.msgprint(f"Updated Customer AMC for {self.customer}")
 
 		# Update Customer Items AMC
 		if self.serial_no:

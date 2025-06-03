@@ -9,9 +9,7 @@
   "serial_no",
   "item_code",
   "item_name",
-  "customer",
-  "amc",
-  "amc_expiry_date"
+  "customer"
  ],
  "fields": [
   {
@@ -21,7 +19,7 @@
    "unique": 1
   },
   {
-   "fetch_from": "item.item_name",
+   "fetch_from": "item_code.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -30,34 +28,23 @@
   },
   {
    "fieldname": "customer",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Customer",
    "options": "Customer"
-  },
-  {
-   "fieldname": "amc",
-   "fieldtype": "Link",
-   "label": "AMC",
-   "options": "Maintenance Schedule"
   },
   {
    "fieldname": "item_code",
    "fieldtype": "Link",
    "label": "Item Code",
    "options": "Item"
-  },
-  {
-   "fieldname": "amc_expiry_date",
-   "fieldtype": "Date",
-   "label": "AMC Expiry Date"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-28 10:35:57.746921",
- "modified_by": "Administrator",
+ "modified": "2025-06-02 14:36:49.229603",
+ "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Customer Items",
  "naming_rule": "By fieldname",
