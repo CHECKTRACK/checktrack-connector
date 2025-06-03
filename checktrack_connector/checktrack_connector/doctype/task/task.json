@@ -52,7 +52,18 @@
   "rgt",
   "old_parent",
   "template_task",
-  "amended_from"
+  "amended_from",
+  "section_break_bcuk",
+  "first_label",
+  "second_label",
+  "third_label",
+  "assign_to_label",
+  "watchers_id",
+  "column_break_ifyi",
+  "first_value",
+  "second_value",
+  "third_value",
+  "assign_to_value"
  ],
  "fields": [
   {
@@ -90,6 +101,7 @@
   {
    "fieldname": "type",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Type",
    "options": "DocType",
    "set_only_once": 1
@@ -411,6 +423,7 @@
   {
    "fieldname": "task_type_doc",
    "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
    "label": "Task Type Doc",
    "options": "type",
    "set_only_once": 1
@@ -431,6 +444,68 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "section_break_bcuk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "first_label",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "First Label"
+  },
+  {
+   "fieldname": "second_label",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Second Label"
+  },
+  {
+   "fieldname": "third_label",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Third Label"
+  },
+  {
+   "fieldname": "column_break_ifyi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "first_value",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "First Value"
+  },
+  {
+   "fieldname": "second_value",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Second Value"
+  },
+  {
+   "fieldname": "third_value",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Third Value"
+  },
+  {
+   "fieldname": "assign_to_label",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Assign To Label"
+  },
+  {
+   "fieldname": "assign_to_value",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Assign To Value"
+  },
+  {
+   "fieldname": "watchers_id",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Watchers Id"
   }
  ],
  "icon": "fa fa-check",
@@ -489,6 +564,7 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
  "search_fields": "subject",
  "show_name_in_global_search": 1,
  "show_preview_popup": 1,

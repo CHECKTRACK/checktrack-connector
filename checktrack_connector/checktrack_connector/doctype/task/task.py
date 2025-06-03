@@ -13,7 +13,14 @@ class Task(NestedSet):
                 old_doc = frappe.get_doc('Task', self.name)
                 self._original_status = old_doc.workflow_status.lower() if old_doc.workflow_status else None
 
+        if self.watchers:
+            ids = [row.employee for row in self.watchers if row.employee]
+            self.watchers_id = "," + ",".join(ids) + "," if ids else ""
+        else:
+            self.watchers_id = ""
+
     def on_update(self):
+        set_dynamic_fields(self)
         # First handle linked document status update
         self.update_linked_doc_status()
 
@@ -84,6 +91,85 @@ class Task(NestedSet):
                 )
         except Exception:
             raise  # Error logged by caller
+
+def set_dynamic_fields(doc):
+    # Find the field mapping document for the Task doctype
+    task_type = doc.type or "Task"
+    mapping_doc = frappe.get_doc("Task Type", task_type)
+    if not mapping_doc:
+        return
+
+    for mapping in mapping_doc.field_mapping:
+        try:
+            value = doc
+            prev_doc = doc
+            prev_field = None
+
+            for part in mapping.source_path.split("."):
+                if not value:
+                    value = ""  # If any intermediate object is None, break and assign ""
+                    break
+
+                # If value is a string, try to resolve as linked document
+                if isinstance(value, str) and prev_doc and prev_field:
+                    value = resolve_linked_doc(prev_doc, prev_field, value)
+
+                prev_doc = value
+                prev_field = part
+
+                value = getattr(value, part, "") if hasattr(value, part) else ""
+
+            # Default to empty string if None
+            final_value = value if value else ""
+            final_label = mapping.label_text or ""
+
+            # Set both in object and DB
+            setattr(doc, mapping.target_field, final_value)
+            setattr(doc, mapping.label_field, final_label)
+
+            doc.db_set(mapping.target_field, final_value)
+            doc.db_set(mapping.label_field, final_label)
+
+        except Exception as e:
+            frappe.log_error(f"Failed to resolve path: {mapping.source_path}\nError: {e}", "Task Mapping Error")
+            doc.db_set(mapping.target_field, "")
+            doc.db_set(mapping.label_field, mapping.label_text or "")
+
+    # Handle status-based color assignment
+    try:
+        current_status = doc.workflow_status
+        status_color = next(
+            (row.color for row in mapping_doc.status_flow if row.workflow_status == current_status), None
+        )
+
+        if status_color:
+            doc.color = status_color
+            doc.db_set("color", status_color)
+
+    except Exception as e:
+        frappe.log_error(f"Failed to assign color for status: {doc.status}\nError: {e}", "Status Color Mapping Error")
+        doc.db_set("color", "")
+
+def resolve_linked_doc(parent_doc, fieldname, value):
+    """Get linked DocType from fieldname of parent_doc and fetch the document by value."""
+    try:
+        if not hasattr(parent_doc, "doctype") or not value:
+            return value
+
+        meta = frappe.get_meta(parent_doc.doctype)
+        field = next((f for f in meta.fields if f.fieldname == fieldname), None)
+
+        if field and field.fieldtype == "Link":
+            return frappe.get_doc(field.options, value)
+        elif field and field.fieldtype == "Dynamic Link":
+            linked_doctype = getattr(parent_doc, field.options, None)
+            return frappe.get_doc(linked_doctype, value) if linked_doctype else value
+
+    except Exception as e:
+        frappe.log_error(f"Failed to resolve linked doc for field: {fieldname}\nError: {e}", "Link Resolver Error")
+        return value
+
+    return value
 
 
 # def get_permission_query_conditions(user):
