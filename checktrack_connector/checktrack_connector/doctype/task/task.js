@@ -3,7 +3,7 @@ frappe.ui.form.on("Task", {
         render_status_ui(frm);
     },
 
-    status(frm) {
+    workflow_status(frm) {
         render_status_ui(frm);
     },
 
@@ -56,7 +56,7 @@ function render_status_ui(frm) {
                     name: doc.name
                 },
                 callback: function (r) {
-                    const status_list = (r.message.status_flow || []).map(row => row.status);
+                    const status_list = (r.message.status_flow || []).map(row => row.workflow_status);
                     if (!status_list.length) status_list.push('Pending');
                     render_status_dropdown(wrapper, frm, status_list);
                 }
@@ -83,20 +83,20 @@ function render_status_dropdown(wrapper, frm, status_list) {
                 color: #fff;
                 font-size: 14px;
             ">
-                ${frm.doc.status ? frm.doc.status.charAt(0).toUpperCase() : '-'}
+                ${frm.doc.workflow_status ? frm.doc.workflow_status.charAt(0).toUpperCase() : '-'}
             </div>
             <div>
                 <div style="font-weight: 600; font-size: 14px;">
-                    Current Status: ${frm.doc.status || 'Not Set'}
+                    Current Status: ${frm.doc.workflow_status || 'Not Set'}
                 </div>
                 <div style="font-size: 12px; color: #888;">
                     Last Updated: ${frappe.datetime.get_datetime_as_string(frm.doc.modified)}
                 </div>
                 ${!is_submitted ? `
                 <div style="margin-top: 8px;">
-                    <select id="status-dropdown" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+                    <select id="workflow_status-dropdown" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
                         ${status_list.map(s => `
-                            <option value="${s}" ${s === frm.doc.status ? "selected" : ""}>${s}</option>
+                            <option value="${s}" ${s === frm.doc.workflow_status ? "selected" : ""}>${s}</option>
                         `).join('')}
                     </select>
                 </div>` : ''}
@@ -108,10 +108,10 @@ function render_status_dropdown(wrapper, frm, status_list) {
 
     if (!is_submitted) {
         setTimeout(() => {
-            $('#status-dropdown').on('change', function () {
+            $('#workflow_status-dropdown').on('change', function () {
                 const new_status = $(this).val();
-                if (new_status !== frm.doc.status) {
-                    frm.set_value('status', new_status);
+                if (new_status !== frm.doc.workflow_status) {
+                    frm.set_value('workflow_status', new_status);
                     frappe.show_alert(`Status set to ${new_status}. Don't forget to Save.`);
                 }
             });

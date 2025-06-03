@@ -11,7 +11,8 @@ class Task(NestedSet):
                 self._original_status = None
             else:
                 old_doc = frappe.get_doc('Task', self.name)
-                self._original_status = old_doc.status.lower() if old_doc.status else None
+                self._original_status = old_doc.workflow_status.lower() if old_doc.workflow_status else None
+
         if self.watchers:
             ids = [row.employee for row in self.watchers if row.employee]
             self.watchers_id = "," + ",".join(ids) + "," if ids else ""
@@ -25,7 +26,7 @@ class Task(NestedSet):
 
         # Then handle submission logic when status changes to Completed/Cancelled
         try:
-            current_status = self.status.lower() if self.status else None
+            current_status = self.workflow_status.lower() if self.workflow_status else None
             is_status_change = not hasattr(self, '_original_status') or self._original_status != current_status
 
             # Check status in a case-insensitive way
@@ -44,11 +45,11 @@ class Task(NestedSet):
         try:
             if frappe.db.exists(self.type, self.task_type_doc):
                 doc = frappe.get_doc(self.type, self.task_type_doc)
-                doc.status = self.status
+                doc.workflow_status = self.workflow_status
                 doc.save()
                 frappe.log_error(
                     title="Linked Document Status Sync",
-                    message=f"Updated status of linked doc '{self.type}' ({self.task_type_doc}) to '{self.status}' from Task '{self.name}'."
+                    message=f"Updated workflow_status of linked doc '{self.type}' ({self.task_type_doc}) to '{self.workflow_status}' from Task '{self.name}'."
                 )
             else:
                 frappe.log_error(
@@ -70,7 +71,7 @@ class Task(NestedSet):
                 self.submit()
                 frappe.log_error(
                     title="Task Self Submitted",
-                    message=f"Task '{self.name}' submitted successfully (status: {self.status})."
+                    message=f"Task '{self.name}' submitted successfully (workflow_status: {self.workflow_status})."
                 )
         except Exception:
             raise  # Error logged by caller
@@ -136,9 +137,9 @@ def set_dynamic_fields(doc):
 
     # Handle status-based color assignment
     try:
-        current_status = doc.status
+        current_status = doc.workflow_status
         status_color = next(
-            (row.color for row in mapping_doc.status_flow if row.status == current_status), None
+            (row.color for row in mapping_doc.status_flow if row.workflow_status == current_status), None
         )
 
         if status_color:
