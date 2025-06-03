@@ -58,6 +58,7 @@
   "second_label",
   "third_label",
   "assign_to_label",
+  "watchers_id",
   "column_break_ifyi",
   "first_value",
   "second_value",
@@ -108,6 +109,7 @@
   {
    "fieldname": "color",
    "fieldtype": "Color",
+   "hidden": 1,
    "label": "Color"
   },
   {
@@ -450,16 +452,19 @@
   {
    "fieldname": "first_label",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "First Label"
   },
   {
    "fieldname": "second_label",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Second Label"
   },
   {
    "fieldname": "third_label",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Third Label"
   },
   {
@@ -469,27 +474,38 @@
   {
    "fieldname": "first_value",
    "fieldtype": "Long Text",
+   "hidden": 1,
    "label": "First Value"
   },
   {
    "fieldname": "second_value",
    "fieldtype": "Long Text",
+   "hidden": 1,
    "label": "Second Value"
   },
   {
    "fieldname": "third_value",
    "fieldtype": "Long Text",
+   "hidden": 1,
    "label": "Third Value"
   },
   {
    "fieldname": "assign_to_label",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Assign To Label"
   },
   {
    "fieldname": "assign_to_value",
    "fieldtype": "Long Text",
+   "hidden": 1,
    "label": "Assign To Value"
+  },
+  {
+   "fieldname": "watchers_id",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Watchers Id"
   }
  ],
  "icon": "fa fa-check",
@@ -498,7 +514,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-06-02 16:54:37.551458",
+ "modified": "2025-06-03 12:38:45.170026",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",

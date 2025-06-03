@@ -12,6 +12,11 @@ class Task(NestedSet):
             else:
                 old_doc = frappe.get_doc('Task', self.name)
                 self._original_status = old_doc.status.lower() if old_doc.status else None
+        if self.watchers:
+            ids = [row.employee for row in self.watchers if row.employee]
+            self.watchers_id = "," + ",".join(ids) + "," if ids else ""
+        else:
+            self.watchers_id = ""
 
     def on_update(self):
         set_dynamic_fields(self)
@@ -128,6 +133,21 @@ def set_dynamic_fields(doc):
             frappe.log_error(f"Failed to resolve path: {mapping.source_path}\nError: {e}", "Task Mapping Error")
             doc.db_set(mapping.target_field, "")
             doc.db_set(mapping.label_field, mapping.label_text or "")
+
+    # Handle status-based color assignment
+    try:
+        current_status = doc.status
+        status_color = next(
+            (row.color for row in mapping_doc.status_flow if row.status == current_status), None
+        )
+
+        if status_color:
+            doc.color = status_color
+            doc.db_set("color", status_color)
+
+    except Exception as e:
+        frappe.log_error(f"Failed to assign color for status: {doc.status}\nError: {e}", "Status Color Mapping Error")
+        doc.db_set("color", "")
 
 def resolve_linked_doc(parent_doc, fieldname, value):
     """Get linked DocType from fieldname of parent_doc and fetch the document by value."""
