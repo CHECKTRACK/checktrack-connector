@@ -28,6 +28,11 @@ def handle_cors_preflight():
 
 USER_API_URL = frappe.get_hooks().get("user_api_url")
 DATA_API_URL = frappe.get_hooks().get("data_api_url")
+if isinstance(USER_API_URL, list) and USER_API_URL:
+    USER_API_URL = USER_API_URL[0]
+if isinstance(DATA_API_URL, list) and DATA_API_URL:
+    DATA_API_URL = DATA_API_URL[0]
+
 
 @frappe.whitelist()
 def checktrack_integration(email, password=""):
