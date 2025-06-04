@@ -10,8 +10,6 @@ def get_last_value(url):
 
 def send_notification(doc, docname, prefix, tenantId):
     try:
-        # Check if assign_to has changed or it's a new assignment
-        previous_doc = doc.get_doc_before_save()
         current_assign_to = doc.assign_to
 
         if not current_assign_to:
@@ -26,21 +24,22 @@ def send_notification(doc, docname, prefix, tenantId):
             return
 
         # Determine if we should send the notification
-        send_notification = False
-        if previous_doc is None:
+        send_notification_flag = False
+
+        if doc.flags.in_insert or doc.is_new():
             # New document: send notification if assign_to is set
-            if current_assign_to:
-                send_notification = True
+            send_notification_flag = True
         else:
             # Existing document: send notification if assign_to changed
-            previous_assign_to = previous_doc.assign_to
-            if previous_assign_to != current_assign_to:
-                send_notification = True
+            previous_doc = doc.get_doc_before_save()
+            if previous_doc:
+                previous_assign_to = previous_doc.assign_to
+                if previous_assign_to != current_assign_to:
+                    send_notification_flag = True
 
-        if not send_notification:
+        if not send_notification_flag:
             frappe.logger().info(f"No change in assign_to for {docname}, skipping notification.")
             return
-        
 
         # Get the current user (assigner) details
         current_user = frappe.get_doc("User", frappe.session.user)
@@ -214,9 +213,6 @@ def handle_task_submit(doc, method):
             response = sync_task_to_mongo(doc, method)
         
         # Send feedback request if task is completed
-        if doc.status and doc.status.strip().lower() == 'completed':
-            send_feedback_request(doc.name)
-            
         frappe.logger().info(f"Task {doc.name} submitted and synced successfully")
         
     except Exception as e:
@@ -243,7 +239,7 @@ def send_status_change_notification_for_submit_cancel(doc, docname, prefix, tena
         current_user = frappe.get_doc("User", frappe.session.user)
         changer_name = current_user.full_name or current_user.name
 
-        current_status = doc.status
+        current_status = doc.workflow_status
         
         # Collect all employees to notify (watchers + assigned person)
         employee_ids_to_notify = set()

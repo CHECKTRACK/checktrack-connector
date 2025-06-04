@@ -65,7 +65,8 @@
   {
    "fieldname": "customer_email_id",
    "fieldtype": "Data",
-   "label": "Customer Email Id"
+   "label": "Customer Email Id",
+   "options": "Email"
   },
   {
    "fieldname": "serial_no",
@@ -86,8 +87,8 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-26 15:35:23.522332",
- "modified_by": "Administrator",
+ "modified": "2025-06-04 11:48:08.388259",
+ "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Schedule Log",
  "naming_rule": "Expression",
