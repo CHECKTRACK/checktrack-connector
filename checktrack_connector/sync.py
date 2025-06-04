@@ -214,9 +214,6 @@ def handle_task_submit(doc, method):
             response = sync_task_to_mongo(doc, method)
         
         # Send feedback request if task is completed
-        if doc.status and doc.status.strip().lower() == 'completed':
-            send_feedback_request(doc.name)
-            
         frappe.logger().info(f"Task {doc.name} submitted and synced successfully")
         
     except Exception as e:
@@ -243,7 +240,7 @@ def send_status_change_notification_for_submit_cancel(doc, docname, prefix, tena
         current_user = frappe.get_doc("User", frappe.session.user)
         changer_name = current_user.full_name or current_user.name
 
-        current_status = doc.status
+        current_status = doc.workflow_status
         
         # Collect all employees to notify (watchers + assigned person)
         employee_ids_to_notify = set()
