@@ -11,6 +11,8 @@ from checktrack_connector.onboard_api import automated_import_users
 from frappe.utils import get_url
 from datetime import datetime, timedelta
 from frappe.utils import random_string
+from frappe.utils import now_datetime, add_to_date
+from frappe.utils.data import get_datetime
 
 # Replace with your actual JWT secret from Node.js app
 JWT_SECRET = "e6H9QQMGBx33KaOd" 
@@ -826,6 +828,10 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
 
         # 2. Find Frappe user
         user = frappe.db.get_value("User", {"email": user_email})
+        if not user:
+            frappe.throw("User not found.")
+
+        user_doc = frappe.get_doc("User", user)
 
         # if not user:
         #     # Option A: Create a new Frappe user if allowed
@@ -845,6 +851,28 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
         # 3. Get API Key/Secret for the Frappe user
         api_key = frappe.db.get_value("User", user, "api_key")
         api_secret = frappe.get_doc("User", user).get_password("api_secret")
+
+        cache_key = f"checktrack_api_key_timestamp:{user}"
+        last_rotated = frappe.cache().get_value(cache_key)
+
+        rotate_key = False
+        if not api_key or not api_secret:
+            # If missing, rotate immediately
+            rotate_key = True
+        elif last_rotated:
+            last_rotated_dt = get_datetime(last_rotated)
+            if now_datetime() > add_to_date(last_rotated_dt, hours=8):
+                rotate_key = True
+        else:
+            rotate_key = True  # No record of rotation
+
+        if rotate_key:
+            new_api_key = random_string(15)
+            user_doc.api_key = new_api_key
+            user_doc.save(ignore_permissions=True)
+            frappe.db.commit()
+            frappe.cache().set_value(cache_key, now_datetime())
+            api_key = new_api_key
 
         # if not (api_key and api_secret):
         #     # Generate new API Key and Secret
