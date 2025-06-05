@@ -2,11 +2,9 @@ frappe.ui.form.on("Task", {
     refresh(frm) {
         render_status_ui(frm);
     },
-
     workflow_status(frm) {
         render_status_ui(frm);
     },
-
     type(frm) {
         render_status_ui(frm); // re-render when type changes
     }
@@ -14,7 +12,6 @@ frappe.ui.form.on("Task", {
 
 function render_status_ui(frm) {
     const wrapper_id = 'custom-status-overview-wrapper';
-
     let wrapper = $(`#${wrapper_id}`);
     if (!wrapper.length) {
         frm.dashboard.add_section(`
@@ -22,22 +19,18 @@ function render_status_ui(frm) {
         `, __("Status Overview"));
         wrapper = $(`#${wrapper_id}`);
     }
-
     wrapper.empty();
 
-    // Show "Pending" only if no type selected
-    if (!frm.doc.type) {
-        render_status_dropdown(wrapper, frm, ['Pending']);
-        return;
-    }
+    // If no type selected, use "Task" as default type
+    const task_type = frm.doc.type || "Task";
 
-    // Call server to get status list based on selected type
+    // Call server to get status list based on selected type (or "Task" if no type selected)
     frappe.call({
         method: "frappe.client.get_list",
         args: {
             doctype: "Task Type",
             filters: {
-                name: frm.doc.type
+                name: task_type
             },
             fields: ["name"],
             limit: 1
@@ -48,7 +41,7 @@ function render_status_ui(frm) {
                 render_status_dropdown(wrapper, frm, ['Pending']);
                 return;
             }
-
+            
             frappe.call({
                 method: "frappe.client.get",
                 args: {
@@ -65,10 +58,9 @@ function render_status_ui(frm) {
     });
 }
 
+
 function render_status_dropdown(wrapper, frm, status_list) {
     const is_submitted = frm.doc.docstatus === 1;
-
-
     const status_display = `
         <div style="display: flex; align-items: center; gap: 16px;">
             <div style="
@@ -103,7 +95,6 @@ function render_status_dropdown(wrapper, frm, status_list) {
             </div>
         </div>
     `;
-
     wrapper.html(status_display);
 
     if (!is_submitted) {
