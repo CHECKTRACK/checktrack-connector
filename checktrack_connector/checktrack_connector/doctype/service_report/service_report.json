@@ -8,10 +8,9 @@
  "field_order": [
   "customer_section",
   "csr_no",
+  "customer_id",
   "customer_name",
   "address",
-  "city",
-  "state",
   "zip_code",
   "status_of_call",
   "date",
@@ -21,6 +20,7 @@
   "detail_problem_reported",
   "system_down",
   "equipment_type",
+  "item_id",
   "make",
   "model",
   "serial_no",
@@ -61,6 +61,7 @@
   {
    "fieldname": "csr_no",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "CSR No"
   },
   {
@@ -69,26 +70,19 @@
    "label": "Customer"
   },
   {
+   "fetch_if_empty": 1,
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "label": "Customer Name"
   },
   {
+   "fetch_if_empty": 1,
    "fieldname": "address",
-   "fieldtype": "Data",
+   "fieldtype": "Long Text",
    "label": "Address"
   },
   {
-   "fieldname": "city",
-   "fieldtype": "Data",
-   "label": "City"
-  },
-  {
-   "fieldname": "state",
-   "fieldtype": "Data",
-   "label": "State"
-  },
-  {
+   "fetch_if_empty": 1,
    "fieldname": "zip_code",
    "fieldtype": "Data",
    "label": "Zip Code"
@@ -261,7 +255,7 @@
   },
   {
    "fieldname": "phone",
-   "fieldtype": "Phone",
+   "fieldtype": "Data",
    "label": "Phone"
   },
   {
@@ -308,11 +302,25 @@
    "fieldname": "p_e_voltage",
    "fieldtype": "Float",
    "label": "P to E (P&E)"
+  },
+  {
+   "fieldname": "customer_id",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Customer ID",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "item_id",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Item ID",
+   "options": "Customer Items"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-29 18:11:00.842660",
+ "modified": "2025-06-05 15:41:16.357161",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Service Report",
