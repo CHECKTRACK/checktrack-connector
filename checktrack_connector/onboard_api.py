@@ -19,7 +19,7 @@ def automated_import_users(tenant_id=None):
 
         # Step 2: Prepare CSV data
         data = [
-            ["email", "first_name", "last_name", "user_type", "roles.name", "enabled", "send_welcome_email"]
+            ["email", "first_name", "last_name", "user_type", "roles.role", "enabled", "send_welcome_email"]
         ]
         
         for tm in team_members:
@@ -28,7 +28,7 @@ def automated_import_users(tenant_id=None):
                 tm.first_name,
                 tm.last_name,
                 "System User",
-                "Employee",
+                "System Manager",
                 1,
                 0
             ])
