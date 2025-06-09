@@ -64,7 +64,7 @@ class Task(NestedSet):
 
     def try_submit_self(self):
         try:
-            self.reload()  # Make sure we have the latest version
+            self.reload()  # Make sure we have the latest version just change
             if self.docstatus == 0:
                 if hasattr(self, 'validate_for_submit'):
                     self.validate_for_submit()
