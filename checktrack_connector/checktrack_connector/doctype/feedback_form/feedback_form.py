@@ -9,7 +9,7 @@ class FeedbackForm(Document):
         if self.task_type_id:
             # Update the Preventive Maintenance Task with feedback link
             frappe.db.set_value(
-                "Preventive Maintenance Task",
+                self.type,
                 self.task_type_id,
                 "feedback",  # Make sure this field exists in the Task DocType
                 self.name
