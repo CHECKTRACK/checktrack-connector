@@ -39,6 +39,7 @@
    "reqd": 1
   },
   {
+   "fetch_from": "item_id.model",
    "fieldname": "model",
    "fieldtype": "Data",
    "label": "Model"
@@ -115,7 +116,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-29 18:06:18.957547",
+ "modified": "2025-06-06 13:42:12.491442",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Calibration Report",

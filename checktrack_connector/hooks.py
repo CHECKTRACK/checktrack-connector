@@ -195,6 +195,9 @@ doc_events = {
     },
     "User": {
         "after_insert": "checktrack_connector.user.generate_api_credentials"
+    },
+    "Address": {
+        "on_update": "checktrack_connector.hook.address_hooks.update_customer_primary_address"
     }
 }
 
