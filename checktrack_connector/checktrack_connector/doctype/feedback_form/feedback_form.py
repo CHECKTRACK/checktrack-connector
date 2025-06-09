@@ -7,10 +7,9 @@ from frappe.model.document import Document
 class FeedbackForm(Document):
     def after_insert(self):
         if self.task_type_id:
-            # Update the Preventive Maintenance Task with feedback link
             frappe.db.set_value(
-                "Preventive Maintenance Task",
+                self.type,
                 self.task_type_id,
-                "feedback",  # Make sure this field exists in the Task DocType
+                "feedback",
                 self.name
             )

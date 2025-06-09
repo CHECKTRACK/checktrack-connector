@@ -10,7 +10,8 @@
   "customer_remark",
   "rating",
   "feedback_details",
-  "task_type_id"
+  "task_type_id",
+  "type"
  ],
  "fields": [
   {
@@ -43,12 +44,18 @@
    "hidden": 1,
    "label": "Task Type Id",
    "options": "Preventive Maintenance Task"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "type"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-28 13:20:08.976880",
+ "modified": "2025-06-09 15:32:35.594107",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Feedback Form",
