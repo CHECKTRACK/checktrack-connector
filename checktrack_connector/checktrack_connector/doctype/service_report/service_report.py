@@ -8,6 +8,9 @@ from frappe.utils.pdf import get_pdf
 
 class ServiceReport(Document):
     def after_insert(self):
+        if not self.csr_no:
+            self.db_set("csr_no",self.name)
+            
         if self.email:
             try:
                 # Render HTML with specific letterhead and print format

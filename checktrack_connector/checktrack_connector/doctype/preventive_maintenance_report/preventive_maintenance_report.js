@@ -1,7 +1,7 @@
 // Copyright (c) 2025, satat tech llp and contributors
 // For license information, please see license.txt
 
-// frappe.ui.form.on("Demo PM Report", {
+// frappe.ui.form.on("Preventive Maintenance Report", {
 // 	refresh(frm) {
 
 // 	},

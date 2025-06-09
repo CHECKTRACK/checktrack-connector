@@ -1,14 +1,13 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:SR-{####}",
- "creation": "2025-04-09 16:56:31.967128",
+ "autoname": "format:PM-{####}",
+ "creation": "2025-06-06 14:02:58.041618",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "customer_section",
   "csr_no",
-  "customer_id",
   "customer_name",
   "address",
   "zip_code",
@@ -20,19 +19,19 @@
   "detail_problem_reported",
   "system_down",
   "equipment_type",
-  "item_id",
   "make",
   "model",
   "serial_no",
   "location_of_installation",
   "online_result_section",
-  "before_service",
+  "before_pm",
   "column_break_gcrv",
-  "after_service",
+  "after_pm",
   "service_details_section",
-  "service_rendered",
-  "engineers_remark",
   "defects_fount_on_inspection",
+  "preventive_maintenance_checklist_replaced_cleaned",
+  "preventive_maintenance_checklist_replaced_purged",
+  "preventive_maintenance_checklist_ok_notok",
   "status_after_service",
   "service_enginners_sign",
   "start_of_service",
@@ -41,6 +40,8 @@
   "p_n_voltage",
   "e_n_voltage",
   "p_e_voltage",
+  "customer_id",
+  "item_id",
   "calibration_details_section",
   "recommended",
   "column_break_hmxm",
@@ -163,16 +164,6 @@
    "label": "Online Result"
   },
   {
-   "fieldname": "before_service",
-   "fieldtype": "Float",
-   "label": "Before Service (mg/L)"
-  },
-  {
-   "fieldname": "after_service",
-   "fieldtype": "Float",
-   "label": "After Service (mg/L)"
-  },
-  {
    "fieldname": "column_break_gcrv",
    "fieldtype": "Column Break"
   },
@@ -180,16 +171,6 @@
    "fieldname": "service_details_section",
    "fieldtype": "Section Break",
    "label": "Service Details"
-  },
-  {
-   "fieldname": "service_rendered",
-   "fieldtype": "Small Text",
-   "label": "Service Rendered"
-  },
-  {
-   "fieldname": "engineers_remark",
-   "fieldtype": "Small Text",
-   "label": "Engineer's Remark"
   },
   {
    "fieldname": "defects_fount_on_inspection",
@@ -235,11 +216,6 @@
   {
    "fieldname": "column_break_hmxm",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "calibration_status_section",
-   "fieldtype": "Section Break",
-   "label": "Calibration Status"
   },
   {
    "fieldname": "customer_feedback_section",
@@ -331,14 +307,47 @@
    "hidden": 1,
    "label": "Item ID",
    "options": "Customer Items"
+  },
+  {
+   "fieldname": "before_pm",
+   "fieldtype": "Float",
+   "label": "Before Preventive Maintenance (mg/L)"
+  },
+  {
+   "fieldname": "after_pm",
+   "fieldtype": "Float",
+   "label": "After Preventive Maintenance (mg/L)"
+  },
+  {
+   "fieldname": "calibration_status_section",
+   "fieldtype": "Section Break",
+   "label": "Calibration Status"
+  },
+  {
+   "fieldname": "preventive_maintenance_checklist_replaced_cleaned",
+   "fieldtype": "Table",
+   "label": "Preventive Maintenance Checklist Replaced / Cleaned",
+   "options": "Preventive Maintenance Checklist Replaced Cleaned Table"
+  },
+  {
+   "fieldname": "preventive_maintenance_checklist_replaced_purged",
+   "fieldtype": "Table",
+   "label": "Preventive Maintenance Checklist Replaced / Purged",
+   "options": "Preventive Maintenance Checklist Replaced Purged Table"
+  },
+  {
+   "fieldname": "preventive_maintenance_checklist_ok_notok",
+   "fieldtype": "Table",
+   "label": "Preventive Maintenance Checklist Ok / Not Ok",
+   "options": "Preventive Maintenance Checklist Ok NotOk Table"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-09 14:35:48.693733",
+ "modified": "2025-06-09 15:17:51.072410",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "Service Report",
+ "name": "Preventive Maintenance Report",
  "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [

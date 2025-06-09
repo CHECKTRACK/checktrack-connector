@@ -9,7 +9,9 @@
   "serial_no",
   "item_code",
   "item_name",
-  "customer"
+  "customer",
+  "model",
+  "make"
  ],
  "fields": [
   {
@@ -38,13 +40,24 @@
    "fieldtype": "Link",
    "label": "Item Code",
    "options": "Item"
+  },
+  {
+   "fetch_from": "item_code.model",
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fetch_from": "item_code.make",
+   "fieldname": "make",
+   "fieldtype": "Data",
+   "label": "Make"
   }
  ],
- "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-02 14:36:49.229603",
- "modified_by": "da.1@yopmail.com",
+ "modified": "2025-06-06 13:41:46.127701",
+ "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Customer Items",
  "naming_rule": "By fieldname",
@@ -63,7 +76,6 @@
    "write": 1
   }
  ],
- "row_format": "Dynamic",
  "search_fields": "item_name",
  "show_title_field_in_link": 1,
  "sort_field": "creation",
