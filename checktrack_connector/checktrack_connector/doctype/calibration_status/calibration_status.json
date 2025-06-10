@@ -15,10 +15,9 @@
  "fields": [
   {
    "fieldname": "stdsol",
-   "fieldtype": "Select",
+   "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "STD.SOL",
-   "options": "TOC/KHP\nTN/KNO3"
+   "label": "STD.SOL"
   },
   {
    "fieldname": "concentrationmgl_or_ppm",
@@ -48,7 +47,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-10 09:37:45.108154",
+ "modified": "2025-06-10 10:56:59.937052",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Calibration Status",
