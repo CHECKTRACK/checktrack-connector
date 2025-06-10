@@ -852,27 +852,27 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
         api_key = frappe.db.get_value("User", user, "api_key")
         api_secret = frappe.get_doc("User", user).get_password("api_secret")
 
-        cache_key = f"checktrack_api_key_timestamp:{user}"
-        last_rotated = frappe.cache().get_value(cache_key)
+        # cache_key = f"checktrack_api_key_timestamp:{user}"
+        # last_rotated = frappe.cache().get_value(cache_key)
 
-        rotate_key = False
-        if not api_key or not api_secret:
-            # If missing, rotate immediately
-            rotate_key = True
-        elif last_rotated:
-            last_rotated_dt = get_datetime(last_rotated)
-            if now_datetime() > add_to_date(last_rotated_dt, hours=8):
-                rotate_key = True
-        else:
-            rotate_key = True  # No record of rotation
+        # rotate_key = False
+        # if not api_key or not api_secret:
+        #     # If missing, rotate immediately
+        #     rotate_key = True
+        # elif last_rotated:
+        #     last_rotated_dt = get_datetime(last_rotated)
+        #     if now_datetime() > add_to_date(last_rotated_dt, hours=8):
+        #         rotate_key = True
+        # else:
+        #     rotate_key = True  # No record of rotation
 
-        if rotate_key:
-            new_api_key = random_string(15)
-            user_doc.api_key = new_api_key
-            user_doc.save(ignore_permissions=True)
-            frappe.db.commit()
-            frappe.cache().set_value(cache_key, now_datetime())
-            api_key = new_api_key
+        # if rotate_key:
+        #     new_api_key = random_string(15)
+        #     user_doc.api_key = new_api_key
+        #     user_doc.save(ignore_permissions=True)
+        #     frappe.db.commit()
+            # frappe.cache().set_value(cache_key, now_datetime())
+            # api_key = new_api_key
 
         # if not (api_key and api_secret):
         #     # Generate new API Key and Secret
