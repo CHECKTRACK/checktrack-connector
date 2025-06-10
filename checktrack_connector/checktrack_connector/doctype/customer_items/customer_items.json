@@ -42,13 +42,11 @@
    "options": "Item"
   },
   {
-   "fetch_from": "item_code.model",
    "fieldname": "model",
    "fieldtype": "Data",
    "label": "Model"
   },
   {
-   "fetch_from": "item_code.make",
    "fieldname": "make",
    "fieldtype": "Data",
    "label": "Make"
@@ -56,7 +54,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-06 13:41:46.127701",
+ "modified": "2025-06-10 10:15:51.268192",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Customer Items",
