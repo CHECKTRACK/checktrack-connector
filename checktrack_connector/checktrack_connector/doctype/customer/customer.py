@@ -14,8 +14,30 @@ class Customer(Document):
 
 	def validate(self):
 		today = nowdate()
-		for item in self.customer_items:
 
+		# Populate primary_address from linked Address doctype
+		if self.customer_primary_address:
+			address_doc = frappe.get_doc("Address", self.customer_primary_address)
+			address_parts = []
+
+			if address_doc.address_line1:
+				address_parts.append(address_doc.address_line1.strip())
+			if address_doc.address_line2:
+				address_parts.append(address_doc.address_line2.strip())
+			if address_doc.city:
+				address_parts.append(address_doc.city.strip())
+			if address_doc.state:
+				address_parts.append(address_doc.state.strip())
+			if address_doc.pincode:
+				address_parts.append(address_doc.pincode.strip())
+			if address_doc.country:
+				address_parts.append(address_doc.country.strip())
+
+			self.primary_address = ", ".join(address_parts)
+
+
+		# Your existing logic for customer_items
+		for item in self.customer_items:
 			if not frappe.db.exists("Customer Items", {"serial_no": item.serial_no}):
 				customer_items = frappe.new_doc("Customer Items")
 				customer_items.serial_no = item.serial_no
@@ -27,3 +49,4 @@ class Customer(Document):
 				frappe.logger().info(f"Customer Items created for Serial No: {item.serial_no}, Customer: {self.name}")
 			else:
 				frappe.logger().info(f"Customer Items already exists for Serial No: {item.serial_no}, skipping creation.")
+

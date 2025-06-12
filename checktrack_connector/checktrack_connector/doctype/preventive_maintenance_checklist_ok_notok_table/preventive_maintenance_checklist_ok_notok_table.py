@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class DemoPMReport(Document):
+class PreventiveMaintenanceChecklistOkNotOkTable(Document):
 	pass

@@ -18,6 +18,7 @@
   "customer_type",
   "customer_group",
   "customer_email",
+  "customer_phone",
   "column_break0",
   "territory",
   "gender",
@@ -56,6 +57,7 @@
   "column_break_26",
   "customer_primary_address",
   "primary_address",
+  "zipcode",
   "column_break_nwor",
   "customer_primary_contact",
   "mobile_no",
@@ -627,6 +629,18 @@
    "fieldtype": "Data",
    "label": "Customer Email",
    "reqd": 1
+  },
+  {
+   "fieldname": "customer_phone",
+   "fieldtype": "Phone",
+   "label": "Customer Phone",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "customer_primary_address.pincode",
+   "fieldname": "zipcode",
+   "fieldtype": "Int",
+   "label": "Zipcode"
   }
  ],
  "icon": "fa fa-user",
@@ -640,7 +654,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-06-05 12:13:00.527444",
+ "modified": "2025-06-06 12:37:07.509825",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Customer",
