@@ -77,7 +77,7 @@
    "options": "Service Report"
   },
   {
-   "fetch_from": "customer.email_id",
+   "fetch_from": "customer.customer_email",
    "fieldname": "customer_email",
    "fieldtype": "Data",
    "hidden": 1,
@@ -105,8 +105,8 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-06 14:13:49.189639",
- "modified_by": "Administrator",
+ "modified": "2025-06-12 11:53:36.589029",
+ "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Preventive Maintenance Task",
  "owner": "Administrator",
