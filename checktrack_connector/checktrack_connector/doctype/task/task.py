@@ -28,9 +28,23 @@ class Task(NestedSet):
         try:
             current_status = self.workflow_status.lower() if self.workflow_status else None
             is_status_change = not hasattr(self, '_original_status') or self._original_status != current_status
+            task_type_name = self.type or "Task"
+            submittable_statuses = []
+            try:
+                task_type_doc = frappe.get_doc("Task Type", task_type_name)
+                submittable_statuses = [
+                    row.workflow_status.lower()
+                    for row in task_type_doc.status_flow
+                    if row.end_state == 1
+                ]
+            except Exception as e:
+                frappe.log_error(
+                    title="Dynamic End State Fallback Error",
+                    message=f"Failed to fetch Task Type '{task_type_name}' for Task '{self.name}':\n{e}"
+                )
 
             # Check status in a case-insensitive way
-            if is_status_change and current_status in ["completed", "cancelled"]:
+            if is_status_change and current_status in submittable_statuses:
                 self.try_submit_self()
                 self.try_submit_linked_doc()
         except Exception:

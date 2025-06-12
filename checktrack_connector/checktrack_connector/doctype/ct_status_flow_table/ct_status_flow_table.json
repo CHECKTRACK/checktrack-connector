@@ -11,7 +11,9 @@
   "visible_fields",
   "required_fields",
   "read_only_fields",
-  "workflow_status_change_to"
+  "workflow_status_change_to",
+  "start_state",
+  "end_state"
  ],
  "fields": [
   {
@@ -49,12 +51,26 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Workflow Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "end_state",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "End State"
+  },
+  {
+   "default": "0",
+   "fieldname": "start_state",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Start State"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-30 13:42:41.221559",
+ "modified": "2025-06-12 09:56:10.225477",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "CT Status Flow Table",
