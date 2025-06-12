@@ -24,6 +24,8 @@ class Task(NestedSet):
         # First handle linked document status update
         self.update_linked_doc_status()
 
+        self.update_linked_doc_task_field()
+
         # Then handle submission logic when status changes to Completed/Cancelled
         try:
             current_status = self.workflow_status.lower() if self.workflow_status else None
@@ -91,6 +93,26 @@ class Task(NestedSet):
                 )
         except Exception:
             raise  # Error logged by caller
+
+    def update_linked_doc_task_field(self):
+        """Update 'task' field in the dynamically linked document with the Task's name (ID)"""
+        if not (self.type and self.task_type_doc):
+            return
+        try:
+            if frappe.db.exists(self.type, self.task_type_doc):
+                linked_doc = frappe.get_doc(self.type, self.task_type_doc)
+                if hasattr(linked_doc, "task"):
+                    linked_doc.task = self.name
+                    linked_doc.save(ignore_permissions=True)
+                    frappe.log_error(
+                        title="Linked Document Task Field Update",
+                        message=f"Set 'task' field of '{self.type}' ({self.task_type_doc}) to Task ID '{self.name}'"
+                    )
+        except Exception:
+            frappe.log_error(
+                title="Linked Doc Task Field Update Error",
+                message=f"Failed to update 'task' field of linked doc '{self.type}' ({self.task_type_doc}) from Task '{self.name}':\n{frappe.get_traceback()}"
+            )
 
 def set_dynamic_fields(doc):
     # Find the field mapping document for the Task doctype

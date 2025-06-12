@@ -7,6 +7,7 @@
  "field_order": [
   "section_break_hhk8",
   "amended_from",
+  "task",
   "workflow_status",
   "customer",
   "customer_email",
@@ -100,12 +101,18 @@
    "link_filters": "[[\"Customer Items\", \"customer\", \"=\", \"eval:doc.customer\"]]",
    "options": "Customer Items",
    "reqd": 1
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Task"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-03 11:43:34.619850",
+ "modified": "2025-06-12 11:23:19.563346",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Preventive Maintenance Task",

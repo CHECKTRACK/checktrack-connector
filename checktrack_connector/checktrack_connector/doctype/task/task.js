@@ -119,6 +119,124 @@ function set_pending_status_change(frm, status) {
     }
 }
 
+// Helper function to get field labels from doctype meta
+async function get_field_labels(doctype, field_names) {
+    try {
+        // Get the doctype meta to access field definitions
+        const meta = await frappe.call({
+            method: "frappe.client.get",
+            args: {
+                doctype: "DocType",
+                name: doctype
+            }
+        });
+        
+        const fields = meta.message?.fields || [];
+        const field_labels = {};
+        
+        // Map field names to their labels
+        field_names.forEach(field_name => {
+            const field_def = fields.find(f => f.fieldname === field_name);
+            field_labels[field_name] = field_def ? field_def.label : field_name;
+        });
+        
+        return field_labels;
+    } catch (error) {
+        console.error("Error getting field labels:", error);
+        // Return field names as fallback
+        const fallback_labels = {};
+        field_names.forEach(field_name => {
+            fallback_labels[field_name] = field_name;
+        });
+        return fallback_labels;
+    }
+}
+
+// New function to validate required fields for status change
+async function validate_required_fields_for_status(frm, target_status) {
+    const task_type = frm.doc.type || "Task";
+    
+    try {
+        // Get the Task Type document with status flow
+        const task_type_doc = await frappe.call({
+            method: "frappe.client.get",
+            args: {
+                doctype: "Task Type",
+                name: task_type
+            }
+        });
+        
+        const status_flow = task_type_doc.message?.status_flow || [];
+        
+        // Find the status flow row for the target status
+        const target_status_row = status_flow.find(row => row.workflow_status === target_status);
+        
+        if (!target_status_row || !target_status_row.required_fields) {
+            return { valid: true }; // No required fields specified
+        }
+        
+        // Parse required fields (assuming they're stored as comma-separated string with quotes)
+        let required_fields = [];
+        try {
+            // Remove outer quotes and split by comma
+            const fields_string = target_status_row.required_fields.replace(/^['"]|['"]$/g, '');
+            required_fields = fields_string.split(',').map(field => field.trim().replace(/['"`]/g, ''));
+        } catch (e) {
+            console.error("Error parsing required fields:", e);
+            return { valid: true }; // If parsing fails, allow the change
+        }
+        
+        // Check if task_type_doc exists (required for field validation)
+        if (!frm.doc.task_type_doc) {
+            return {
+                valid: false,
+                message: "Task Type Doc is required before changing status.",
+                missing_fields: []
+            };
+        }
+        
+        // Get the task_type_doc to check field values
+        const task_type_doc_data = await frappe.call({
+            method: "frappe.client.get",
+            args: {
+                doctype: frm.doc.type,
+                name: frm.doc.task_type_doc
+            }
+        });
+        
+        const doc_data = task_type_doc_data.message;
+        const missing_field_names = [];
+        
+        // Check each required field
+        required_fields.forEach(field => {
+            if (!doc_data[field] || doc_data[field] === '' || doc_data[field] === null) {
+                missing_field_names.push(field);
+            }
+        });
+        
+        if (missing_field_names.length > 0) {
+            // Get field labels for the missing fields
+            const field_labels = await get_field_labels(frm.doc.type, missing_field_names);
+            
+            // Convert field names to labels
+            const missing_field_labels = missing_field_names.map(field_name => field_labels[field_name]);
+            
+            return {
+                valid: false,
+                message: `The following required fields must be filled before changing status to "${target_status}":`,
+                missing_fields: missing_field_labels
+            };
+        }
+        
+        return { valid: true };
+        
+    } catch (error) {
+        console.error("Error validating required fields:", error);
+        frappe.msgprint("Error occurred while validating required fields. Please try again.");
+        return { valid: false, message: "Validation error occurred." };
+    }
+}
+
 function render_status_ui(frm) {
     const wrapper_id = 'custom-status-overview-wrapper';
     let wrapper = $(`#${wrapper_id}`);
@@ -283,9 +401,34 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                 }
             });
             
-            $('#apply-status-btn').on('click', function() {
+            $('#apply-status-btn').on('click', async function() {
                 const pending_change = get_pending_status_change(frm);
                 if (pending_change) {
+                    // Validate required fields before applying status change
+                    const validation_result = await validate_required_fields_for_status(frm, pending_change);
+                    
+                    if (!validation_result.valid) {
+                        // Show error message with missing fields
+                        let message = validation_result.message;
+                        if (validation_result.missing_fields && validation_result.missing_fields.length > 0) {
+                            message += "<br><br><strong>Missing fields:</strong><br>";
+                            message += validation_result.missing_fields.map(field => `• ${field}`).join('<br>');
+                        }
+                        
+                        frappe.msgprint({
+                            title: __('Required Fields Missing'),
+                            message: message,
+                            indicator: 'red'
+                        });
+                        
+                        // Reset the dropdown to current status
+                        $('#workflow_status-dropdown').val(frm.doc.workflow_status);
+                        set_pending_status_change(frm, null);
+                        $('#apply-status-btn').hide();
+                        
+                        return;
+                    }
+                    
                     // Apply the pending status change
                     frm.set_value('workflow_status', pending_change);
                     
@@ -298,6 +441,14 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                         setTimeout(() => {
                             render_status_ui(frm);
                         }, 500);
+                    }).catch((error) => {
+                        console.error("Error saving form:", error);
+                        frappe.msgprint("Error occurred while saving. Please try again.");
+                        
+                        // Reset the dropdown to current status
+                        $('#workflow_status-dropdown').val(frm.doc.workflow_status);
+                        set_pending_status_change(frm, null);
+                        $('#apply-status-btn').hide();
                     });
                 }
             });

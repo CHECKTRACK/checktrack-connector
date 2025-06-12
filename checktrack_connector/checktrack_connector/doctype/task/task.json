@@ -133,7 +133,6 @@
    "default": "Pending",
    "fieldname": "workflow_status",
    "fieldtype": "Data",
-   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "WorkFlow Status",
@@ -164,11 +163,10 @@
    "search_index": 1
   },
   {
-   "depends_on": "eval: doc.workflow_status == \"Completed\"",
    "fieldname": "completed_on",
    "fieldtype": "Date",
-   "label": "Completed On",
-   "mandatory_depends_on": "eval: doc.workflow_status == \"Completed\""
+   "hidden": 1,
+   "label": "Completed On"
   },
   {
    "depends_on": "eval: doc.workflow_status == \"Completed\"",
@@ -514,7 +512,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2025-06-06 14:22:37.628061",
+ "modified": "2025-06-12 10:36:36.277259",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Task",
