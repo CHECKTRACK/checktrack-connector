@@ -53,13 +53,15 @@
    "fieldname": "calibration_certificate",
    "fieldtype": "Link",
    "label": "Calibration Certificate",
+   "link_filters": "[[\"Calibration Report\", \"model\", \"=\", \"__null__\"]] ",
    "options": "Calibration Report"
   },
   {
    "fieldname": "pm_report",
    "fieldtype": "Link",
    "label": "PM Report",
-   "options": "Demo PM Report"
+   "link_filters": "[[\"Preventive Maintenance Report\", \"csr_no\", \"=\", \"__null__\"]]",
+   "options": "Preventive Maintenance Report"
   },
   {
    "fieldname": "completion_date",
@@ -75,6 +77,7 @@
    "fieldname": "service_report",
    "fieldtype": "Link",
    "label": "Service Report",
+   "link_filters": "[[\"Service Report\", \"csr_no\", \"=\", \"__null__\"]]",
    "options": "Service Report"
   },
   {
@@ -112,7 +115,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-12 13:49:51.978146",
+ "modified": "2025-06-13 14:51:46.727021",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Preventive Maintenance Task",

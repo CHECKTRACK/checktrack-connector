@@ -40,6 +40,7 @@ frappe.ui.form.on("Task", {
         render_status_ui(frm);
         // Set field properties based on type field
         set_task_type_doc_requirements(frm);
+        frm.page.clear_primary_action();
     },
 
     workflow_status(frm) {
@@ -326,6 +327,7 @@ function render_status_ui(frm) {
 
 function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses) {
     const is_submitted = frm.doc.docstatus === 1;
+    const is_new_doc = frm.is_new(); // Check if document is new (not saved yet)
     
     // Use valid_next_statuses for dropdown options, fallback to all_statuses if empty
     const dropdown_options = valid_next_statuses.length > 0 ? valid_next_statuses : all_statuses;
@@ -357,7 +359,7 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                     Last Updated: ${frappe.datetime.get_datetime_as_string(frm.doc.modified)}
                 </div>
 
-                ${!is_submitted ? `
+                ${!is_submitted && !is_new_doc ? `
                 <div style="margin-top: 8px;">
                     <select id="workflow_status-dropdown" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
                         ${dropdown_options.map(s => `
@@ -374,13 +376,17 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                         cursor: pointer;
                         ${!pending_status_change ? 'display: none;' : ''}
                     ">Save</button>
+                </div>` : is_new_doc ? `
+                <div style="margin-top: 8px; font-size: 12px; color: #888; font-style: italic;">
+                    Status can be changed after saving the task.
                 </div>` : ''}
             </div>
         </div>
     `;
     wrapper.html(status_display);
 
-    if (!is_submitted) {
+    // Only add event listeners if document is not submitted and not new
+    if (!is_submitted && !is_new_doc) {
         setTimeout(() => {
             $('#workflow_status-dropdown').on('change', function () {
                 const selected_status = $(this).val();
