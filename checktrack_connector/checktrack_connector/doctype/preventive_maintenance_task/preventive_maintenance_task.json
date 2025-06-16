@@ -81,7 +81,7 @@
    "options": "Service Report"
   },
   {
-   "fetch_from": "customer.email_id",
+   "fetch_from": "customer.customer_email",
    "fieldname": "customer_email",
    "fieldtype": "Data",
    "hidden": 1,
@@ -115,7 +115,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-16 16:42:03.065161",
+ "modified": "2025-06-16 16:50:21.374821",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Preventive Maintenance Task",
