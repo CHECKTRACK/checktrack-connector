@@ -1,3 +1,4 @@
+from frappe import conf
 app_name = "checktrack_connector"
 app_title = "checktrack_connector"
 app_publisher = "satat tech llp"
@@ -6,8 +7,8 @@ app_email = "app_support@satat.tech"
 app_license = "mit"
 
 # Define API URLs as hooks
-user_api_url = "https://app.checktrack.dev/api/user-api"
-data_api_url = "https://app.checktrack.dev/api/data-api"
+user_api_url = conf.get("user_api_url")
+data_api_url = conf.get("data_api_url")
 
 # Apps
 # ------------------
