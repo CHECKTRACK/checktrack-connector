@@ -117,17 +117,21 @@ class Task(NestedSet):
                 linked_doc = frappe.get_doc(self.type, self.task_type_doc)
                 if hasattr(linked_doc, "task"):
                     linked_doc.task = self.name
+                    # Try multiple permission bypass methods
+                    linked_doc.flags.ignore_permissions = True
+                    linked_doc.flags.ignore_validate = True
                     linked_doc.save(ignore_permissions=True)
+                    frappe.db.commit()  # Ensure changes are committed
                     frappe.log_error(
                         title="Linked Document Task Field Update",
                         message=f"Set 'task' field of '{self.type}' ({self.task_type_doc}) to Task ID '{self.name}'"
                     )
-        except Exception:
+        except Exception as e:
             frappe.log_error(
                 title="Linked Doc Task Field Update Error",
-                message=f"Failed to update 'task' field of linked doc '{self.type}' ({self.task_type_doc}) from Task '{self.name}':\n{frappe.get_traceback()}"
+                message=f"Failed to update 'task' field of linked doc '{self.type}' ({self.task_type_doc}) from Task '{self.name}':\n{str(e)}\n{frappe.get_traceback()}"
             )
-
+            
 def set_dynamic_fields(doc):
     # Find the field mapping document for the Task doctype
     task_type = doc.type or "Task"
