@@ -7,6 +7,7 @@
  "field_order": [
   "section_break_hhk8",
   "amended_from",
+  "task",
   "workflow_status",
   "customer",
   "customer_email",
@@ -52,12 +53,14 @@
    "fieldname": "calibration_certificate",
    "fieldtype": "Link",
    "label": "Calibration Certificate",
+   "link_filters": "[[\"Calibration Report\", \"model\", \"=\", \"__null__\"]] ",
    "options": "Calibration Report"
   },
   {
    "fieldname": "pm_report",
    "fieldtype": "Link",
    "label": "PM Report",
+   "link_filters": "[[\"Preventive Maintenance Report\", \"csr_no\", \"=\", \"__null__\"]]",
    "options": "Preventive Maintenance Report"
   },
   {
@@ -74,10 +77,11 @@
    "fieldname": "service_report",
    "fieldtype": "Link",
    "label": "Service Report",
+   "link_filters": "[[\"Service Report\", \"csr_no\", \"=\", \"__null__\"]]",
    "options": "Service Report"
   },
   {
-   "fetch_from": "customer.customer_email",
+   "fetch_from": "customer.email_id",
    "fieldname": "customer_email",
    "fieldtype": "Data",
    "hidden": 1,
@@ -100,12 +104,18 @@
    "link_filters": "[[\"Customer Items\", \"customer\", \"=\", \"eval:doc.customer\"]]",
    "options": "Customer Items",
    "reqd": 1
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Task"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-12 11:53:36.589029",
+ "modified": "2025-06-13 14:51:46.727021",
  "modified_by": "da.1@yopmail.com",
  "module": "checktrack_connector",
  "name": "Preventive Maintenance Task",
@@ -125,6 +135,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": []
