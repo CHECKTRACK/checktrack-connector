@@ -360,11 +360,34 @@ def sync_task_to_mongo(doc, method):
         USER_API_URL = USER_API_URL[0]
     if isinstance(DATA_API_URL, list) and DATA_API_URL:
         DATA_API_URL = DATA_API_URL[0]
-    frappe.log_error("Triggered sync_task_to_mongo", f"TASK NAME: {doc.name}")
+
+    watchers = []
+    assignTo = []
+
     company_doc = frappe.get_doc("Company", doc.company)
+    assignToInfo = frappe.get_doc("Employee", doc.assign_to)
+    assigned_to_ref = {
+        "_id": {
+            "$oid": assignToInfo.name
+        },
+        "_ref": f"{company_doc.prefix}_team_members",
+        "_title": f"{assignToInfo.employee_name}"
+    }
+    assignTo.append(assigned_to_ref)
+    for row in doc.watchers:
+        watcher_ref = {
+            "_id": {
+                "$oid": row.employee
+            },
+            "_ref": f"{company_doc.prefix}_team_members",
+            "_title": f"{row.employee_name}"
+        }
+        watchers.append(watcher_ref)
+
     payload = {
         "name": doc.task_name,
-        "assignedTo": [],
+        "assignedTo": assignTo,
+        "watchers": watchers,
         "description": doc.description,
         "frappe": {
             "_id": doc.name,
@@ -442,11 +465,33 @@ def update_task_in_mongo(doc, method):
     if isinstance(DATA_API_URL, list) and DATA_API_URL:
         DATA_API_URL = DATA_API_URL[0]
 
+    watchers = []
+    assignTo = []
+
     company_doc = frappe.get_doc("Company", doc.company)
+    assignToInfo = frappe.get_doc("Employee", doc.assign_to)
+    assigned_to_ref = {
+        "_id": {
+            "$oid": assignToInfo.name
+        },
+        "_ref": f"{company_doc.prefix}_team_members",
+        "_title": f"{assignToInfo.employee_name}"
+    }
+    assignTo.append(assigned_to_ref)
+    for row in doc.watchers:
+        watcher_ref = {
+            "_id": {
+                "$oid": row.employee
+            },
+            "_ref": f"{company_doc.prefix}_team_members",
+            "_title": f"{row.employee_name}"
+        }
+        watchers.append(watcher_ref)
 
     payload = {
         "name": doc.task_name,
-        "assignedTo": [],
+        "assignedTo": assignTo,
+        "watchers": watchers,
         "description": doc.description,
         "frappe": {
             "_id": doc.name,
