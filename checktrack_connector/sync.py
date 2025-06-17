@@ -436,7 +436,8 @@ def sync_task_to_mongo(doc, method):
 
         mongo_id = get_last_value(response.headers['Location'])
         if mongo_id:
-            frappe.db.set_value(doc.doctype, doc.name, "mongo_task_id", mongo_id)
+            doc.db_set("mongo_task_id", mongo_id, update_modified=False)
+            # doc.reload()
             frappe.logger().info(f"[SYNC SUCCESS] Task '{doc.name}' synced to MongoDB with ID: {mongo_id}")
         else:
             frappe.logger().error(f"[SYNC FAILED] Task '{doc.name}' created in MongoDB but no ID returned.")

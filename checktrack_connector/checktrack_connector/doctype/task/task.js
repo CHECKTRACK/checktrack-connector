@@ -1,5 +1,14 @@
 frappe.ui.form.on("Task", {
     onload: async function(frm) {
+        const original_save = frm.save;
+        frm.save = function(...args) {
+            if (!frm.is_dirty()) {
+                // Skip alert
+                console.log("Suppressing 'No changes in document' alert");
+                return Promise.resolve(frm);
+            }
+            return original_save.apply(frm, args);
+        };
         // Initialize pending status changes storage if it doesn't exist
         if (!frappe._task_pending_status_changes) {
             frappe._task_pending_status_changes = {};
@@ -237,122 +246,6 @@ async function validate_required_fields_for_status(frm, target_status) {
     }
 }
 
-// Enhanced function to handle concurrent modifications
-async function safe_save_with_status_change(frm, new_status, max_retries = 3) {
-    let attempts = 0;
-    
-    while (attempts < max_retries) {
-        try {
-            attempts++;
-            
-            // First, refresh the document to get the latest version
-            await frm.reload_doc();
-            
-            // Re-validate required fields after refresh (document might have changed)
-            const validation_result = await validate_required_fields_for_status(frm, new_status);
-            
-            if (!validation_result.valid) {
-                // Show error message with missing fields
-                let message = validation_result.message;
-                if (validation_result.missing_fields && validation_result.missing_fields.length > 0) {
-                    message += "<br><br><strong>Missing fields:</strong><br>";
-                    message += validation_result.missing_fields.map(field => `• ${field}`).join('<br>');
-                }
-                
-                frappe.msgprint({
-                    title: __('Required Fields Missing'),
-                    message: message,
-                    indicator: 'red'
-                });
-                
-                return { success: false, error: 'validation_failed' };
-            }
-            
-            // Set the new status
-            frm.set_value('workflow_status', new_status);
-            
-            // Try to save with explicit version check
-            const save_result = await frm.save();
-            
-            // If we reach here, save was successful
-            return { success: true };
-            
-        } catch (error) {
-            console.error(`Save attempt ${attempts} failed:`, error);
-            
-            // Check if it's a version conflict error
-            if (error.message && error.message.includes('has been modified after you have opened it')) {
-                if (attempts < max_retries) {
-                    // Show a brief message and retry
-                    
-                    // Wait a bit before retrying
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    continue;
-                } else {
-                    // Max retries reached
-                    frappe.msgprint({
-                        title: __('Save Failed'),
-                        message: `Unable to save after ${max_retries} attempts. The document is being modified by another user or process. Please try again in a few moments.`,
-                        indicator: 'red'
-                    });
-                    return { success: false, error: 'max_retries_exceeded' };
-                }
-            } else {
-                // Different type of error
-                frappe.msgprint({
-                    title: __('Save Error'),
-                    message: `An error occurred while saving: ${error.message || 'Unknown error'}`,
-                    indicator: 'red'
-                });
-                return { success: false, error: 'save_error' };
-            }
-        }
-    }
-}
-
-// Enhanced function to periodically refresh document data
-function setup_document_refresh_monitor(frm) {
-    // Only set up for existing documents (not new ones)
-    if (frm.is_new()) return;
-    
-    // Clear any existing interval
-    if (frm._refresh_interval) {
-        clearInterval(frm._refresh_interval);
-    }
-    
-    // Set up periodic refresh every 30 seconds
-    frm._refresh_interval = setInterval(async () => {
-        try {
-            // Get the latest document data without full reload
-            const latest_doc = await frappe.call({
-                method: "frappe.client.get",
-                args: {
-                    doctype: frm.doc.doctype,
-                    name: frm.doc.name
-                }
-            });
-            
-            const latest_modified = latest_doc.message.modified;
-            const current_modified = frm.doc.modified;
-            
-            // Check if document was modified by someone else
-            if (latest_modified !== current_modified) {
-                // Show notification about changes
-                if (!frm._modification_warning_shown) {
-                    frm._modification_warning_shown = true;
-                    
-                    // Reset warning flag after 10 seconds
-                    setTimeout(() => {
-                        frm._modification_warning_shown = false;
-                    }, 10000);
-                }
-            }
-        } catch (error) {
-            console.error("Error checking document freshness:", error);
-        }
-    }, 30000); // Check every 30 seconds
-}
-
 function render_status_ui(frm) {
     const wrapper_id = 'custom-status-overview-wrapper';
     let wrapper = $(`#${wrapper_id}`);
@@ -363,9 +256,6 @@ function render_status_ui(frm) {
         wrapper = $(`#${wrapper_id}`);
     }
     wrapper.empty();
-
-    // Set up document refresh monitoring
-    setup_document_refresh_monitor(frm);
 
     // If no type selected, use "Task" as default type
     const task_type = frm.doc.type || "Task";
@@ -494,7 +384,6 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                         cursor: pointer;
                         ${!pending_status_change ? 'display: none;' : ''}
                     ">Save</button>
-
                 </div>` : is_new_doc ? `
                 <div style="margin-top: 8px; font-size: 12px; color: #888; font-style: italic;">
                     Status can be changed after saving the task.
@@ -518,6 +407,7 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                     // Show apply button
                     $('#apply-status-btn').show();
                     
+                    
                 } else {
                     // Reset if user selects the current status
                     set_pending_status_change(frm, null);
@@ -525,40 +415,56 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                 }
             });
             
-            // Enhanced save button with concurrency handling
             $('#apply-status-btn').on('click', async function() {
                 const pending_change = get_pending_status_change(frm);
                 if (pending_change) {
-                    // Disable button to prevent multiple clicks
-                    $(this).prop('disabled', true).text('Saving...');
+                    // Validate required fields before applying status change
+                    const validation_result = await validate_required_fields_for_status(frm, pending_change);
                     
-                    const result = await safe_save_with_status_change(frm, pending_change);
+                    if (!validation_result.valid) {
+                        // Show error message with missing fields
+                        let message = validation_result.message;
+                        if (validation_result.missing_fields && validation_result.missing_fields.length > 0) {
+                            message += "<br><br><strong>Missing fields:</strong><br>";
+                            message += validation_result.missing_fields.map(field => `• ${field}`).join('<br>');
+                        }
+                        
+                        frappe.msgprint({
+                            title: __('Required Fields Missing'),
+                            message: message,
+                            indicator: 'red'
+                        });
+                        
+                        // Reset the dropdown to current status
+                        $('#workflow_status-dropdown').val(frm.doc.workflow_status);
+                        set_pending_status_change(frm, null);
+                        $('#apply-status-btn').hide();
+                        
+                        return;
+                    }
                     
-                    if (result.success) {
+                    // Apply the pending status change
+                    frm.set_value('workflow_status', pending_change);
+                    
+                    // Save the form
+                    frm.save().then(() => {
                         set_pending_status_change(frm, null);
                         
                         // Re-render the UI after save
                         setTimeout(() => {
                             render_status_ui(frm);
                         }, 500);
-                    } else {
-                        // Re-enable button and reset dropdown
-                        $(this).prop('disabled', false).text('Save');
+                    }).catch((error) => {
+                        console.error("Error saving form:", error);
+                        frappe.msgprint("Error occurred while saving. Please try again.");
+                        
+                        // Reset the dropdown to current status
                         $('#workflow_status-dropdown').val(frm.doc.workflow_status);
                         set_pending_status_change(frm, null);
                         $('#apply-status-btn').hide();
-                    }
+                    });
                 }
             });
-            
-
         }, 100);
-    }
-    
-    // Clean up interval when form is destroyed
-    if (frm._refresh_interval) {
-        frm.$wrapper.on('remove', function() {
-            clearInterval(frm._refresh_interval);
-        });
     }
 }
