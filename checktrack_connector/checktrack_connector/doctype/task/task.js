@@ -1,5 +1,14 @@
 frappe.ui.form.on("Task", {
     onload: async function(frm) {
+        const original_save = frm.save;
+        frm.save = function(...args) {
+            if (!frm.is_dirty()) {
+                // Skip alert
+                console.log("Suppressing 'No changes in document' alert");
+                return Promise.resolve(frm);
+            }
+            return original_save.apply(frm, args);
+        };
         // Initialize pending status changes storage if it doesn't exist
         if (!frappe._task_pending_status_changes) {
             frappe._task_pending_status_changes = {};
@@ -439,7 +448,6 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                     
                     // Save the form
                     frm.save().then(() => {
-                        frappe.show_alert(`Status successfully changed to "${pending_change}"`);
                         set_pending_status_change(frm, null);
                         
                         // Re-render the UI after save
