@@ -383,7 +383,8 @@ def sync_task_to_mongo(doc, method):
             "_title": f"{row.employee_name}"
         }
         watchers.append(watcher_ref)
-
+    frappe.msgprint(f"watchers{watchers}")
+    frappe.msgprint(f"assignTo{assignTo}")
     payload = {
         "name": doc.task_name,
         "assignedTo": assignTo,
