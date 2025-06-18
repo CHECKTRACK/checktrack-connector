@@ -385,10 +385,12 @@ def sync_task_to_mongo(doc, method):
         watchers.append(watcher_ref)
     frappe.msgprint(f"watchers{watchers}")
     frappe.msgprint(f"assignTo{assignTo}")
+    frappe.log_error(f"watchers '{watchers}' not found", "Sync Task Error")
+    frappe.log_error(f"assignTo '{assignTo}' not found", "Sync Task Error")
     payload = {
         "name": doc.task_name,
         "assignedTo": assignTo,
-        "watchers": watchers,
+        "watchers": "",
         "description": doc.description,
         "frappe": {
             "_id": doc.name,
