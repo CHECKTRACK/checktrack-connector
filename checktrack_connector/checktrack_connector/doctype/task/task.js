@@ -43,6 +43,11 @@ frappe.ui.form.on("Task", {
             }
             return {};
         });
+
+        // Set default workflow status for new documents
+        if (frm.is_new() && !frm.doc.workflow_status) {
+            await set_default_workflow_status(frm);
+        }
     },
 
     refresh(frm) {
@@ -55,7 +60,7 @@ frappe.ui.form.on("Task", {
         render_status_ui(frm);
     },
 
-    type(frm) {
+    type: async function(frm) {
         render_status_ui(frm); // re-render when type changes
         
         // Set field requirements when type changes
@@ -77,6 +82,11 @@ frappe.ui.form.on("Task", {
             }
             return {};
         });
+
+        // Update default workflow status when type changes
+        if (frm.is_new()) {
+            await set_default_workflow_status(frm);
+        }
     },
 
     validate: function(frm) {
@@ -87,6 +97,40 @@ frappe.ui.form.on("Task", {
         }
     }
 });
+
+// New function to set default workflow status based on start_state
+async function set_default_workflow_status(frm) {
+    try {
+        const task_type = frm.doc.type || "Task";
+        
+        // Get the Task Type document with status flow
+        const task_type_doc = await frappe.call({
+            method: "frappe.client.get",
+            args: {
+                doctype: "Task Type",
+                name: task_type
+            }
+        });
+        
+        const status_flow = task_type_doc.message?.status_flow || [];
+        
+        // Find the status with start_state = 1
+        const start_status_row = status_flow.find(row => row.start_state === 1);
+        
+        if (start_status_row && start_status_row.workflow_status) {
+            // Set the default workflow status
+            frm.set_value('workflow_status', start_status_row.workflow_status);
+        } else {
+            // Fallback to 'Pending' if no start state is found
+            frm.set_value('workflow_status', 'Pending');
+        }
+        
+    } catch (error) {
+        console.error("Error setting default workflow status:", error);
+        // Fallback to 'Pending' on error
+        frm.set_value('workflow_status', 'Pending');
+    }
+}
 
 function set_task_type_doc_requirements(frm) {
     // Set task_type_doc as required if type is selected
