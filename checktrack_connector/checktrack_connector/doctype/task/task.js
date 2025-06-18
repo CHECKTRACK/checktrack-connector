@@ -9,10 +9,6 @@ frappe.ui.form.on("Task", {
             }
             return original_save.apply(frm, args);
         };
-        // Initialize pending status changes storage if it doesn't exist
-        if (!frappe._task_pending_status_changes) {
-            frappe._task_pending_status_changes = {};
-        }
         
         // Get all task type names (these are the doctype names stored in Task Type)
         const task_types = await frappe.db.get_list('Task Type', {
@@ -89,11 +85,49 @@ frappe.ui.form.on("Task", {
         }
     },
 
-    validate: function(frm) {
+    validate: async function(frm) {
         // Validation: if type is selected, task_type_doc must also be selected
         if (frm.doc.type && !frm.doc.task_type_doc) {
             frappe.msgprint(__('Please select Task Type Doc when Type is selected'));
             frappe.validated = false;
+            return;
+        }
+
+        // Check if workflow status has changed and validate required fields
+        if (frm.doc.workflow_status && frm.doc.__islocal !== 1) {
+            // Get the original workflow status from the server
+            const original_doc = await frappe.call({
+                method: "frappe.client.get",
+                args: {
+                    doctype: "Task",
+                    name: frm.doc.name
+                }
+            });
+
+            const original_status = original_doc.message?.workflow_status;
+            
+            // If status has changed, validate required fields
+            if (original_status !== frm.doc.workflow_status) {
+                const validation_result = await validate_required_fields_for_status(frm, frm.doc.workflow_status);
+                
+                if (!validation_result.valid) {
+                    // Show error message with missing fields
+                    let message = validation_result.message;
+                    if (validation_result.missing_fields && validation_result.missing_fields.length > 0) {
+                        message += "<br><br><strong>Missing fields:</strong><br>";
+                        message += validation_result.missing_fields.map(field => `• ${field}`).join('<br>');
+                    }
+                    
+                    frappe.msgprint({
+                        title: __('Required Fields Missing'),
+                        message: message,
+                        indicator: 'red'
+                    });
+                    
+                    frappe.validated = false;
+                    return;
+                }
+            }
         }
     }
 });
@@ -140,35 +174,6 @@ function set_task_type_doc_requirements(frm) {
     } else {
         frm.set_df_property('task_type_doc', 'reqd', 0);
         frm.set_df_property('task_type_doc', 'bold', 0);
-    }
-}
-
-function get_task_key(frm) {
-    // Create a unique key for this task record
-    return frm.doc.name || `new_${frm.doc.doctype}_${Date.now()}`;
-}
-
-function get_pending_status_change(frm) {
-    // Initialize storage if it doesn't exist
-    if (!frappe._task_pending_status_changes) {
-        frappe._task_pending_status_changes = {};
-    }
-    
-    const task_key = get_task_key(frm);
-    return frappe._task_pending_status_changes[task_key] || null;
-}
-
-function set_pending_status_change(frm, status) {
-    // Initialize storage if it doesn't exist
-    if (!frappe._task_pending_status_changes) {
-        frappe._task_pending_status_changes = {};
-    }
-    
-    const task_key = get_task_key(frm);
-    if (status) {
-        frappe._task_pending_status_changes[task_key] = status;
-    } else {
-        delete frappe._task_pending_status_changes[task_key];
     }
 }
 
@@ -363,11 +368,7 @@ function render_status_ui(frm) {
                         }
                     } else {
                         // If no current status, show all available statuses
-                        // Or you can set a default starting status here
                         valid_next_statuses = all_statuses;
-                        
-                        // Alternative: Set first status as default
-                        // valid_next_statuses = [all_statuses[0]];
                     }
 
                     render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses);
@@ -383,9 +384,6 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
     
     // Use valid_next_statuses for dropdown options, fallback to all_statuses if empty
     const dropdown_options = valid_next_statuses.length > 0 ? valid_next_statuses : all_statuses;
-    
-    // Get the pending status change for this specific task
-    const pending_status_change = get_pending_status_change(frm);
     
     const status_display = `
         <div style="display: flex; align-items: center; gap: 16px;">
@@ -412,22 +410,26 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
                 </div>
 
                 ${!is_submitted && !is_new_doc ? `
-                <div style="margin-top: 8px;">
+                <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
                     <select id="workflow_status-dropdown" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
                         ${dropdown_options.map(s => `
-                            <option value="${s}" ${s === (pending_status_change || frm.doc.workflow_status) ? "selected" : ""}>${s}</option>
+                            <option value="${s}" ${s === frm.doc.workflow_status ? "selected" : ""}>${s}</option>
                         `).join('')}
                     </select>
-                    <button id="apply-status-btn" style="
-                        margin-left: 8px;
-                        padding: 6px 12px;
-                        background-color: #007bff;
-                        color: white;
-                        border: none;
-                        border-radius: 4px;
+                    <button id="workflow_status-save-btn" style="
+                        padding: 6px 12px; 
+                        border-radius: 4px; 
+                        border: 1px solid #007bff; 
+                        background-color: #007bff; 
+                        color: white; 
                         cursor: pointer;
-                        ${!pending_status_change ? 'display: none;' : ''}
+                        font-size: 12px;
+                        font-weight: 500;
+                        display: none;
                     ">Save</button>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: #666; font-style: italic;">
+                    Select a different status to show the Save button.
                 </div>` : is_new_doc ? `
                 <div style="margin-top: 8px; font-size: 12px; color: #888; font-style: italic;">
                     Status can be changed after saving the task.
@@ -440,73 +442,79 @@ function render_status_dropdown(wrapper, frm, all_statuses, valid_next_statuses)
     // Only add event listeners if document is not submitted and not new
     if (!is_submitted && !is_new_doc) {
         setTimeout(() => {
-            $('#workflow_status-dropdown').on('change', function () {
+            const dropdown = $('#workflow_status-dropdown');
+            const saveBtn = $('#workflow_status-save-btn');
+            const originalStatus = frm.doc.workflow_status;
+            
+            // Handle dropdown change
+            dropdown.on('change', function () {
                 const selected_status = $(this).val();
-                const current_status = frm.doc.workflow_status;
                 
-                if (selected_status !== current_status) {
-                    // Store the pending change for this specific task
-                    set_pending_status_change(frm, selected_status);
-                    
-                    // Show apply button
-                    $('#apply-status-btn').show();
-                    
-                    
+                // Show/hide save button based on whether status changed
+                if (selected_status !== originalStatus) {
+                    saveBtn.show();
                 } else {
-                    // Reset if user selects the current status
-                    set_pending_status_change(frm, null);
-                    $('#apply-status-btn').hide();
+                    saveBtn.hide();
                 }
             });
             
-            $('#apply-status-btn').on('click', async function() {
-                const pending_change = get_pending_status_change(frm);
-                if (pending_change) {
-                    // Validate required fields before applying status change
-                    const validation_result = await validate_required_fields_for_status(frm, pending_change);
-                    
-                    if (!validation_result.valid) {
-                        // Show error message with missing fields
-                        let message = validation_result.message;
-                        if (validation_result.missing_fields && validation_result.missing_fields.length > 0) {
-                            message += "<br><br><strong>Missing fields:</strong><br>";
-                            message += validation_result.missing_fields.map(field => `• ${field}`).join('<br>');
+            // Handle save button click
+            saveBtn.on('click', async function () {
+                const selected_status = dropdown.val();
+                
+                if (selected_status !== originalStatus) {
+                    try {
+                        // First validate the status change without saving
+                        const validation_result = await validate_required_fields_for_status(frm, selected_status);
+                        
+                        if (!validation_result.valid) {
+                            // Show validation error
+                            let message = validation_result.message;
+                            if (validation_result.missing_fields && validation_result.missing_fields.length > 0) {
+                                message += "<br><br><strong>Missing fields:</strong><br>";
+                                message += validation_result.missing_fields.map(field => `• ${field}`).join('<br>');
+                            }
+                            
+                            frappe.msgprint({
+                                title: __('Required Fields Missing'),
+                                message: message,
+                                indicator: 'red'
+                            });
+                            
+                            // Revert dropdown to original state
+                            dropdown.val(originalStatus);
+                            saveBtn.hide();
+                            return;
                         }
                         
+                        // Set the value first
+                        await frm.set_value('workflow_status', selected_status);
+                        
+                        // Then save the document
+                        await frm.save();
+                        
+                        // Hide button after successful save
+                        saveBtn.hide();
+                                       
+                    } catch (error) {
+                        console.error('Save failed:', error);
+                        
+                        // Revert the workflow_status field to original value
+                        await frm.set_value('workflow_status', originalStatus);
+                        
+                        // Revert dropdown to original state
+                        dropdown.val(originalStatus);
+                        
+                        // Hide the save button
+                        saveBtn.hide();
+                        
+                        // Show error message
                         frappe.msgprint({
-                            title: __('Required Fields Missing'),
-                            message: message,
+                            title: __('Save Failed'),
+                            message: error.message || 'An error occurred while saving. Please try again.',
                             indicator: 'red'
                         });
-                        
-                        // Reset the dropdown to current status
-                        $('#workflow_status-dropdown').val(frm.doc.workflow_status);
-                        set_pending_status_change(frm, null);
-                        $('#apply-status-btn').hide();
-                        
-                        return;
                     }
-                    
-                    // Apply the pending status change
-                    frm.set_value('workflow_status', pending_change);
-                    
-                    // Save the form
-                    frm.save().then(() => {
-                        set_pending_status_change(frm, null);
-                        
-                        // Re-render the UI after save
-                        setTimeout(() => {
-                            render_status_ui(frm);
-                        }, 500);
-                    }).catch((error) => {
-                        console.error("Error saving form:", error);
-                        frappe.msgprint("Error occurred while saving. Please try again.");
-                        
-                        // Reset the dropdown to current status
-                        $('#workflow_status-dropdown').val(frm.doc.workflow_status);
-                        set_pending_status_change(frm, null);
-                        $('#apply-status-btn').hide();
-                    });
                 }
             });
         }, 100);
