@@ -314,6 +314,8 @@ def send_status_change_notification_for_submit_cancel(doc, docname, prefix, tena
         frappe.log_error(frappe.get_traceback(), f"Status change notification failed for {status_action}")
       
 def sync_or_update_project_in_mongo(doc, method):
+    if frappe.flags.get("skip_project_hooks"):
+        return
     if doc.mongo_project_id:
         response = update_project_in_mongo(doc, method)
     else:

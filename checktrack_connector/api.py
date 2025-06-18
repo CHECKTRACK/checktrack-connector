@@ -7,7 +7,7 @@ from frappe.model.meta import get_meta
 from frappe.auth import LoginManager
 from frappe import _
 from frappe.utils.password import get_decrypted_password
-from checktrack_connector.onboard_api import automated_import_users
+from checktrack_connector.onboard_api import automated_import_users, import_project
 from frappe.utils import get_url
 from datetime import datetime, timedelta
 from frappe.utils import random_string
@@ -140,14 +140,10 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
             return create_result
 
         user_import_result = automated_import_users(tenant_id=company_name)
-        if user_import_result.get("status") == "success":
-            update_mongodb_tenant_flag(tenant_id,access_token)
-            return create_result
 
         if user_import_result.get("status") != "success":
             rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
             frappe.msgprint(_("User import failed. Rolling back created team members."), indicator="red")
-
             return {
                 "status": "error",
                 "rollback_status": True,
@@ -155,7 +151,15 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
                 "import_error": user_import_result
             }
 
-        return create_result
+        project_import = import_project(tenant_id=tenant_id, tenant_prefix=tenant_prefix, access_token=access_token,company_name=company_name)
+        if project_import.get("status") == "success":
+            update_mongodb_tenant_flag(tenant_id,access_token)
+            return project_import
+        
+        if project_import.get("status") != "success":
+            frappe.msgprint(_("Project import failed."), indicator="red")
+
+        return project_import
 
     except Exception as e:
         return {

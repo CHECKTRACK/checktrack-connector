@@ -1,8 +1,18 @@
 import io
 import csv
 import frappe
+import urllib.parse
+import json
+import requests
 from frappe.utils.file_manager import save_file
 from frappe.core.doctype.data_import.data_import import start_import, get_import_status
+
+USER_API_URL = frappe.get_hooks().get("user_api_url")
+DATA_API_URL = frappe.get_hooks().get("data_api_url")
+if isinstance(USER_API_URL, list) and USER_API_URL:
+    USER_API_URL = USER_API_URL[0]
+if isinstance(DATA_API_URL, list) and DATA_API_URL:
+    DATA_API_URL = DATA_API_URL[0]
 
 
 @frappe.whitelist()
@@ -132,5 +142,98 @@ def automated_import_users(tenant_id=None):
         return {
             "status": "error",
             "message": "An error occurred during user import",
+            "error": str(e)
+        }
+    
+@frappe.whitelist()
+def import_project(tenant_id, tenant_prefix, access_token,company_name):
+    try:
+        filter_query = {"tenant._id": {"$oid": tenant_id}}
+        url = f"{DATA_API_URL}/{tenant_prefix}_projects?filter={urllib.parse.quote(json.dumps(filter_query))}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "No-Auth-Challenge": "true",
+            "Content-Type": "application/json"
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            projects = response.json()
+            if not isinstance(projects, list):
+                return {"status": "error", "message": "No project found for the provided tenant_id"}
+            data = [
+                ["project_name", "description","status","company","mongo_project_id"]
+            ]
+            for project in projects:
+                data.append([
+                    project.get("name"),
+                    project.get("description"),
+                    project.get("status").capitalize(),
+                    company_name,
+                    project.get("_id", {}).get("$oid")
+                ])
+            
+            csv_buffer = io.StringIO()
+            writer = csv.writer(csv_buffer)
+            for row in data:
+                writer.writerow(row)
+            csv_buffer.seek(0)
+
+            file_doc = save_file(
+                fname="project_import.csv",
+                content=csv_buffer.getvalue(),
+                dt=None,
+                dn=None,
+                folder="Home",
+                decode=False,
+                is_private=0
+            )
+            frappe.db.commit()
+
+            # Step 5: Create Data Import record
+            import_doc = frappe.get_doc({
+                "doctype": "Data Import",
+                "reference_doctype": "Project",
+                "import_type": "Insert New Records",
+                "import_file": file_doc.file_url,
+                "submit_after_import": 0,
+                "overwrite": 0,
+                "ignore_encoding_errors": 1
+            })
+            import_doc.save()
+            frappe.db.commit()
+
+            frappe.flags.skip_project_hooks = True
+            try:
+                start_import(import_doc.name)
+            finally:
+                frappe.flags.skip_project_hooks = False
+
+            status_info = get_import_status(import_doc.name)
+
+            if status_info.get("status") == "Success":
+
+                return {
+                    "status": "success",
+                    "message": f"Imported data into User from file {file_doc.file_url}"
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": "Import failed",
+                    "details": status_info.get("messages")
+                }
+
+
+        else:
+            return {
+                "status": "error",
+                "message": "Something went wrong!"
+            }
+        
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "automated_import_project failed")
+        return {
+            "status": "error",
+            "message": "An error occurred during project import",
             "error": str(e)
         }
