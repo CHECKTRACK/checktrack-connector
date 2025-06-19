@@ -202,24 +202,90 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
             import_doc.save()
             frappe.db.commit()
 
-            frappe.flags.skip_project_hooks = True
-            try:
-                start_import(import_doc.name)
-            finally:
-                frappe.flags.skip_project_hooks = False
+            start_import(import_doc.name)
 
             status_info = get_import_status(import_doc.name)
 
             if status_info.get("status") == "Success":
 
-                return {
-                    "status": "success",
-                    "message": f"Imported data into User from file {file_doc.file_url}"
+                created_projects = frappe.get_all("Project",fields=["name", "mongo_project_id"])
+                project_id_map = {
+                    proj["mongo_project_id"]: proj["name"]
+                    for proj in created_projects if proj.get("mongo_project_id")
                 }
+                task_list  = get_task(tenant_id=tenant_id, tenant_prefix=tenant_prefix, access_token=access_token)
+
+                task_data = [
+                    ["task_name", "description","assign_to","project","workflow_status","company","mongo_task_id"]
+                ]
+
+                for task in task_list:
+                    mongo_proj_id = task.get("project", {}).get("_id", {}).get("$oid")
+
+                    if not mongo_proj_id or mongo_proj_id not in project_id_map:
+                        continue
+
+                    frappe_project_name = project_id_map[mongo_proj_id]
+
+                    task_data.append([
+                        task.get("name"),
+                        task.get("description", ""),
+                        task.get("assignedTo", [{}])[0].get("_id", {}).get("$oid", ""),
+                        frappe_project_name,
+                        "Pending",
+                        company_name,
+                        task.get("_id", {}).get("$oid")
+                    ])
+
+                csv_buffer_task = io.StringIO()
+                writer_task = csv.writer(csv_buffer_task)
+                for row in task_data:
+                    writer_task.writerow(row)
+                csv_buffer_task.seek(0)
+
+                file_doc_task = save_file(
+                    fname="task_import.csv",
+                    content=csv_buffer_task.getvalue(),
+                    dt=None,
+                    dn=None,
+                    folder="Home",
+                    decode=False,
+                    is_private=0
+                )
+                frappe.db.commit()
+
+                # Step 5: Create Data Import record
+                import_doc_task = frappe.get_doc({
+                    "doctype": "Data Import",
+                    "reference_doctype": "Task",
+                    "import_type": "Insert New Records",
+                    "import_file": file_doc_task.file_url,
+                    "submit_after_import": 0,
+                    "overwrite": 0,
+                    "ignore_encoding_errors": 1
+                })
+                import_doc_task.save()
+                frappe.db.commit()
+
+                start_import(import_doc_task.name)
+
+                status_info_task = get_import_status(import_doc_task.name)
+
+                if status_info_task.get("status") == "Success":
+                    return {
+                        "status": "success",
+                        "message": f"Imported data of task and project done"
+                    }
+                else:
+                    return {
+                        "status": "error",
+                        "message": "Task Import failed project",
+                        "details": status_info_task.get("messages")
+                    }
             else:
                 return {
                     "status": "error",
-                    "message": "Import failed",
+                    "message": "Project and Task Import failed project",
                     "details": status_info.get("messages")
                 }
 
@@ -237,3 +303,27 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
             "message": "An error occurred during project import",
             "error": str(e)
         }
+    
+
+def get_task(tenant_id, tenant_prefix, access_token):
+    try:
+        filter_query = {"tenant._id": {"$oid": tenant_id}}
+        url = f"{DATA_API_URL}/{tenant_prefix}_tasks?filter={urllib.parse.quote(json.dumps(filter_query))}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "No-Auth-Challenge": "true",
+            "Content-Type": "application/json"
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            tasks = response.json()
+            return tasks
+            
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "tasks get failed")
+        return {
+            "status": "error",
+            "message": "An error occurred during tasks get",
+            "error": str(e)
+        }
+    
