@@ -3,6 +3,7 @@ import jwt
 import requests
 import urllib.parse
 import json
+import math
 from frappe.model.meta import get_meta
 from frappe.auth import LoginManager
 from frappe import _
@@ -643,7 +644,11 @@ def get_decrypted_password_for_doc(docname):
         return {"error": "Could not decrypt password due to an internal error."}
 
 @frappe.whitelist()
-def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None):
+def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None,page=None, page_size=None):
+
+    page = int(page)
+    page_size = int(page_size)
+    start = (page - 1) * page_size
     extra_filters = json.loads(extra_filters) if extra_filters else []
 
     def build_filters(base):
@@ -657,30 +662,52 @@ def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None):
         filters.update(base)
         return filters
 
+    adjusted_page_size = 10
+    total_limit = 30
     all_tasks = []
 
+    remaining_count = total_limit
+
+    # 1. Fetch assigned tasks
     if assign_to:
         assigned_tasks = frappe.get_all(
             "Task",
             filters=build_filters({"assign_to": assign_to}),
-            fields=["*"]
+            fields=["*"],
+            start=start,
+            page_length=adjusted_page_size
         )
         all_tasks += assigned_tasks
+        remaining_count -= len(assigned_tasks)
+    else:
+        assigned_tasks = []
 
-    if employee_id:
+    # 2. Fetch watcher tasks
+    if employee_id and remaining_count > 0:
         watcher_tasks = frappe.get_all(
             "Task",
             filters=build_filters({"watchers_id": ["like", f"%{employee_id}%"]}),
-            fields=["*"]
+            fields=["*"],
+            start=start,
+            page_length=min(10, remaining_count)
         )
         all_tasks += watcher_tasks
+        remaining_count -= len(watcher_tasks)
+    else:
+        watcher_tasks = []
 
-    unassigned_tasks = frappe.get_all(
-        "Task",
-        filters=build_filters({"assign_to": ["in", ["", None]]}),
-        fields=["*"]
-    )
-    all_tasks += unassigned_tasks
+    # 3. Fetch unassigned tasks
+    if employee_id and remaining_count > 0:
+        unassigned_tasks = frappe.get_all(
+            "Task",
+            filters=build_filters({"assign_to": ["in", ["", None]]}),
+            fields=["*"],
+            start=start,
+            page_length=remaining_count
+        )
+        all_tasks += unassigned_tasks
+    else:
+        unassigned_tasks = []
 
     task_map = {task["name"]: task for task in all_tasks}
 

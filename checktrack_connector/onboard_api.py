@@ -148,8 +148,9 @@ def automated_import_users(tenant_id=None):
 @frappe.whitelist()
 def import_project(tenant_id, tenant_prefix, access_token,company_name):
     try:
+        limit = 1000
         filter_query = {"tenant._id": {"$oid": tenant_id}}
-        url = f"{DATA_API_URL}/{tenant_prefix}_projects?filter={urllib.parse.quote(json.dumps(filter_query))}"
+        url = f"{DATA_API_URL}/{tenant_prefix}_projects?filter={urllib.parse.quote(json.dumps(filter_query))}&pagesize={limit}"
         headers = {
             "Authorization": f"Bearer {access_token}",
             "No-Auth-Challenge": "true",
@@ -206,7 +207,7 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
 
             status_info = get_import_status(import_doc.name)
 
-            if status_info.get("status") == "Success":
+            if status_info.get("status") in ["Success", "Partial Success"]:
 
                 created_projects = frappe.get_all("Project",fields=["name", "mongo_project_id"])
                 project_id_map = {
@@ -214,18 +215,19 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
                     for proj in created_projects if proj.get("mongo_project_id")
                 }
                 task_list  = get_task(tenant_id=tenant_id, tenant_prefix=tenant_prefix, access_token=access_token)
-
+                
                 task_data = [
                     ["task_name", "description","assign_to","project","workflow_status","company","mongo_task_id"]
                 ]
 
                 for task in task_list:
-                    mongo_proj_id = task.get("project", {}).get("_id", {}).get("$oid")
+                    project_data = task.get("project")
+                    mongo_proj_id = None
 
-                    if not mongo_proj_id or mongo_proj_id not in project_id_map:
-                        continue
+                    if isinstance(project_data, dict):
+                        mongo_proj_id = project_data.get("_id", {}).get("$oid")
 
-                    frappe_project_name = project_id_map[mongo_proj_id]
+                    frappe_project_name = project_id_map.get(mongo_proj_id, None)
 
                     assigned_to = (
                         task.get("assignedTo") and task.get("assignedTo", [{}])[0].get("_id", {}).get("$oid")
@@ -236,7 +238,7 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
                         task.get("description", ""),
                         assigned_to,
                         frappe_project_name,
-                        "Pending",
+                        "Pending" if task.get("status") in ["active", "inactive"] else task.get("status", "Pending"),
                         company_name,
                         task.get("_id", {}).get("$oid")
                     ])
@@ -275,7 +277,7 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
 
                 status_info_task = get_import_status(import_doc_task.name)
 
-                if status_info_task.get("status") == "Success":
+                if status_info_task.get("status") in ["Success", "Partial Success"]:
                     return {
                         "status": "success",
                         "message": f"Imported data of task and project done"
@@ -311,23 +313,40 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
 
 def get_task(tenant_id, tenant_prefix, access_token):
     try:
-        filter_query = {"tenant._id": {"$oid": tenant_id}}
-        url = f"{DATA_API_URL}/{tenant_prefix}_tasks?filter={urllib.parse.quote(json.dumps(filter_query))}"
+        all_tasks = []
         headers = {
             "Authorization": f"Bearer {access_token}",
             "No-Auth-Challenge": "true",
             "Content-Type": "application/json"
         }
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            tasks = response.json()
-            return tasks
-            
+
+        filter_query = {"tenant._id": {"$oid": tenant_id}}
+        base_url = f"{DATA_API_URL}/{tenant_prefix}_tasks"
+
+        pagesize = 100
+        page = 1
+
+        while True:
+            url = (f"{base_url}?filter={urllib.parse.quote(json.dumps(filter_query))}&pagesize={pagesize}&page={page}")
+            response = requests.get(url, headers=headers)
+
+            if response.status_code == 200:
+                batch = response.json()
+                if not batch:
+                    break
+                all_tasks.extend(batch)
+                page += 1
+            else:
+                frappe.log_error(f"{response.status_code} - {response.text}", "Task page fetch failed")
+                break
+
+        return all_tasks
+
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "tasks get failed")
+        frappe.log_error(frappe.get_traceback(), "Tasks fetch failed")
         return {
             "status": "error",
-            "message": "An error occurred during tasks get",
+            "message": "An error occurred during tasks fetch",
             "error": str(e)
         }
     
