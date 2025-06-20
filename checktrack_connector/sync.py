@@ -365,15 +365,16 @@ def sync_task_to_mongo(doc, method):
     assignTo = []
 
     company_doc = frappe.get_doc("Company", doc.company)
-    assignToInfo = frappe.get_doc("Employee", doc.assign_to)
-    assigned_to_ref = {
-        "_id": {
-            "$oid": assignToInfo.name
-        },
-        "_ref": f"{company_doc.prefix}_team_members",
-        "_title": f"{assignToInfo.employee_name}"
-    }
-    assignTo.append(assigned_to_ref)
+    if doc.assign_to:
+        assignToInfo = frappe.get_doc("Employee", doc.assign_to)
+        assigned_to_ref = {
+            "_id": {
+                "$oid": assignToInfo.name
+            },
+            "_ref": f"{company_doc.prefix}_team_members",
+            "_title": f"{assignToInfo.employee_name}"
+        }
+        assignTo.append(assigned_to_ref)
     for row in doc.watchers:
         watcher_ref = {
             "_id": {
@@ -470,15 +471,16 @@ def update_task_in_mongo(doc, method):
     assignTo = []
 
     company_doc = frappe.get_doc("Company", doc.company)
-    assignToInfo = frappe.get_doc("Employee", doc.assign_to)
-    assigned_to_ref = {
-        "_id": {
-            "$oid": assignToInfo.name
-        },
-        "_ref": f"{company_doc.prefix}_team_members",
-        "_title": f"{assignToInfo.employee_name}"
-    }
-    assignTo.append(assigned_to_ref)
+    if doc.assign_to:
+        assignToInfo = frappe.get_doc("Employee", doc.assign_to)
+        assigned_to_ref = {
+            "_id": {
+                "$oid": assignToInfo.name
+            },
+            "_ref": f"{company_doc.prefix}_team_members",
+            "_title": f"{assignToInfo.employee_name}"
+        }
+        assignTo.append(assigned_to_ref)
     for row in doc.watchers:
         watcher_ref = {
             "_id": {

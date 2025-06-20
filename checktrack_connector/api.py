@@ -3,11 +3,12 @@ import jwt
 import requests
 import urllib.parse
 import json
+import math
 from frappe.model.meta import get_meta
 from frappe.auth import LoginManager
 from frappe import _
 from frappe.utils.password import get_decrypted_password
-from checktrack_connector.onboard_api import automated_import_users
+from checktrack_connector.onboard_api import automated_import_users, import_project
 from frappe.utils import get_url
 from datetime import datetime, timedelta
 from frappe.utils import random_string
@@ -140,14 +141,10 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
             return create_result
 
         user_import_result = automated_import_users(tenant_id=company_name)
-        if user_import_result.get("status") == "success":
-            update_mongodb_tenant_flag(tenant_id,access_token)
-            return create_result
 
         if user_import_result.get("status") != "success":
             rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
             frappe.msgprint(_("User import failed. Rolling back created team members."), indicator="red")
-
             return {
                 "status": "error",
                 "rollback_status": True,
@@ -155,7 +152,15 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
                 "import_error": user_import_result
             }
 
-        return create_result
+        project_import = import_project(tenant_id=tenant_id, tenant_prefix=tenant_prefix, access_token=access_token,company_name=company_name)
+        if project_import.get("status") == "success":
+            update_mongodb_tenant_flag(tenant_id,access_token)
+            return project_import
+        
+        if project_import.get("status") != "success":
+            frappe.msgprint(_("Project import failed."), indicator="red")
+
+        return project_import
 
     except Exception as e:
         return {
@@ -639,7 +644,11 @@ def get_decrypted_password_for_doc(docname):
         return {"error": "Could not decrypt password due to an internal error."}
 
 @frappe.whitelist()
-def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None):
+def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None,page=None, page_size=None):
+
+    page = int(page)
+    page_size = int(page_size)
+    start = (page - 1) * page_size
     extra_filters = json.loads(extra_filters) if extra_filters else []
 
     def build_filters(base):
@@ -653,21 +662,56 @@ def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None):
         filters.update(base)
         return filters
 
-    # Tasks assigned to user
+    adjusted_page_size = 10
+    total_limit = page_size
+    all_tasks = []
+
+    remaining_count = total_limit
+
+    # 1. Fetch assigned tasks
     if assign_to:
-        assigned_tasks = frappe.get_all("Task", filters=build_filters({"assign_to": assign_to}), fields=["*"])
+        assigned_tasks = frappe.get_all(
+            "Task",
+            filters=build_filters({"assign_to": assign_to}),
+            fields=["*"],
+            start=start,
+            page_length=adjusted_page_size
+        )
+        all_tasks += assigned_tasks
+        remaining_count -= len(assigned_tasks)
     else:
         assigned_tasks = []
 
-    # Tasks where user is a watcher
-    if employee_id:
-        watcher_tasks = frappe.get_all("Task", filters=build_filters({"watchers_id": ["like", f"%{employee_id}%"]}), fields=["*"])
-    else: 
+    # 2. Fetch watcher tasks
+    if employee_id and remaining_count > 0:
+        watcher_tasks = frappe.get_all(
+            "Task",
+            filters=build_filters({"watchers_id": ["like", f"%{employee_id}%"]}),
+            fields=["*"],
+            start=start,
+            page_length=min(10, remaining_count)
+        )
+        all_tasks += watcher_tasks
+        remaining_count -= len(watcher_tasks)
+    else:
         watcher_tasks = []
 
-    # Merge and deduplicate
-    combined = {task["name"]: task for task in assigned_tasks + watcher_tasks}
-    return {"data": list(combined.values())}
+    # 3. Fetch unassigned tasks
+    if employee_id and remaining_count > 0:
+        unassigned_tasks = frappe.get_all(
+            "Task",
+            filters=build_filters({"assign_to": ["in", ["", None]]}),
+            fields=["*"],
+            start=start,
+            page_length=remaining_count
+        )
+        all_tasks += unassigned_tasks
+    else:
+        unassigned_tasks = []
+
+    task_map = {task["name"]: task for task in all_tasks}
+
+    return {"data": list(task_map.values())}
 
 @frappe.whitelist()
 def get_expanded_doc(doctype, name):

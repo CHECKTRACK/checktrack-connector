@@ -83,8 +83,7 @@
    "fieldtype": "Data",
    "label": "Project Name",
    "oldfieldtype": "Data",
-   "reqd": 1,
-   "unique": 1
+   "reqd": 1
   },
   {
    "default": "Active",
@@ -472,7 +471,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2025-06-12 14:56:15.232037",
+ "modified": "2025-06-20 12:35:34.536771",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Project",
@@ -519,6 +518,7 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
  "search_fields": "project_name, status",
  "show_name_in_global_search": 1,
  "show_title_field_in_link": 1,
