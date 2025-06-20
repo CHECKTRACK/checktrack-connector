@@ -657,21 +657,34 @@ def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None):
         filters.update(base)
         return filters
 
-    # Tasks assigned to user
+    all_tasks = []
+
     if assign_to:
-        assigned_tasks = frappe.get_all("Task", filters=build_filters({"assign_to": assign_to}), fields=["*"])
-    else:
-        assigned_tasks = []
+        assigned_tasks = frappe.get_all(
+            "Task",
+            filters=build_filters({"assign_to": assign_to}),
+            fields=["*"]
+        )
+        all_tasks += assigned_tasks
 
-    # Tasks where user is a watcher
     if employee_id:
-        watcher_tasks = frappe.get_all("Task", filters=build_filters({"watchers_id": ["like", f"%{employee_id}%"]}), fields=["*"])
-    else: 
-        watcher_tasks = []
+        watcher_tasks = frappe.get_all(
+            "Task",
+            filters=build_filters({"watchers_id": ["like", f"%{employee_id}%"]}),
+            fields=["*"]
+        )
+        all_tasks += watcher_tasks
 
-    # Merge and deduplicate
-    combined = {task["name"]: task for task in assigned_tasks + watcher_tasks}
-    return {"data": list(combined.values())}
+    unassigned_tasks = frappe.get_all(
+        "Task",
+        filters=build_filters({"assign_to": ["in", ["", None]]}),
+        fields=["*"]
+    )
+    all_tasks += unassigned_tasks
+
+    task_map = {task["name"]: task for task in all_tasks}
+
+    return {"data": list(task_map.values())}
 
 @frappe.whitelist()
 def get_expanded_doc(doctype, name):

@@ -227,10 +227,14 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
 
                     frappe_project_name = project_id_map[mongo_proj_id]
 
+                    assigned_to = (
+                        task.get("assignedTo") and task.get("assignedTo", [{}])[0].get("_id", {}).get("$oid")
+                    ) or None
+
                     task_data.append([
                         task.get("name"),
                         task.get("description", ""),
-                        task.get("assignedTo", [{}])[0].get("_id", {}).get("$oid", ""),
+                        assigned_to,
                         frappe_project_name,
                         "Pending",
                         company_name,
