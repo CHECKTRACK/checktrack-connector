@@ -663,7 +663,7 @@ def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None,page
         return filters
 
     adjusted_page_size = 10
-    total_limit = 30
+    total_limit = page_size
     all_tasks = []
 
     remaining_count = total_limit
