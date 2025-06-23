@@ -87,7 +87,7 @@
    "fetch_from": "customer_id.zipcode",
    "fetch_if_empty": 1,
    "fieldname": "zip_code",
-   "fieldtype": "Data",
+   "fieldtype": "Int",
    "label": "Zip Code"
   },
   {
