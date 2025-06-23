@@ -644,7 +644,7 @@ def get_decrypted_password_for_doc(docname):
         return {"error": "Could not decrypt password due to an internal error."}
 
 @frappe.whitelist()
-def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None, page=1, page_size=30):
+def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None, page=None, page_size=None):
     page = int(page)
     page_size = int(page_size)
     start = (page - 1) * page_size
