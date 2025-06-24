@@ -21,7 +21,7 @@ def assign_all_roles_to_user(user_email):
         "Dashboard Manager", "Delivery Manager", "Delivery User", "Fleet Manager", 
         "Fulfillment User", "HR Manager", "HR User", "Inbox User", "Item Manager", 
         "Knowledge Base Contributor", "Knowledge Base Editor", "Maintenance Manager",
-        "Maintenance User", "Manufacturing Manager", "Manufacturing User", "Marketing Manager","Newsletter Manager",
+        "Maintenance User", "Manufacturing Manager", "Manufacturing User","Newsletter Manager",
         "Prepared Report User", "Projects Manager", "Projects User", "Purchase Manager",
         "Purchase Master Manager", "Purchase User", "Quality Manager", "Report Manager",
         "Sales Manager", "Sales Master Manager", "Sales User", "Script Manager", 
