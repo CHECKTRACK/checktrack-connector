@@ -83,29 +83,89 @@ def checktrack_integration(email, password=""):
 
         company_result = {}
 
-        new_company = frappe.get_doc({
+        # Check if company with same name already exists
+        existing_company = frappe.db.exists("Company", company_name)
+        
+        if existing_company:
+            # Use existing company and update its data
+            try:
+                existing_company_doc = frappe.get_doc("Company", company_name)
+                
+                # Update existing company with new data from mapped_data
+                for field, value in mapped_data["data"].items():
+                    if field != "company_name" and hasattr(existing_company_doc, field):
+                        existing_company_doc.set(field, value)
+                
+                existing_company_doc.save(ignore_permissions=True)
+                frappe.db.commit()
+                
+                company_result = {
+                    "status": "existing_updated", 
+                    "tenant_id": tenant_id, 
+                    "message": f"Using and updated existing company: {company_name}",
+                    "company_name": company_name
+                }
+                frappe.msgprint(
+                    message=f"Company '{company_name}' already exists. Updated existing company data for integration.", 
+                    title="CheckTrack Integration - Existing Company Updated"
+                )
+            except Exception as e:
+                # If update fails, just use existing company without update
+                company_result = {
+                    "status": "existing", 
+                    "tenant_id": tenant_id, 
+                    "message": f"Using existing company: {company_name} (update failed: {str(e)})",
+                    "company_name": company_name
+                }
+                frappe.msgprint(
+                    message=f"Company '{company_name}' exists but update failed: {str(e)}. Using existing company as-is.", 
+                    title="CheckTrack Integration - Existing Company"
+                )
+        else:
+            # Create new company
+            new_company = frappe.get_doc({
                 "doctype": "Company",
                 **mapped_data["data"]
             })
-        new_company.insert(ignore_permissions=True)
-        company_result = {"status": "created", "tenant_id": tenant_id, "message": "Company created successfully"}
+            new_company.insert(ignore_permissions=True)
+            company_result = {
+                "status": "created", 
+                "tenant_id": tenant_id, 
+                "message": "Company created successfully",
+                "company_name": company_name
+            }
+            frappe.msgprint(
+                    message=f"New Company Created.", 
+                    title="CheckTrack Integration"
+                )
 
         team_members_result = fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name)
 
         if team_members_result.get("status") == "error" or team_members_result.get("rollback_status") == True:
             try:
-                if frappe.db.exists("Company", company_name):
+                # Only delete company if it was newly created (not existing)
+                if company_result.get("status") == "created" and frappe.db.exists("Company", company_name):
                     company_doc = frappe.get_doc("Company", company_name)
                     company_doc.delete(ignore_permissions=True)
                     frappe.db.commit()
-                    company_result = {"status": "error", "tenant_id": tenant_id, "message": "Company removed due to employee creation failure"}
-
-                    frappe.throw(_("Something went wrong!"), indicator="red")
-                    return {
-                        "tenant": company_result,
-                        "team_members": team_members_result,
-                        "is_fully_integration": False
+                    company_result = {
+                        "status": "error", 
+                        "tenant_id": tenant_id, 
+                        "message": "Company removed due to employee creation failure"
                     }
+                elif company_result.get("status") in ["existing", "existing_updated"]:
+                    # For existing companies, don't delete but update the status
+                    company_result.update({
+                        "status": "error_existing", 
+                        "message": "Employee creation failed for existing company (company not removed)"
+                    })
+
+                frappe.throw(_("Something went wrong!"), indicator="red")
+                return {
+                    "tenant": company_result,
+                    "team_members": team_members_result,
+                    "is_fully_integration": False
+                }
             except Exception as e:
                 frappe.throw(_("Something went wrong!"), indicator="red")
 
