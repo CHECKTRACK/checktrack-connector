@@ -105,7 +105,7 @@ def checktrack_integration(email, password=""):
                     "message": f"Using and updated existing company: {company_name}",
                     "company_name": company_name
                 }
-                frappe.msgprint(
+                frappe.log_error(
                     message=f"Company '{company_name}' already exists. Updated existing company data for integration.", 
                     title="CheckTrack Integration - Existing Company Updated"
                 )
@@ -117,7 +117,7 @@ def checktrack_integration(email, password=""):
                     "message": f"Using existing company: {company_name} (update failed: {str(e)})",
                     "company_name": company_name
                 }
-                frappe.msgprint(
+                frappe.log_error(
                     message=f"Company '{company_name}' exists but update failed: {str(e)}. Using existing company as-is.", 
                     title="CheckTrack Integration - Existing Company"
                 )
@@ -134,10 +134,6 @@ def checktrack_integration(email, password=""):
                 "message": "Company created successfully",
                 "company_name": company_name
             }
-            frappe.msgprint(
-                    message=f"New Company Created.", 
-                    title="CheckTrack Integration"
-                )
 
         team_members_result = fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name)
 
@@ -180,7 +176,6 @@ def checktrack_integration(email, password=""):
     except Exception as e:
         frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
-
 @frappe.whitelist()
 def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name):
     try:
