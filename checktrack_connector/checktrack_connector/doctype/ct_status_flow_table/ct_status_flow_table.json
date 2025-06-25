@@ -13,6 +13,7 @@
   "read_only_fields",
   "workflow_status_change_to",
   "start_state",
+  "working_state",
   "end_state"
  ],
  "fields": [
@@ -65,17 +66,25 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Start State"
+  },
+  {
+   "default": "0",
+   "fieldname": "working_state",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Working State"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-06-12 09:56:10.225477",
+ "modified": "2025-06-24 10:53:50.210136",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "CT Status Flow Table",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": []
