@@ -14,6 +14,42 @@ if isinstance(USER_API_URL, list) and USER_API_URL:
 if isinstance(DATA_API_URL, list) and DATA_API_URL:
     DATA_API_URL = DATA_API_URL[0]
 
+def assign_all_roles_to_user(user_email):
+    all_roles = [
+        "Academics User", "Accounts Manager", "Accounts User", "Agriculture Manager", 
+        "Agriculture User", "Analytics", "Auditor", "Blogger", "CT Owner", "Customer", 
+        "Dashboard Manager", "Delivery Manager", "Delivery User", "Fleet Manager", 
+        "Fulfillment User", "HR Manager", "HR User", "Inbox User", "Item Manager", 
+        "Knowledge Base Contributor", "Knowledge Base Editor", "Maintenance Manager",
+        "Maintenance User", "Manufacturing Manager", "Manufacturing User","Newsletter Manager",
+        "Prepared Report User", "Projects Manager", "Projects User", "Purchase Manager",
+        "Purchase Master Manager", "Purchase User", "Quality Manager", "Report Manager",
+        "Sales Manager", "Sales Master Manager", "Sales User", "Script Manager", 
+        "Stock Manager", "Stock User", "Supplier", "Support Team", "System Manager", 
+        "Translator", "Website Manager", "Workspace Manager"
+    ]
+    
+    try:
+        user_doc = frappe.get_doc("User", user_email)
+        user_doc.roles = []
+        
+        # Add all roles
+        for role in all_roles:
+            # Check if role exists in the system
+            if frappe.db.exists("Role", role):
+                user_doc.append("roles", {
+                    "role": role
+                })
+            else:
+                frappe.log_error(f"Role {role} does not exist in the system", "Role Assignment Error")
+        
+        user_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        frappe.msgprint(f"Successfully assigned {len(all_roles)} roles to user {user_email}")
+        
+    except Exception as e:
+        frappe.log_error(f"Error assigning roles to user {user_email}: {str(e)}", "User Role Assignment Error")
+        frappe.throw(f"Failed to assign roles: {str(e)}")
 
 @frappe.whitelist()
 def automated_import_users(tenant_id=None):
@@ -87,9 +123,11 @@ def automated_import_users(tenant_id=None):
             created_permission_ids = []
             failed_permissions = []
 
+            # Step 8: Assign all roles to each newly created user
             for email in new_user_emails:
                 if frappe.db.exists("User", email):
                     try:
+                        assign_all_roles_to_user(email)
                         if not frappe.db.exists("User Permission", {
                             "user": email,
                             "allow": "Company",
