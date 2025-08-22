@@ -8,7 +8,8 @@
  "field_order": [
   "task_type",
   "status_flow",
-  "field_mapping"
+  "field_mapping",
+  "estimated_completion_time"
  ],
  "fields": [
   {
@@ -29,11 +30,16 @@
    "fieldtype": "Table",
    "label": "Field Mapping",
    "options": "CT Field Mapping Table"
+  },
+  {
+   "fieldname": "estimated_completion_time",
+   "fieldtype": "Duration",
+   "label": "Estimated Completion Time"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-02 14:33:04.968459",
+ "modified": "2025-08-19 14:47:16.717436",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task Type",
