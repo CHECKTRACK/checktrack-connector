@@ -7,20 +7,24 @@ frappe.ui.form.on('CheckTrack Integration', {
             frm.page.btn_primary.hide();
         }
         if (!frm.is_new()) {
+            showConnectionLoader(frm);
 
             check_tenant_exists(frm, function(exists) {
+                hideConnectionLoader(frm);
+                
                 if (exists) {
-
                     frm.fields.forEach(field => {
-                        frm.set_df_property(field.df.fieldname, 'hidden', true);
+                        if (field.df.fieldname !== 'name') { // Keep the name field visible
+                            frm.set_df_property(field.df.fieldname, 'hidden', true);
+                        }
                     });
+                    
                     frm.dashboard.clear_headline();
                     frm.dashboard.set_headline(
                         `<div class="alert alert-success" style="margin-bottom: 0px;">
                             <strong>${__("Connected to Checktrack")}</strong>
                         </div>`
                     );
-                    frm.set_indicator(__('Connected to Frappe'), 'green');
                     frm.remove_custom_button('Connect');
 
                 } else {
@@ -131,11 +135,11 @@ frappe.ui.form.on('CheckTrack Integration', {
 
                             if (response.message) {
                                 if (response.message.is_fully_integration) {
-                                    frappe.msgprint(__('Checktrack successfully integration.'));
+                                    frappe.msgprint(__('Checktrack successfully integrated.'));
                                     frm.reload_doc();
                                 }
                             } else {
-                                frappe.msgprint(__('Failed to integrat!'));
+                                frappe.msgprint(__('Failed to integrate!'));
                             }
                         })
                         .catch((error) => {
@@ -162,21 +166,77 @@ frappe.ui.form.on('CheckTrack Integration', {
 });
 
 function check_tenant_exists(frm, callback) {
-
     frappe.call({
-        method: 'checktrack_connector.api.check_tenant_exists',
+        method: 'frappe.client.get_value',
         args: {
-            email: frappe.session.user 
+            doctype: 'User',
+            filters: { name: frappe.session.user },
+            fieldname: 'email'
         },
-        callback: function (response) {
-            var exists = response.message && response.message.exists;
-            if (callback) callback(exists);
+        callback: function (r) {
+            const userEmail = r.message.email;
+            console.log("check_tenant_exists called with email:", userEmail);
+            
+            frappe.call({
+                method: 'checktrack_connector.api.check_tenant_exists',
+                args: {
+                    email: userEmail
+                },
+                callback: function (response) {
+                    console.log("check_tenant_exists API response:", response);
+                    var exists = response.message && response.message.exists;
+                    console.log("Extracted exists value:", exists);
+                    if (callback) callback(exists);
+                },
+                error: function(err) {
+                    console.error("Error checking tenant exists:", err);
+                    if (callback) callback(false);
+                }
+            });
         },
         error: function(err) {
-            console.error("Error checking tenant exists:", err);
+            console.error("Error getting user email:", err);
             if (callback) callback(false);
         }
     });
+}
+
+
+function showConnectionLoader(frm) {
+    if (frm.fields_dict.email) {
+        frm.set_df_property('email', 'hidden', true);
+    }
+    if (frm.fields_dict.password) {
+        frm.set_df_property('password', 'hidden', true);
+    }
+    
+    frm.dashboard.clear_headline();
+    frm.dashboard.set_headline(
+        `<div class="text-center" style="padding: 20px;">
+            <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div class="mt-2">
+                <strong>${__("Checking connection status...")}</strong>
+            </div>
+        </div>`
+    );
+    
+    frm.disable_save();
+}
+
+
+function hideConnectionLoader(frm) {
+    if (frm.fields_dict.email) {
+        frm.set_df_property('email', 'hidden', false);
+    }
+    if (frm.fields_dict.password) {
+        frm.set_df_property('password', 'hidden', false);
+    }
+
+    frm.dashboard.clear_headline();
+
+    frm.enable_save();
 }
 
 

@@ -92,7 +92,7 @@ def automated_import_users(tenant_id=None, integration_email=None):
         # Check if we have any data to import (excluding header)
         if len(data) <= 1:
             return {
-                "status": "warning",
+                "status": "success",
                 "message": f"No users to import after skipping integration email(s). Skipped {skipped_count} email(s)."
             }
         
@@ -235,6 +235,11 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
             projects = response.json()
             if not isinstance(projects, list):
                 return {"status": "error", "message": "No project found for the provided tenant_id"}
+            if not projects or len(projects) == 0:
+                return {
+                    "status": "success", 
+                    "message": "No projects found, so no need to import"
+                }
             data = [
                 ["project_name", "description","status","company","mongo_project_id"]
             ]
@@ -289,6 +294,17 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
                     for proj in created_projects if proj.get("mongo_project_id")
                 }
                 task_list  = get_task(tenant_id=tenant_id, tenant_prefix=tenant_prefix, access_token=access_token)
+                
+                # Check if get_task returned an error response
+                if isinstance(task_list, dict) and "status" in task_list and task_list["status"] == "error":
+                    return {"status": "error", "message": "Failed to fetch tasks", "details": task_list.get("message")}
+                
+                # Check if no tasks found (this is not an error, just no data to import)
+                if not task_list or len(task_list) == 0:
+                    return {
+                        "status": "success", 
+                        "message": "No tasks found, so no need to import tasks"
+                    }
                 
                 task_data = [
                     ["task_name", "description","assign_to","project","workflow_status","company","mongo_task_id"]
