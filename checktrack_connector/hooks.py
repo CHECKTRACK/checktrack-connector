@@ -172,12 +172,6 @@ data_api_url = conf.get("data_api_url")
 # }
 
 doc_events = {
-    "*": {
-        "before_request": "checktrack_connector.middleware.validate_jwt_token"
-    },
-     "Demo PM Task": {
-        "on_save": "checktrack_connector.doctype.demo_pm_task.demo_pm_task.on_update",
-    },
     "Task": {
        "on_update": "checktrack_connector.sync.sync_or_update_task_in_mongo",
        "on_submit": "checktrack_connector.sync.handle_task_submit",
