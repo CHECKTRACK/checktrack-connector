@@ -720,12 +720,14 @@ def check_tenant_exists(email):
     
     # Step 1: Get access token using hardcoded credentials
     auth_url = f"{USER_API_URL}/login"
+    admin_email = conf.get("checktrack_admin_email")
+    admin_password = conf.get("checktrack_admin_password")
     auth_payload = {
-        "email": "jaympatel9294@gmail.com",
-        "password": "0hr3VuNoyqcgy1Su"
+        "email": admin_email,
+        "password": admin_password
     }
     HEADERS = {"Content-Type": "application/json"}
-
+    
     try:
         auth_response = requests.post(auth_url, headers=HEADERS, json=auth_payload)
 
@@ -752,7 +754,7 @@ def check_tenant_exists(email):
     
     if not employee.get("company"):
         return {"exists": False, "message": "Employee has no associated company."}
-    
+
     # Step 4: Get tenant_id from Company doctype
     tenant_id = frappe.db.get_value("Company", employee.get("company"), "tenant_id")
     
