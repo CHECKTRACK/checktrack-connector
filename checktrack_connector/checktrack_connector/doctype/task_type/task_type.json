@@ -8,7 +8,7 @@
  "field_order": [
   "task_type",
   "status_flow",
-  "field_mapping",
+  "task_card",
   "estimated_completion_time"
  ],
  "fields": [
@@ -26,20 +26,20 @@
    "options": "CT Status Flow Table"
   },
   {
-   "fieldname": "field_mapping",
-   "fieldtype": "Table",
-   "label": "Field Mapping",
-   "options": "CT Field Mapping Table"
-  },
-  {
    "fieldname": "estimated_completion_time",
    "fieldtype": "Duration",
    "label": "Estimated Completion Time"
+  },
+  {
+   "fieldname": "task_card",
+   "fieldtype": "Table",
+   "label": "Task Card",
+   "options": "CT Task Card Table"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-19 14:47:16.717436",
+ "modified": "2025-09-02 11:31:01.922586",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Task Type",
