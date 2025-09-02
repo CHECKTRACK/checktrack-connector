@@ -8,8 +8,8 @@
  "field_order": [
   "target_field",
   "label_field",
-  "source_path",
-  "label_text"
+  "label_text",
+  "value"
  ],
  "fields": [
   {
@@ -27,26 +27,26 @@
    "options": "assign_to_label\nfirst_label\nsecond_label\nthird_label"
   },
   {
-   "fieldname": "source_path",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Source Path"
-  },
-  {
    "fieldname": "label_text",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Label Text"
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Value"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-06-02 14:56:35.525810",
- "modified_by": "da.1@yopmail.com",
+ "modified": "2025-09-02 11:29:32.838132",
+ "modified_by": "Administrator",
  "module": "checktrack_connector",
- "name": "CT Field Mapping Table",
+ "name": "CT Task Card Table",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",

@@ -139,13 +139,13 @@ def set_dynamic_fields(doc):
     if not mapping_doc:
         return
 
-    for mapping in mapping_doc.field_mapping:
+    for mapping in mapping_doc.task_card:
         try:
             value = doc
             prev_doc = doc
             prev_field = None
 
-            for part in mapping.source_path.split("."):
+            for part in mapping.value.split("."):
                 if not value:
                     value = ""  # If any intermediate object is None, break and assign ""
                     break
@@ -171,7 +171,7 @@ def set_dynamic_fields(doc):
             doc.db_set(mapping.label_field, final_label)
 
         except Exception as e:
-            frappe.log_error(f"Failed to resolve path: {mapping.source_path}\nError: {e}", "Task Mapping Error")
+            frappe.log_error(f"Failed to resolve path: {mapping.value}\nError: {e}", "Task Mapping Error")
             doc.db_set(mapping.target_field, "")
             doc.db_set(mapping.label_field, mapping.label_text or "")
 
