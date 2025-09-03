@@ -25,7 +25,6 @@ frappe.ui.form.on('CheckTrack Integration', {
                             <strong>${__("Connected to Checktrack")}</strong>
                         </div>`
                     );
-
                     frm.remove_custom_button('Connect');
 
                 } else {
@@ -161,6 +160,7 @@ frappe.ui.form.on('CheckTrack Integration', {
 
     password: function(frm) {
         frm.raw_password = frm.fields_dict.password.input.value;
+
         frm.trigger('refresh');
     },
 });
@@ -238,4 +238,5 @@ function hideConnectionLoader(frm) {
 
     frm.enable_save();
 }
+
 
