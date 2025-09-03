@@ -185,7 +185,7 @@ def automated_import_users(tenant_id=None, integration_email=None):
                 }
             
             frappe.db.commit()
-            
+
             success_message = f"Imported data into User from file {file_doc.file_url}"
             if skipped_count > 0:
                 success_message += f" (Skipped {skipped_count} integration email(s))"
@@ -407,7 +407,7 @@ def get_task(tenant_id, tenant_prefix, access_token):
             tenant_id = tenant_id['$oid']
         else:
             tenant_id = str(tenant_id)
-
+            
         all_tasks = []
         headers = {
             "Authorization": f"Bearer {access_token}",
