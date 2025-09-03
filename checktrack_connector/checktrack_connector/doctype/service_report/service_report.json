@@ -267,7 +267,7 @@
    "fetch_from": "customer_id.customer_phone",
    "fetch_if_empty": 1,
    "fieldname": "phone",
-   "fieldtype": "Data",
+   "fieldtype": "Phone",
    "label": "Phone"
   },
   {
@@ -275,7 +275,8 @@
    "fetch_if_empty": 1,
    "fieldname": "email",
    "fieldtype": "Data",
-   "label": "Email"
+   "label": "Email",
+   "options": "Email"
   },
   {
    "fieldname": "signature",

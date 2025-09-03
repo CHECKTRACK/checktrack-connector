@@ -1,3 +1,4 @@
+from frappe import conf
 import frappe
 import jwt
 import requests
@@ -8,6 +9,7 @@ from frappe.model.meta import get_meta
 from frappe.auth import LoginManager
 from frappe import _
 from frappe.utils.password import get_decrypted_password
+from frappe.utils.password import set_encrypted_password
 from checktrack_connector.onboard_api import automated_import_users, import_project
 from frappe.utils import get_url
 from datetime import datetime, timedelta
@@ -16,7 +18,8 @@ from frappe.utils import now_datetime, add_to_date
 from frappe.utils.data import get_datetime
 
 # Replace with your actual JWT secret from Node.js app
-JWT_SECRET = "e6H9QQMGBx33KaOd" 
+JWT_SECRET = conf.get("jwt_secret")
+JWT_AUDIENCE = conf.get("jwt_audience")
 JWT_ALGORITHM = "HS256" # Or whatever your Node.js app uses
 
 def handle_cors_preflight():
@@ -38,11 +41,24 @@ if isinstance(DATA_API_URL, list) and DATA_API_URL:
 
 
 @frappe.whitelist()
-def checktrack_integration(email, password=""):
+def checktrack_integration(email, password="", isServerCall=False):
 
     # Authenticate and get access token
     auth_url = f"{USER_API_URL}/login"
-    auth_payload = {"email": email.strip().lower(), "password": password}
+    
+    if isServerCall:
+        # Use credentials from config for server calls
+        server_email = conf.get("checktrack_admin_email")
+        server_password = conf.get("checktrack_admin_password")
+        auth_payload = {
+            "email": server_email,
+            "password": server_password
+        }
+    else:
+        # Use provided credentials for regular calls
+        auth_payload = {"email": email.strip().lower(), "password": password}
+
+    
     HEADERS = {"Content-Type": "application/json"}
 
     try:
@@ -52,17 +68,69 @@ def checktrack_integration(email, password=""):
             frappe.throw("CheckTrack intergation failed. Invalid email or password.")
 
         auth_data = auth_response.json()
-        frappe.log_error(message=f"Auth response keys: {list(auth_data.keys())}", title="Auth Debug")
 
         access_token = auth_data.get("accessToken")
-        tenant_id = auth_data.get("user", {}).get("works", [{}])[0].get("tenant", {}).get("_id", {}).get("$oid")
+        
+    
+        if isServerCall:
+            # For server calls, get tenant_id from MongoDB user collection
+            try:
+                user_url = f"{DATA_API_URL}/users?filter={urllib.parse.quote(json.dumps({'email': email.strip().lower()}))}"
+                user_headers = {
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-Type": "application/json"
+                }
+                user_response = requests.get(user_url, headers=user_headers)
+                
+                if user_response.status_code != 200:
+                    frappe.throw("Failed to fetch user data from CheckTrack.")
+                
+                user_data = user_response.json()
+                
+                if not user_data or not isinstance(user_data, list) or len(user_data) == 0:
+                    frappe.throw("User not found in CheckTrack.")
+                
+                # Get tenant_id from the first work object
+                works = user_data[0].get("works", [])
+                
+                if not works or len(works) == 0:
+                    frappe.throw("User has no works associated.")
+                
+                tenant_obj = works[0].get("tenant", {})
+                
+                if not tenant_obj:
+                    frappe.throw("No tenant found in user's work.")
+                
+                tenant_id = tenant_obj.get("_id")
+                
+                if not tenant_id:
+                    frappe.throw("Tenant ID not found.")
+                
+                # Extract the actual ID string if it's a dict
+                if isinstance(tenant_id, dict) and '$oid' in tenant_id:
+                    tenant_id = tenant_id['$oid']
+                else:
+                    tenant_id = str(tenant_id)
+                
+            except Exception as e:
+                frappe.throw(f"Error fetching user data: {str(e)}")
+        else:
+            # For regular calls, get tenant_id from auth response
+            tenant_id = auth_data.get("user", {}).get("works", [{}])[0].get("tenant", {}).get("_id", {}).get("$oid")
+
+        
 
     except Exception as e:
-        frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
 
     try:
-        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
+        # Extract the actual ID string from tenant_id if it's a dict
+        if isinstance(tenant_id, dict) and '$oid' in tenant_id:
+            actual_tenant_id = tenant_id['$oid']
+        else:
+            actual_tenant_id = str(tenant_id)
+        
+        tenant_url = f"{DATA_API_URL}/tenants/{actual_tenant_id}"
         tenant_headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json"
@@ -71,7 +139,7 @@ def checktrack_integration(email, password=""):
         tenant_data = tenant_response.json()
 
     except Exception as e:
-        frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
+        frappe.msgprint(f"Error fetching tenant data: {str(e)}")
         return {"exists": False, "message": f"Error: {str(e)}"}
 
     try:
@@ -80,6 +148,11 @@ def checktrack_integration(email, password=""):
         tenant_id = mapped_data.get("data", {}).get("tenant_id")
         tenant_prefix = mapped_data.get("data", {}).get("prefix")
         company_name = mapped_data.get("data", {}).get("company_name")
+        
+
+
+        if not company_name:
+            frappe.throw("Company name is required but not found in tenant data")
 
         company_result = {}
 
@@ -105,11 +178,9 @@ def checktrack_integration(email, password=""):
                     "message": f"Using and updated existing company: {company_name}",
                     "company_name": company_name
                 }
-                frappe.log_error(
-                    message=f"Company '{company_name}' already exists. Updated existing company data for integration.", 
-                    title="CheckTrack Integration - Existing Company Updated"
-                )
+
             except Exception as e:
+                frappe.msgprint(f"Error updating existing company: {str(e)}")
                 # If update fails, just use existing company without update
                 company_result = {
                     "status": "existing", 
@@ -117,25 +188,28 @@ def checktrack_integration(email, password=""):
                     "message": f"Using existing company: {company_name} (update failed: {str(e)})",
                     "company_name": company_name
                 }
-                frappe.log_error(
-                    message=f"Company '{company_name}' exists but update failed: {str(e)}. Using existing company as-is.", 
-                    title="CheckTrack Integration - Existing Company"
-                )
+
         else:
             # Create new company
-            new_company = frappe.get_doc({
-                "doctype": "Company",
-                **mapped_data["data"]
-            })
-            new_company.insert(ignore_permissions=True)
-            company_result = {
-                "status": "created", 
-                "tenant_id": tenant_id, 
-                "message": "Company created successfully",
-                "company_name": company_name
-            }
+            try:
+                new_company = frappe.get_doc({
+                    "doctype": "Company",
+                    **mapped_data["data"]
+                })
+                new_company.insert(ignore_permissions=True)
+                company_result = {
+                    "status": "created", 
+                    "tenant_id": tenant_id, 
+                    "message": "Company created successfully",
+                    "company_name": company_name
+                }
+            except Exception as e:
+                frappe.msgprint(f"Error creating new company: {str(e)}")
+                frappe.throw(f"Failed to create company: {str(e)}")
 
-        team_members_result = fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name)
+
+
+        team_members_result = fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name, email)
 
         if team_members_result.get("status") == "error" or team_members_result.get("rollback_status") == True:
             try:
@@ -177,7 +251,7 @@ def checktrack_integration(email, password=""):
         frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
 @frappe.whitelist()
-def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name):
+def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name, integration_email=None):
     try:
         fetch_result = get_all_team_members(tenant_id, tenant_prefix, access_token)
         team_members_data = fetch_result.get("data")
@@ -195,7 +269,7 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
         if create_result.get("status") != "success":
             return create_result
 
-        user_import_result = automated_import_users(tenant_id=company_name)
+        user_import_result = automated_import_users(tenant_id=company_name, integration_email=integration_email)
 
         if user_import_result.get("status") != "success":
             rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
@@ -466,6 +540,7 @@ def rollback_team_members(processed_ids):
 
 def map_tenant_data(input_data):
 
+
     if isinstance(input_data, list) and input_data:
         input_data = input_data[0]
 
@@ -478,14 +553,16 @@ def map_tenant_data(input_data):
         phone_number = phone_number[len(dial_code):]
     formatted_phone = f"{dial_code}-{phone_number}" if dial_code and phone_number else phone_number
 
-    return {
+    company_name = input_data.get('name', '')
+    
+    result = {
         "data": {
             "tenant_id": tenant_id,
             "prefix": input_data.get('prefix', ''),
             "phone": formatted_phone,
             "timezone": input_data.get('timezone', ''),
             "features": [{"features": feature} for feature in input_data.get('featuresList', [])],
-            "company_name": input_data.get('name', ''),
+            "company_name": company_name,
             "date_format": input_data.get('dateFormat', ''),
             "no_of_employee": str(input_data.get('noOfEmployee', 0)),
             "work_location": [
@@ -500,6 +577,8 @@ def map_tenant_data(input_data):
             ]
         }
     }
+    
+    return result
 
 def map_team_member_data(input_data, company_name, updateEmployee):
 
@@ -630,55 +709,85 @@ def map_team_member_data(input_data, company_name, updateEmployee):
 #     return {"message": "User synced successfully"}
 
 @frappe.whitelist()
-def check_tenant_exists(email, password=""):
+def check_tenant_exists(email):
     """
     Check if a tenant already exists for the given credentials.
     This function authenticates with the credentials but does not create any records.
-    Returns: True if tenant exists and is fully intgration, False otherwise
+    Returns: True if tenant exists and is fully integrated, False otherwise
     """
-    if not email or not password:
-        return {"exists": False}
+    if not email:
+        return {"exists": False, "message": "Email is required."}
+    
+    # Step 1: Get access token using hardcoded credentials
     auth_url = f"{USER_API_URL}/login"
-    auth_payload = {"email": email.strip().lower(), "password": password}
+    admin_email = conf.get("checktrack_admin_email")
+    admin_password = conf.get("checktrack_admin_password")
+    auth_payload = {
+        "email": admin_email,
+        "password": admin_password
+    }
     HEADERS = {"Content-Type": "application/json"}
-
+    
     try:
         auth_response = requests.post(auth_url, headers=HEADERS, json=auth_payload)
 
         if auth_response.status_code != 200:
-            return {"exists": False, "message": "CheckTrack intergation failed. Invalid email or password."}
+            return {"exists": False, "message": "Failed to authenticate with CheckTrack API."}
 
         auth_data = auth_response.json()
-
         access_token = auth_data.get("accessToken")
-        company_name = auth_data.get("tenant", {}).get("name")
 
-        if not access_token or not company_name:
-            return {"exists": False, "message": "Failed to get company information."}
-
-        if frappe.db.exists("Company", company_name):
-            team_members_count = frappe.db.count("Employee", {"company": company_name})
-
-            if team_members_count > 0:
-                return {
-                    "exists": True,
-                    "tenant_id": company_name,
-                    "team_members_count": team_members_count,
-                    "message": f"Company exists with {team_members_count} employee"
-                }
-            else:
-                return {
-                    "exists": True,
-                    "tenant_id": company_name,
-                    "team_members_count": 0,
-                    "message": "Company exists but has no employee"
-                }
-        else:
-            return {"exists": False, "message": "Company does not exist in the system"}
+        if not access_token:
+            return {"exists": False, "message": "Failed to get access token."}
 
     except Exception as e:
-        frappe.log_error(message=f"Error checking company exists: {str(e)}", title="Employee Check Error")
-        return {"exists": False, "message": f"Error: {str(e)}"}
+        return {"exists": False, "message": f"Authentication error: {str(e)}"}
+
+    # Step 2: Use the passed email to look up Employee, Company, tenant_id, etc.
+    user_email = email
+    
+    # Step 3: Check if user exists in Employee doctype
+    employee = frappe.db.get_value("Employee", {"work_email": user_email}, ["name", "company"], as_dict=True)
+    
+    if not employee:
+        return {"exists": False, "message": "Employee not found in the system."}
+    
+    if not employee.get("company"):
+        return {"exists": False, "message": "Employee has no associated company."}
+
+    # Step 4: Get tenant_id from Company doctype
+    tenant_id = frappe.db.get_value("Company", employee.get("company"), "tenant_id")
+    
+    if not tenant_id:
+        return {"exists": False, "message": "Company has no tenant_id."}
+    
+    # Step 5: Check in MongoDB if isFrappeIntegrated is true
+    try:
+        tenant_url = f"{DATA_API_URL}/tenants/{tenant_id}"
+        tenant_headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        tenant_response = requests.get(tenant_url, headers=tenant_headers)
+        
+        if tenant_response.status_code != 200:
+            return {"exists": False, "message": "Failed to fetch tenant data from CheckTrack."}
+        
+        tenant_data = tenant_response.json()
+        is_frappe_integrated = tenant_data.get("isFrappeIntegrated", False)
+        
+        if is_frappe_integrated:
+            return {
+                "exists": True,
+                "tenant_id": tenant_id,
+                "company": employee.get("company"),
+                "message": "Tenant is fully integrated with Frappe"
+            }
+        else:
+            return {"exists": False, "message": "Tenant is not integrated with Frappe."}
+            
+    except Exception as e:
+        return {"exists": False, "message": f"Error checking integration: {str(e)}"}
 
 @frappe.whitelist()
 def get_decrypted_password_for_doc(docname):
@@ -731,7 +840,8 @@ def get_tasks_for_user(assign_to=None, employee_id=None, extra_filters=None, pag
         or_filters=or_filters,
         fields=["*"],
         start=start,
-        page_length=page_size
+        page_length=page_size,
+        order_by="due_date ASC, creation DESC"
     )
 
     # Remove duplicates by task name (if needed)
@@ -788,7 +898,6 @@ def get_specific_doc_data(doctype, name=None, filters=None):
             expanded_doc = expand_links(full_doc, doctype)
             return {"data": expanded_doc}
         except Exception as e:
-            frappe.log_error(f"Error fetching specific document: {str(e)}")
             return {"message": f"Error fetching specific document: {str(e)}"}
     else:
         filters = json.loads(filters) if filters else {}
@@ -842,14 +951,21 @@ def update_mongodb_tenant_flag(tenant_id, access_token):
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json"
         }
+
+        site_url = get_url()
+        
+        if site_url.startswith("http://"):
+            site_url = site_url.replace("http://", "https://", 1)
+        
         payload = {
-            "isFrappeIntegrated": True
+            "isFrappeIntegrated": True,
+            "frappeAppUrl": site_url
         }
 
         response = requests.patch(tenant_url, headers=headers, json=payload)
 
         if response.status_code in [200, 204]:
-            frappe.logger().info(f"CheckTrack: Tenant {tenant_id} updated with isFrappeIntegrated = true")
+            frappe.logger().info(f"CheckTrack: Tenant {tenant_id} updated with isFrappeIntegrated = true and frappeAppUrl = {site_url}")
         else:
             frappe.logger().warn(f"CheckTrack: Failed to update tenant {tenant_id}. Status: {response.status_code}, Response: {response.text}")
 
@@ -889,7 +1005,7 @@ def update_related_tasks(doc, method):
 def authenticate_with_jwt_and_get_frappe_token(jwt_token):
     try:
         # 1. Verify and decode the JWT
-        decoded_jwt = jwt.decode(jwt_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="app.checktrack.dev")
+        decoded_jwt = jwt.decode(jwt_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience=JWT_AUDIENCE)
 
         # Extract user identification from JWT
         user_email = decoded_jwt.get('email') 
@@ -921,20 +1037,29 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
         # 3. Get API Key/Secret for the Frappe user
         api_key = frappe.db.get_value("User", user, "api_key")
         api_secret = frappe.get_doc("User", user).get_password("api_secret")
+        cache_key = f"checktrack_api_key_timestamp:{user}"
+        last_rotated = frappe.cache().get_value(cache_key)
 
-        # cache_key = f"checktrack_api_key_timestamp:{user}"
-        # last_rotated = frappe.cache().get_value(cache_key)
-
-        # rotate_key = False
-        # if not api_key or not api_secret:
-        #     # If missing, rotate immediately
-        #     rotate_key = True
-        # elif last_rotated:
-        #     last_rotated_dt = get_datetime(last_rotated)
-        #     if now_datetime() > add_to_date(last_rotated_dt, hours=8):
-        #         rotate_key = True
-        # else:
-        #     rotate_key = True  # No record of rotation
+        rotate_key = False
+        if not api_key or not api_secret:
+            # If missing, rotate immediately
+            rotate_key = True
+        elif last_rotated:
+            last_rotated_dt = get_datetime(last_rotated)
+            if now_datetime() > add_to_date(last_rotated_dt, hours=8):
+                rotate_key = True
+        else:
+            rotate_key = True  # No record of rotation
+        
+        if rotate_key:
+            user_doc.api_key = frappe.generate_hash(length=15)
+            new_secret = frappe.generate_hash(length=15)
+            set_encrypted_password("User", user_doc.name, new_secret, "api_secret")
+            user_doc.save(ignore_permissions=True)
+            api_key = user_doc.api_key
+            api_secret = new_secret
+            frappe.db.commit()
+            frappe.cache().set_value(cache_key, now_datetime())
 
         # if rotate_key:
         #     new_api_key = random_string(15)
@@ -943,6 +1068,7 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
         #     frappe.db.commit()
             # frappe.cache().set_value(cache_key, now_datetime())
             # api_key = new_api_key
+
 
         # if not (api_key and api_secret):
         #     # Generate new API Key and Secret
@@ -964,7 +1090,6 @@ def authenticate_with_jwt_and_get_frappe_token(jwt_token):
     except jwt.InvalidTokenError as e:
         frappe.throw(f"Invalid JWT: {e}")
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "JWT Authentication Error")
         frappe.throw(f"An error occurred during authentication: {e}")
 
 @frappe.whitelist(allow_guest=True)
