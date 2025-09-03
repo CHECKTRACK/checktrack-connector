@@ -46,13 +46,13 @@
   "territory",
   "fax",
   "address_section",
-  "address_html",
+  "address",
   "column_break_38",
   "city",
   "state",
   "country",
   "column_break2",
-  "contact_html",
+  "contact",
   "qualification_tab",
   "qualification_status",
   "column_break_64",
@@ -119,6 +119,7 @@
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "lead_name",
    "fieldtype": "Data",
+   "hidden": 1,
    "in_global_search": 1,
    "label": "Full Name",
    "oldfieldname": "lead_name",
@@ -331,12 +332,6 @@
    "label": "Address & Contacts"
   },
   {
-   "fieldname": "address_html",
-   "fieldtype": "HTML",
-   "label": "Address HTML",
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_38",
    "fieldtype": "Column Break"
   },
@@ -359,12 +354,6 @@
   {
    "fieldname": "column_break2",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "contact_html",
-   "fieldtype": "HTML",
-   "label": "Contact HTML",
-   "read_only": 1
   },
   {
    "collapsible": 1,
@@ -467,32 +456,38 @@
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "activities_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Activities"
   },
   {
    "fieldname": "open_activities_html",
    "fieldtype": "HTML",
+   "hidden": 1,
    "label": "Open Activities HTML"
   },
   {
    "fieldname": "all_activities_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "All Activities"
   },
   {
    "fieldname": "all_activities_html",
    "fieldtype": "HTML",
+   "hidden": 1,
    "label": "All Activities HTML"
   },
   {
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "notes_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Notes"
   },
   {
    "fieldname": "notes_html",
    "fieldtype": "HTML",
+   "hidden": 1,
    "label": "Notes HTML"
   },
   {
@@ -506,15 +501,26 @@
   {
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Connections",
    "show_dashboard": 1
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "contact",
+   "fieldtype": "Data",
+   "label": "Contact"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-08-20 11:21:28.781287",
+ "modified": "2025-09-03 11:32:10.874108",
  "modified_by": "Administrator",
  "module": "checktrack_connector",
  "name": "Lead",
