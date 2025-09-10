@@ -14,7 +14,7 @@ frappe.ui.form.on('CheckTrack Integration', {
                 
                 if (exists) {
                     frm.fields.forEach(field => {
-                        if (field.df.fieldname !== 'name') { // Keep the name field visible
+                        if (field.df.fieldname !== 'name') { 
                             frm.set_df_property(field.df.fieldname, 'hidden', true);
                         }
                     });
@@ -155,13 +155,13 @@ frappe.ui.form.on('CheckTrack Integration', {
     },
 
     email: function(frm) {
-        frm.trigger('refresh');
+        if (frm.fields_dict.password && frm.fields_dict.password.input) {
+            frm.raw_password = frm.fields_dict.password.input.value;
+        }
     },
 
     password: function(frm) {
         frm.raw_password = frm.fields_dict.password.input.value;
-
-        frm.trigger('refresh');
     },
 });
 
@@ -238,6 +238,3 @@ function hideConnectionLoader(frm) {
 
     frm.enable_save();
 }
-
-
-
