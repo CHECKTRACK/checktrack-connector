@@ -366,13 +366,13 @@ def create_all_team_members(team_members_data, company_name):
                 if "_id" in member_data and not "teammember_id" in member_data:
                     member_data = map_team_member_data(member_data, company_name,False)
 
-                if not isinstance(member_data, dict):
-                    data = frappe.parse_json(member_data)
+                # if not isinstance(member_data, dict):
+                #     data = frappe.parse_json(member_data)
 
-                teammember_id = data.get('teammember_id')
-                existing_member = frappe.db.get_value("Employee", {"teammember_id": teammember_id}, "name")
-                if existing_member:
-                    continue
+                # teammember_id = data.get('teammember_id')
+                # existing_member = frappe.db.get_value("Employee", {"teammember_id": teammember_id}, "name")
+                # if existing_member:
+                #     continue
 
                 result = create_team_member(member_data)
 
