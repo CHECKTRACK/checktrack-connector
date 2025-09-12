@@ -230,14 +230,18 @@ def checktrack_integration(email, password="", isServerCall=False):
                         "message": "Employee creation failed for existing company (company not removed)"
                     })
 
-                frappe.throw(_("Something went wrong!"), indicator="red")
+                # Fixed: Remove indicator parameter from frappe.throw
+                frappe.msgprint(_("Something went wrong!"), indicator="red")
+                frappe.throw(_("Something went wrong!"))
                 return {
                     "tenant": company_result,
                     "team_members": team_members_result,
                     "is_fully_integration": False
                 }
             except Exception as e:
-                frappe.throw(_("Something went wrong!"), indicator="red")
+                # Fixed: Remove indicator parameter from frappe.throw
+                frappe.msgprint(_("Something went wrong!"), indicator="red")
+                frappe.throw(_("Something went wrong!"))
 
         is_fully_integration = team_members_result.get("status") == "success"
 
@@ -250,6 +254,7 @@ def checktrack_integration(email, password="", isServerCall=False):
     except Exception as e:
         frappe.log_error(message=f"Error checking CheckTrack integration: {str(e)}", title="CheckTrack Integration Error")
         return {"exists": False, "message": f"Error: {str(e)}"}
+
 @frappe.whitelist()
 def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, company_name, integration_email=None):
     try:
@@ -273,6 +278,7 @@ def fetch_and_create_team_members(tenant_id, tenant_prefix, access_token, compan
 
         if user_import_result.get("status") != "success":
             rollback_team_members(create_result.get("new_member_ids", []))  # Rollback team members
+            # Fixed: Remove indicator parameter from frappe.throw, use msgprint for indicator
             frappe.msgprint(_("User import failed. Rolling back created team members."), indicator="red")
             return {
                 "status": "error",
@@ -363,8 +369,9 @@ def create_all_team_members(team_members_data, company_name):
                 if not isinstance(member_data, dict):
                     data = frappe.parse_json(member_data)
 
-                email = data.get('work_email')
-                if frappe.db.exists("Employee", email.lower().strip()):
+                teammember_id = data.get('teammember_id')
+                existing_member = frappe.db.get_value("Employee", {"teammember_id": teammember_id}, "name")
+                if existing_member:
                     continue
 
                 result = create_team_member(member_data)
@@ -383,6 +390,7 @@ def create_all_team_members(team_members_data, company_name):
 
         if should_rollback and successfully_processed_ids:
             rollback_results = rollback_team_members(successfully_processed_ids)
+            # Fixed: Remove indicator parameter from frappe.throw, use msgprint for indicator
             frappe.msgprint(_("Something went wrong!"), indicator="red")
 
             return {
@@ -404,6 +412,7 @@ def create_all_team_members(team_members_data, company_name):
 
     except Exception as e:
         rollback_reason = f"Unexpected error in create all employee: {str(e)}"
+        # Fixed: Remove indicator parameter from frappe.throw, use msgprint for indicator
         frappe.msgprint(_("Something went wrong!"), indicator="red")
 
         if successfully_processed_ids:
@@ -444,6 +453,7 @@ def update_all_team_members(team_members_data, company_name):
 
     except Exception as e:
         reason = f"Unexpected error in update employee: {str(e)}"
+        # Fixed: Remove indicator parameter from frappe.throw, use msgprint for indicator
         frappe.msgprint(_("Something went wrong!"), indicator="red")
 
         return {
