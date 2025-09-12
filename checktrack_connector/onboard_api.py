@@ -71,10 +71,10 @@ def automated_import_users(tenant_id=None, integration_email=None):
         skipped_count = 0
         for tm in team_members:
             # Skip if this email matches the integration email
-            if integration_email and tm.work_email.lower().strip() == integration_email.lower().strip():
+            if frappe.db.exists("User", tm.work_email.lower().strip()):
                 skipped_count += 1
                 continue
-                
+            
             # Validate email before adding to import data
             if not tm.work_email or not tm.work_email.strip():
                 continue
