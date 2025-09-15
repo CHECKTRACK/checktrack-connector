@@ -1,3 +1,4 @@
+import os
 import requests
 from checktrack_connector.api import DATA_API_URL, USER_API_URL
 import frappe
@@ -330,8 +331,8 @@ def get_app_admin_bearer_auth():
         if isinstance(DATA_API_URL, list) and DATA_API_URL:
             DATA_API_URL = DATA_API_URL[0]
 
-        email = conf.get("checktrack_admin_email")
-        password = conf.get("checktrack_admin_password") 
+        email = conf.get("checktrack_admin_email") or os.environ.get("checktrack_admin_email")
+        password = conf.get("checktrack_admin_password") or os.environ.get("checktrack_admin_password")
         
         url = f"{USER_API_URL}/login"
         auth_payload = {"email": email, "password": password}
