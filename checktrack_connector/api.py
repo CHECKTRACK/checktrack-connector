@@ -1,5 +1,4 @@
 from frappe import conf
-import os
 import frappe
 import jwt
 import requests
@@ -19,8 +18,8 @@ from frappe.utils import now_datetime, add_to_date
 from frappe.utils.data import get_datetime
 
 # Replace with your actual JWT secret from Node.js app
-JWT_SECRET = conf.get("jwt_secret") or os.environ.get("jwt_secret")
-JWT_AUDIENCE = conf.get("jwt_audience") or os.environ.get("jwt_audience")
+JWT_SECRET = conf.get("jwt_secret")
+JWT_AUDIENCE = conf.get("jwt_audience")
 JWT_ALGORITHM = "HS256" # Or whatever your Node.js app uses
 
 def handle_cors_preflight():
@@ -49,8 +48,8 @@ def checktrack_integration(email, password="", isServerCall=False):
     
     if isServerCall:
         # Use credentials from config for server calls
-        server_email = conf.get("checktrack_admin_email") or os.environ.get("checktrack_admin_email")
-        server_password = conf.get("checktrack_admin_password") or os.environ.get("checktrack_admin_password")
+        server_email = conf.get("checktrack_admin_email")
+        server_password = conf.get("checktrack_admin_password")
         auth_payload = {
             "email": server_email,
             "password": server_password
@@ -738,8 +737,8 @@ def check_tenant_exists(email):
     
     # Step 1: Get access token using hardcoded credentials
     auth_url = f"{USER_API_URL}/login"
-    admin_email = conf.get("checktrack_admin_email") or os.environ.get("checktrack_admin_email")
-    admin_password = conf.get("checktrack_admin_password") or os.environ.get("checktrack_admin_password")
+    admin_email = conf.get("checktrack_admin_email")
+    admin_password = conf.get("checktrack_admin_password")
     auth_payload = {
         "email": admin_email,
         "password": admin_password
