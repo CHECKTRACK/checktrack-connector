@@ -193,13 +193,6 @@ doc_events = {
     }
 }
 
-override_whitelisted_methods = {
-    "frappe.utils.handle_preflight": "checktrack_connector.utils.handle_preflight",
-}
-
-after_request = ["checktrack_connector.utils.add_cors_headers"]
-
-
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
