@@ -1,14 +1,5 @@
 import frappe
 
-ALLOWED_ORIGINS = [
-    "http://localhost:8002",  # Local development
-    "http://127.0.0.1:8002",
-    "http://192.168.0.12:8002",
-    "https://app.checktrack.dev/api/user-api",
-    "https://app.checktrack.dev/api/data-api",
-    # "https://your-flutter-app.com"  # Production app URL
-]
-
 def validate_cors():
     """Set CORS headers for all requests."""
 

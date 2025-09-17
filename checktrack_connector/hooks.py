@@ -180,9 +180,6 @@ doc_events = {
     "Project": {
        "on_update": "checktrack_connector.sync.sync_or_update_project_in_mongo"
     },
-    "*": {
-        "on_request": "checktrack_connector.utils.validate_cors",
-    },
     "Maintenance Schedule": {
         "on_submit": [
            "checktrack_connector.checktrack_connector.doctype.maintenance_schedule.maintenance_schedule.create_schedule_logs",
