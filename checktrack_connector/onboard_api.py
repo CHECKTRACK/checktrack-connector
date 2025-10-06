@@ -247,7 +247,7 @@ def import_project(tenant_id, tenant_prefix, access_token,company_name):
                 data.append([
                     project.get("name"),
                     project.get("description"),
-                    project.get("status").capitalize(),
+                    "Active",
                     company_name,
                     project.get("_id", {}).get("$oid")
                 ])
